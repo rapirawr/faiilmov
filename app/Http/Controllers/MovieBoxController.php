@@ -79,6 +79,23 @@ class MovieBoxController extends Controller
     }
 
     /**
+     * Get subtitles for a subject and episode
+     * GET /moviebox/subtitles/{id}?se=0&ep=0
+     */
+    public function subtitles(Request $request, string $id): JsonResponse
+    {
+        $season = (int)$request->query('se', 0);
+        $episode = (int)$request->query('ep', 0);
+
+        try {
+            $data = $this->movieBox->getCaptions($id, $season, $episode);
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get homepage feed
      * GET /moviebox/homepage?tabId=0&page=1
      */
@@ -97,11 +114,16 @@ class MovieBoxController extends Controller
 
     /**
      * Proxy stream requests with proper Referer & User-Agent headers to bypass 429/403 blocks
-     * GET /moviebox/proxy-stream?url=...
+     * Auto-refreshes stream URL if upstream CDN returns HTTP 403/410 expired token
+     * GET /moviebox/proxy-stream?url=...&id=...&se=...&ep=...
      */
     public function proxyStream(Request $request)
     {
         $targetUrl = $request->query('url');
+        $subjectId = $request->query('id');
+        $season = (int)$request->query('se', 0);
+        $episode = (int)$request->query('ep', 0);
+
         if (!$targetUrl) {
             return response()->json(['error' => 'URL parameter is required.'], 400);
         }
@@ -115,8 +137,35 @@ class MovieBoxController extends Controller
             $requestHeaders[] = 'Range: ' . $rangeHeader;
         }
 
-        return response()->stream(function () use ($targetUrl, $requestHeaders) {
-            $ch = curl_init($targetUrl);
+        // Try initial stream URL, if 403/410 and subjectId is present, auto-refresh fresh stream link
+        $freshUrl = null;
+        if ($subjectId) {
+            $chCheck = curl_init($targetUrl);
+            curl_setopt($chCheck, CURLOPT_NOBODY, true);
+            curl_setopt($chCheck, CURLOPT_HTTPHEADER, $requestHeaders);
+            curl_setopt($chCheck, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($chCheck, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($chCheck, CURLOPT_CONNECTTIMEOUT, 3);
+            curl_setopt($chCheck, CURLOPT_TIMEOUT, 5);
+            curl_exec($chCheck);
+            $statusCode = curl_getinfo($chCheck, CURLINFO_HTTP_CODE);
+            curl_close($chCheck);
+
+            if ($statusCode === 403 || $statusCode === 410) {
+                try {
+                    $freshData = $this->movieBox->getResources($subjectId, $season, $episode, 1, null, 20, true);
+                    $list = $freshData['list'] ?? [];
+                    if (!empty($list)) {
+                        $freshUrl = $list[0]['resourceLink'] ?? $list[0]['url'] ?? $list[0]['playUrl'] ?? null;
+                    }
+                } catch (Exception $e) {}
+            }
+        }
+
+        $finalUrl = $freshUrl ?: $targetUrl;
+
+        return response()->stream(function () use ($finalUrl, $requestHeaders) {
+            $ch = curl_init($finalUrl);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
@@ -173,27 +222,35 @@ class MovieBoxController extends Controller
             ]);
         }
 
+        $cacheKey = 'subtitle_vtt_' . md5($targetUrl);
+
         try {
-            $response = \Illuminate\Support\Facades\Http::timeout(10)->get($targetUrl);
-            if (!$response->successful()) {
-                return response("WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\n[Subtitle tidak dapat dimuat]", 200, [
-                    'Content-Type' => 'text/vtt; charset=utf-8',
-                    'Access-Control-Allow-Origin' => '*',
-                ]);
-            }
+            $vttContent = \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addHours(24), function () use ($targetUrl) {
+                $response = \Illuminate\Support\Facades\Http::timeout(10)->get($targetUrl);
+                if (!$response->successful()) {
+                    return "WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\n[Subtitle tidak dapat dimuat]";
+                }
 
-            $content = $response->body();
+                $content = $response->body();
+                // Strip UTF-8 BOM
+                $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+                // Normalize line breaks to \n
+                $content = str_replace(["\r\n", "\r"], "\n", $content);
 
-            // Convert SRT to WebVTT format if needed
-            if (!str_starts_with(trim($content), 'WEBVTT')) {
-                // Convert commas in timestamps (00:01:23,456 -> 00:01:23.456)
-                $content = preg_replace('/(\d{2}:\d{2}:\d{2}),(\d{3})/', '$1.$2', $content);
-                $content = "WEBVTT\n\n" . ltrim($content);
-            }
+                // Convert SRT to WebVTT format if needed
+                if (!str_starts_with(trim($content), 'WEBVTT')) {
+                    // Convert commas in timestamps (00:01:23,456 or 01:23,456 -> 00:01:23.456)
+                    $content = preg_replace('/(\d{1,2}:\d{2}:\d{2})[,.](\d{2,3})/', '$1.$2', $content);
+                    $content = "WEBVTT\n\n" . ltrim($content);
+                }
 
-            return response($content, 200, [
+                return $content;
+            });
+
+            return response($vttContent, 200, [
                 'Content-Type' => 'text/vtt; charset=utf-8',
                 'Access-Control-Allow-Origin' => '*',
+                'Cache-Control' => 'public, max-age=86400',
             ]);
         } catch (Exception $e) {
             return response("WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\n[Subtitle Error]", 200, [

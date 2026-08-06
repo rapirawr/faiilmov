@@ -17,7 +17,8 @@ class SearchController extends Controller
     public function autocomplete(Request $request): JsonResponse
     {
         $q = $request->input('q', '');
-        $suggestions = $this->search->autocomplete($q);
+        $isPopular = $request->boolean('popular');
+        $suggestions = $this->search->autocomplete($q, $isPopular);
         return response()->json($suggestions);
     }
 }

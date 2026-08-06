@@ -1,16 +1,13 @@
 <!-- Top Navigation Header Component -->
-<header class="fixed top-0 left-0 right-0 z-40 h-20 bg-transparent backdrop-blur-md flex items-center justify-between px-4 sm:px-8 gap-4 pointer-events-none [&>*]:pointer-events-auto">
+<header class="fixed top-0 left-0 right-0 z-40 h-20 bg-dark-950/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-8 gap-4 pointer-events-none [&>*]:pointer-events-auto shadow-md">
     
     <!-- Left: Circular Toggle & Brand Logo -->
     <div class="flex items-center gap-3">
-        <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center border border-white/10 transition-colors shadow-sm">
+        <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 shrink-0 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center border border-white/10 transition-colors shadow-sm lg:hidden">
             <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
 
-        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <div class="w-10 h-10 rounded-full bg-white text-zinc-950 flex items-center justify-center font-bold shadow-md group-hover:bg-zinc-200 transition-colors">
-                <i data-lucide="film" class="w-5 h-5"></i>
-            </div>
+        <a href="{{ route('home') }}" class="hidden sm:flex items-center gap-2.5 group">
             <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
                 faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
             </span>
@@ -18,14 +15,18 @@
     </div>
 
     <!-- Center: Compact Capsule Autocomplete Search Bar -->
-    <div class="relative flex-1 max-w-xl hidden md:block mx-4"
+    <div class="relative flex-1 max-w-xl mx-2 sm:mx-4"
          x-data="searchAutocomplete()"  
          @click.outside="closePanel()"
          @keydown.escape.window="closePanel()"
          @keydown.window.ctrl.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select()"
          @keydown.window.cmd.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select()">
         
-        <form :action="'{{ route('browse') }}'" method="GET" class="relative" @submit="selectFocused()">
+        <form :action="'{{ route('browse') }}'" method="GET" class="relative flex items-center w-full bg-dark-900/90 backdrop-blur-md rounded-full border border-white/10 focus-within:border-white/30 focus-within:bg-dark-950 transition-all shadow-inner" @submit="selectFocused()">
+            <!-- Search Icon (Left) -->
+            <i data-lucide="search" class="w-4 h-4 text-gray-500 shrink-0 ml-3 sm:ml-3.5 pointer-events-none"></i>
+            
+            <!-- Input Field (Center) -->
             <input type="text"
                    name="q"
                    x-ref="searchInput"
@@ -35,22 +36,24 @@
                    @keydown.arrow-up.prevent="navigateUp()"
                    @keydown.enter.prevent="selectFocused()"
                    @focus="openPanel()"
-                   placeholder="Search movies / TV Shows..."
+                   placeholder="Cari film..."
                    autocomplete="off"
-                   class="w-full bg-zinc-800/70 backdrop-blur-md text-xs text-zinc-100 placeholder-zinc-400 pl-11 pr-14 py-2.5 rounded-full border border-white/10 focus:outline-none focus:border-zinc-400 focus:bg-zinc-800 transition-all shadow-inner">
-            <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                   class="flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 px-3 py-2.5 outline-none">
             
-            <!-- Clear Button -->
-            <button type="button" x-show="query.length > 0" @click="clearSearch()"
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
-                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-            </button>
+            <!-- Right Section: Clear Button or Ctrl K Badge -->
+            <div class="flex items-center gap-2 mr-3 sm:mr-3.5 shrink-0">
+                <!-- Clear Button -->
+                <button type="button" x-show="query.length > 0" @click="clearSearch()"
+                        class="text-zinc-500 hover:text-white transition-colors p-1 cursor-pointer flex items-center justify-center">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
 
-            <!-- Shortcut Badge Indicator (Ctrl K) -->
-            <div x-show="query.length === 0" 
-                 class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none text-[10px] font-semibold text-zinc-400 bg-white/10 px-1.5 py-0.5 rounded-md border border-white/10 shadow-sm">
-                <span class="text-[9px] font-sans">Ctrl</span>
-                <span class="font-mono font-bold">K</span>
+                <!-- Shortcut Badge Indicator (Ctrl K) -->
+                <kbd x-show="query.length === 0" 
+                     class="hidden sm:flex items-center gap-1 pointer-events-none text-xs font-medium text-zinc-500 bg-white/10 px-2.5 py-1 rounded-md border border-white/20 font-sans">
+                    <span>Ctrl</span>
+                    <span>K</span>
+                </kbd>
             </div>
         </form>
 
@@ -62,10 +65,10 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-             class="absolute top-full left-0 right-0 mt-3 bg-dark-950/95 backdrop-blur-3xl rounded-[2rem] border border-white/15 shadow-2xl overflow-hidden z-[200]"
+             class="fixed inset-x-3 top-20 mt-1 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:right-0 sm:mt-2 bg-dark-950/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-[200]"
              style="display: none;">
             
-            <div class="p-4 space-y-4 max-h-[26rem] overflow-y-auto">
+            <div class="p-4 space-y-4 max-h-[70vh] sm:max-h-[26rem] overflow-y-auto no-scrollbar">
                 
                 <!-- STATE 1: Empty Query - Show Search History & Popular Films -->
                 <template x-if="query.trim().length === 0">
@@ -77,7 +80,7 @@
                                     <i data-lucide="history" class="w-3.5 h-3.5 text-zinc-400"></i>
                                     <span>Riwayat Pencarian</span>
                                 </span>
-                                <button type="button" @click="clearHistory()" class="text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 transition-colors">
+                                <button type="button" @click="clearHistory()" class="text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
                                     Hapus Semua
                                 </button>
                             </div>
@@ -94,7 +97,7 @@
                         </div>
 
                         <!-- Popular Recommendations Section -->
-                        <div class="space-y-2">
+                        <div x-show="popularFilms.length > 0" class="space-y-2">
                             <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
                                 <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-400"></i>
                                 <span>Film Popular Saat Ini</span>
@@ -102,15 +105,17 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <template x-for="pFilm in popularFilms" :key="pFilm.id">
                                     <a :href="pFilm.url" @click="saveHistoryTerm(pFilm.title); closePanel()" class="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
-                                        <img :src="pFilm.poster" :alt="pFilm.title" class="w-9 h-12 object-cover rounded-xl shrink-0 bg-dark-800" onerror="this.src='https://images.unsplash.com/photo-1518676599602-2170de9df05d?q=50&w=80'">
+                                        <img :src="pFilm.poster" :alt="pFilm.title" class="w-9 h-12 object-cover rounded-xl shrink-0 bg-dark-800">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-xs font-semibold text-white truncate group-hover:text-amber-300 transition-colors" x-text="pFilm.title"></p>
                                             <div class="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
                                                 <span x-text="pFilm.year"></span>
-                                                <span class="text-amber-400 font-bold flex items-center gap-0.5">
-                                                    <i data-lucide="star" class="w-2.5 h-2.5 fill-amber-400"></i>
-                                                    <span x-text="pFilm.rating ? pFilm.rating.toFixed(1) : '7.8'"></span>
-                                                </span>
+                                                <template x-if="pFilm.rating > 0">
+                                                    <span class="text-amber-400 font-bold flex items-center gap-0.5">
+                                                        <i data-lucide="star" class="w-2.5 h-2.5 fill-amber-400"></i>
+                                                        <span x-text="pFilm.rating.toFixed(1)"></span>
+                                                    </span>
+                                                </template>
                                             </div>
                                         </div>
                                     </a>
@@ -142,8 +147,7 @@
                                     
                                     <!-- Poster Thumbnail -->
                                     <img :src="item.poster" :alt="item.title"
-                                         class="w-9 h-13 object-cover rounded-xl shrink-0 bg-dark-800 shadow"
-                                         onerror="this.src='https://images.unsplash.com/photo-1518676599602-2170de9df05d?q=50&w=80'">
+                                         class="w-9 h-13 object-cover rounded-xl shrink-0 bg-dark-800 shadow">
 
                                     <!-- Film Info -->
                                     <div class="flex-1 min-w-0">
@@ -185,67 +189,9 @@
         </div>
     </div>
 
-    <!-- Right Action Buttons: Capsule Pill & Room Joiner -->
+    <!-- Right Action Buttons: Capsule Pill -->
     <div class="flex items-center gap-2.5">
-        
-        <!-- Gabung Room Nonton Bareng Modal Trigger -->
-        <div x-data="{ joinModalOpen: false }">
-            <button type="button" @click="joinModalOpen = true" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all shadow-md cursor-pointer">
-                <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span>Gabung Room</span>
-            </button>
 
-            <!-- Modal Popup Gabung Room Nonton Bareng -->
-            <div x-show="joinModalOpen" 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-                 style="display: none;">
-                
-                <div @click.outside="joinModalOpen = false" 
-                     class="w-full max-w-md glass-panel p-6 rounded-3xl border border-white/20 shadow-2xl space-y-5 text-left relative">
-                    
-                    <button type="button" @click="joinModalOpen = false" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 cursor-pointer">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-
-                    <div class="space-y-1">
-                        <h3 class="font-serif font-bold text-xl text-white flex items-center gap-2">
-                            <i data-lucide="users" class="w-5 h-5 text-amber-400"></i>
-                            <span>Gabung Room Nonton Bareng</span>
-                        </h3>
-                        <p class="text-xs text-zinc-400">Masukkan kode room 6 karakter yang diberikan oleh Host.</p>
-                    </div>
-
-                    <form @submit.prevent="let code = $refs.roomCodeInput.value.trim().toUpperCase(); if(code) { window.location.href = '/watch-party/' + code; }" class="space-y-4">
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-zinc-300">Kode Room</label>
-                            <input type="text" 
-                                   x-ref="roomCodeInput"
-                                   placeholder="Contoh: X7K2P9" 
-                                   required 
-                                   maxlength="10"
-                                   class="w-full uppercase font-mono tracking-widest text-center text-lg font-bold bg-zinc-900/90 text-amber-400 placeholder-zinc-600 px-4 py-3 rounded-2xl border border-white/15 focus:outline-none focus:border-amber-400">
-                        </div>
-
-                        <button type="submit" class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-lg">
-                            <span>Masuk ke Room</span>
-                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </button>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-
-        <a href="{{ route('browse') }}" class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-zinc-950 font-bold text-xs hover:bg-zinc-200 transition-all shadow-md">
-            <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
-            <span>Download App</span>
-        </a>
 
         @auth
             <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm">

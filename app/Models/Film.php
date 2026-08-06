@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Film extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'moviebox_subject_id',
@@ -21,8 +22,16 @@ class Film extends Model
         'backdrop_url',
         'trailer_url',
         'rating',
+        'view_count',
         'subject_type',
         'max_resolution',
+    ];
+
+    protected $casts = [
+        'rating' => 'float',
+        'view_count' => 'integer',
+        'release_year' => 'integer',
+        'duration_minutes' => 'integer',
     ];
 
     public function genres()
@@ -62,8 +71,13 @@ class Film extends Model
 
     public function updateAverageRating(): void
     {
-        $avg = $this->reviews()->avg('rating');
-        $this->update(['rating' => round($avg ?? 0.0, 1)]);
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $film = static::where('id', $this->id)->lockForUpdate()->first();
+            if ($film) {
+                $avg = $film->reviews()->avg('rating');
+                $film->update(['rating' => round($avg ?? 0.0, 1)]);
+            }
+        });
     }
 
     public function getMaxResolutionAttribute(): string
@@ -114,6 +128,22 @@ class Film extends Model
             $posterUrl = is_array($data['pic']) ? ($data['pic']['url'] ?? null) : $data['pic'];
         }
 
+        $backdropUrl = null;
+        if (isset($data['banner']) && is_array($data['banner'])) {
+            $backdropUrl = $data['banner']['url'] ?? null;
+        } elseif (isset($data['banner']) && is_string($data['banner'])) {
+            $backdropUrl = $data['banner'];
+        } elseif (isset($data['bgCover'])) {
+            $backdropUrl = is_array($data['bgCover']) ? ($data['bgCover']['url'] ?? null) : $data['bgCover'];
+        } elseif (isset($data['backdrop'])) {
+            $backdropUrl = is_array($data['backdrop']) ? ($data['backdrop']['url'] ?? null) : $data['backdrop'];
+        } elseif (isset($data['horizontalCover'])) {
+            $backdropUrl = is_array($data['horizontalCover']) ? ($data['horizontalCover']['url'] ?? null) : $data['horizontalCover'];
+        }
+        if (empty($backdropUrl)) {
+            $backdropUrl = $posterUrl;
+        }
+
         $stype = (int)($data['subjectType'] ?? $data['stype'] ?? 1);
 
         $resRaw = $data['maxResolution'] ?? $data['resolution'] ?? $data['quality'] ?? $data['sharpness'] ?? '1080P';
@@ -140,7 +170,7 @@ class Film extends Model
                 'release_year' => $releaseYear > 0 ? $releaseYear : 2024,
                 'duration_minutes' => $duration > 0 ? $duration : 120,
                 'poster_url' => $posterUrl,
-                'backdrop_url' => $posterUrl,
+                'backdrop_url' => $backdropUrl,
                 'rating' => (float)($data['imdbRatingValue'] ?? $data['score'] ?? 0.0),
                 'subject_type' => ($stype === 2) ? 'series' : 'movie',
                 'max_resolution' => $maxRes,

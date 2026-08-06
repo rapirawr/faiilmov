@@ -20,4 +20,9 @@ class Review extends Model
     {
         return $this->belongsTo(Film::class);
     }
+
+    public function reports()
+    {
+        return $this->hasMany(ReviewReport::class);
+    }
 }

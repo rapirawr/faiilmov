@@ -8,32 +8,35 @@
     <!-- Interactive Hero Carousel Banner -->
     @if(isset($heroFilms) && count($heroFilms) > 0)
         @php
-            $heroJson = json_encode($heroFilms->map(function($f) {
+            $heroData = $heroFilms->map(function($f) {
                 return [
                     'id' => $f->id,
                     'title' => $f->title,
                     'slug' => $f->slug,
+                    'backdrop_url' => $f->backdrop_url ?: $f->poster_url,
                     'backdrop' => $f->backdrop_url ?: $f->poster_url,
-                    'rating' => number_format($f->rating, 1),
-                    'year' => $f->release_year,
-                    'type' => strtoupper($f->subject_type),
+                    'poster_url' => $f->poster_url,
+                    'rating' => $f->rating,
+                    'release_year' => $f->release_year,
+                    'subject_type' => $f->subject_type,
                     'synopsis' => $f->synopsis,
-                    'genres' => $f->genres->pluck('name')->implode(', ') ?: 'Action, Drama',
                 ];
-            }));
+            });
+            $heroJson = json_encode($heroData);
         @endphp
 
-        <section x-data="{ 
-                     slides: {{ $heroJson }}, 
-                     activeIndex: 0, 
-                     timer: null,
-                     next() { this.activeIndex = (this.activeIndex + 1) % this.slides.length },
-                     prev() { this.activeIndex = (this.activeIndex - 1 + this.slides.length) % this.slides.length }
-                 }" 
-                 x-init="timer = setInterval(() => next(), 6000)"
-                 @mouseenter="clearInterval(timer)"
-                 @mouseleave="timer = setInterval(() => next(), 6000)"
-                 class="relative w-full h-[380px] sm:h-[460px] lg:h-[500px] overflow-hidden bg-dark-950 border-b border-white/10 group">
+        <div id="react-hero-banner" data-films='@json($heroData)'>
+            <section x-data="{ 
+                         slides: {{ $heroJson }}, 
+                         activeIndex: 0, 
+                         timer: null,
+                         next() { this.activeIndex = (this.activeIndex + 1) % this.slides.length },
+                         prev() { this.activeIndex = (this.activeIndex - 1 + this.slides.length) % this.slides.length }
+                     }" 
+                     x-init="timer = setInterval(() => next(), 6000)"
+                     @mouseenter="clearInterval(timer)"
+                     @mouseleave="timer = setInterval(() => next(), 6000)"
+                     class="relative w-full h-[380px] sm:h-[460px] lg:h-[500px] overflow-hidden bg-dark-950 border-b border-white/10 group mb-8 rounded-3xl">
             
             <!-- Slides Background Backdrop -->
             <template x-for="(slide, index) in slides" :key="slide.id">
@@ -43,10 +46,10 @@
                      x-transition:leave="transition ease-in duration-500 opacity-100"
                      x-transition:leave-end="opacity-0"
                      class="absolute inset-0 z-0">
-                    <img :src="slide.backdrop" :alt="slide.title" class="w-full h-full object-cover object-center filter brightness-50">
-                    <div class="absolute inset-0 bg-dark-950/40"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/40 to-transparent"></div>
-                    <div class="absolute inset-0 bg-gradient-to-r from-dark-950/90 via-dark-950/40 to-transparent"></div>
+                    <img :src="slide.backdrop || slide.backdrop_url" :alt="slide.title" class="w-full h-full object-cover object-center filter brightness-90">
+                    <div class="absolute inset-0 bg-dark-950/20"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-dark-950/60 via-dark-950/20 to-transparent"></div>
                 </div>
             </template>
 
@@ -106,7 +109,8 @@
             </div>
 
         </section>
-    @endif
+    </div>
+@endif
 
     <!-- Content Sections Container -->
     <div class="px-4 sm:px-8 space-y-10">
@@ -231,7 +235,7 @@
 
             <!-- Curved Bridge Component Filter Form -->
             <form action="{{ route('home') }}" method="GET" class="bridge-container p-4 rounded-[2.5rem]">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 items-center">
                     
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Cari Film</label>
@@ -244,7 +248,7 @@
 
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Genre</label>
-                        <select name="genre" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors">
+                        <select name="genre" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors truncate">
                             <option value="">Semua Genre</option>
                             @foreach($genres as $g)
                                 <option value="{{ $g->slug }}" {{ request('genre') == $g->slug ? 'selected' : '' }}>{{ $g->name }}</option>
@@ -254,7 +258,7 @@
 
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Tipe</label>
-                        <select name="type" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors">
+                        <select name="type" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors truncate">
                             <option value="">Semua Tipe</option>
                             <option value="movie" {{ request('type') == 'movie' ? 'selected' : '' }}>Movie</option>
                             <option value="series" {{ request('type') == 'series' ? 'selected' : '' }}>TV Series</option>
@@ -263,14 +267,14 @@
 
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Urutkan</label>
-                        <select name="sort" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors">
+                        <select name="sort" class="w-full bg-dark-950/70 text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors truncate">
                             <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
                             <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>Rating Tertinggi</option>
                             <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Judul A-Z</option>
                         </select>
                     </div>
 
-                    <div class="flex items-end gap-2 pt-5 sm:pt-0">
+                    <div class="flex items-end gap-2 pt-2 sm:pt-0">
                         <button type="submit" class="w-full py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md cursor-pointer">
                             <i data-lucide="filter" class="w-3.5 h-3.5"></i>
                             <span>Filter</span>

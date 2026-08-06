@@ -168,7 +168,19 @@
     </div>
 
     <!-- Tab 2: Watchlist -->
-    <div x-show="tab === 'watchlist'" style="display: none;" x-data="{ items: @json($watchlists->map(fn($w) => ['id' => $w->id, 'film_id' => $w->film_id, 'title' => $w->film->title, 'poster_url' => $w->film->poster_url, 'slug' => $w->film->slug, 'toggle_url' => route('watchlist.toggle', $w->film_id)])) }">
+    @php
+        $watchlistJson = json_encode($watchlists->map(function($w) {
+            return [
+                'id' => $w->id,
+                'film_id' => $w->film_id,
+                'title' => $w->film ? $w->film->title : '',
+                'poster_url' => $w->film ? $w->film->poster_url : '',
+                'slug' => $w->film ? $w->film->slug : '',
+                'toggle_url' => route('watchlist.toggle', $w->film_id)
+            ];
+        })->values());
+    @endphp
+    <div x-show="tab === 'watchlist'" style="display: none;" x-data="{ items: {{ $watchlistJson }} }">
         <template x-if="items.length > 0">
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 <template x-for="(item, index) in items" :key="item.id">

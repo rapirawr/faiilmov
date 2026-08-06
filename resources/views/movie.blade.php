@@ -176,9 +176,9 @@
             <!-- Hero Backdrop Image -->
             <div class="absolute inset-0 z-0">
                 <img :src="featuredItem?.cover?.url || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1920&auto=format&fit=crop'" 
-                     class="w-full h-full object-cover object-center filter brightness-75 scale-105 animate-pulse-slow">
+                     class="w-full h-full object-cover object-center filter brightness-90 scale-105 animate-pulse-slow">
                 <div class="absolute inset-0 hero-gradient"></div>
-                <div class="absolute inset-0 bg-gradient-to-r from-dark-900 via-dark-900/80 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-dark-900 via-dark-900/50 to-transparent"></div>
             </div>
 
             <!-- Hero Content -->

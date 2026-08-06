@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'is_banned', 'banned_reason', 'banned_until'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,7 +27,38 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'is_banned' => 'boolean',
+            'banned_until' => 'datetime',
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
+    }
+
+    public function isBanned(): bool
+    {
+        if (!$this->is_banned) {
+            return false;
+        }
+
+        if ($this->banned_until && now()->greaterThan($this->banned_until)) {
+            $this->update([
+                'is_banned' => false,
+                'banned_reason' => null,
+                'banned_until' => null,
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(AdminActivityLog::class, 'admin_id');
     }
 
     public function reviews()

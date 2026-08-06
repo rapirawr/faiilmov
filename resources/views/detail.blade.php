@@ -6,12 +6,17 @@
 <div x-data="detailPage({{ $userWatchlist ? 'true' : 'false' }})">
 
     <!-- Film Backdrop Header -->
-    <div class="relative min-h-[480px] flex items-end pb-12 overflow-hidden border-b border-white/10">
+    <div class="relative min-h-[440px] sm:min-h-[500px] flex items-end pb-10 overflow-hidden">
         <div class="absolute inset-0 z-0">
-            <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-50">
-            <div class="absolute inset-0 bg-dark-950/70 backdrop-blur-[2px]"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/80 to-transparent"></div>
+            <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+            <div class="absolute inset-0 bg-black/15"></div>
+            <!-- Side Gradient for Text Readability -->
+            <div class="absolute inset-0 bg-gradient-to-r from-dark-950/80 via-dark-950/30 to-transparent"></div>
+            <!-- Bottom Smooth Gradient Fade -->
+            <div class="absolute inset-x-0 -bottom-[25px] h-[15rem] bg-gradient-to-t from-dark-950 via-dark-950/95 to-transparent"></div>
         </div>
+        
+        <div class="absolute inset-x-0 -bottom-px h-20 bg-dark-950 z-0"></div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col md:flex-row items-start md:items-end gap-8">
             <!-- Glass Poster Card -->
@@ -108,64 +113,79 @@
 
             <!-- SERIES ONLY: Seasons & Episodes Selector Panel -->
             @if($film->subject_type === 'series' && $film->seasons->count() > 0)
-                <section class="glass-panel p-7 rounded-3xl border border-white/10 space-y-6"
-                         x-data="{ 
-                            activeSeason: {{ $lastWatchedHistory ? $lastWatchedHistory->season_number : 1 }},
-                            seasons: {{ json_encode($film->seasons->map(function($s) use ($film) {
+                @php
+                    $seasonsData = $film->seasons->map(function($s) use ($film) {
+                        return [
+                            'season_number' => $s->season_number,
+                            'episodes' => $s->episodes->map(function($e) use ($film, $s) {
                                 return [
-                                    'season_number' => $s->season_number,
-                                    'episodes' => $s->episodes->map(function($e) use ($film, $s) {
-                                        return [
-                                            'episode_number' => $e->episode_number,
-                                            'title' => $e->title,
-                                            'synopsis' => $e->synopsis,
-                                            'duration_minutes' => $e->duration_minutes,
-                                            'thumbnail_url' => $e->thumbnail_url ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=50&w=300',
-                                            'watch_url' => route('film.watch', $film->slug) . "?season={$s->season_number}&episode={$e->episode_number}",
-                                        ];
-                                    }),
+                                    'episode_number' => $e->episode_number,
+                                    'title' => $e->title,
+                                    'synopsis' => $e->synopsis,
+                                    'duration_minutes' => $e->duration_minutes,
+                                    'thumbnail_url' => $e->thumbnail_url ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=50&w=300',
+                                    'watch_url' => route('film.watch', $film->slug) . "?season={$s->season_number}&episode={$e->episode_number}",
                                 ];
-                            })) }}
-                         }">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-                        <h3 class="font-serif font-bold text-xl text-white flex items-center gap-2">
-                            <i data-lucide="tv" class="w-5 h-5 text-amber-400"></i>
-                            <span>Daftar Season & Episode</span>
-                        </h3>
+                            }),
+                        ];
+                    });
+                    $seasonsJson = json_encode($seasonsData);
+                @endphp
 
-                        <!-- Season Tabs -->
-                        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                            <template x-for="s in seasons" :key="s.season_number">
-                                <button @click="activeSeason = s.season_number"
-                                        :class="activeSeason === s.season_number ? 'bg-white text-zinc-950 font-bold shadow' : 'glass-card text-zinc-300 hover:text-white border-white/10'"
-                                        class="px-4 py-2 rounded-2xl text-xs transition-all whitespace-nowrap cursor-pointer">
-                                    <span x-text="'Season ' + s.season_number"></span>
-                                </button>
+                <div id="react-episode-selector"
+                     data-seasons='@json($seasonsData)'
+                     data-initial-season="{{ $lastWatchedHistory ? $lastWatchedHistory->season_number : 1 }}">
+                    
+                    <!-- Blade Fallback -->
+                    <section class="glass-panel p-7 rounded-3xl border border-white/10 space-y-6"
+                             x-data="{ 
+                                activeSeason: {{ $lastWatchedHistory ? $lastWatchedHistory->season_number : 1 }},
+                                seasons: {{ $seasonsJson }}
+                             }">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                            <h3 class="font-serif font-bold text-xl text-white flex items-center gap-2">
+                                <i data-lucide="tv" class="w-5 h-5 text-amber-400"></i>
+                                <span>Daftar Season & Episode</span>
+                                <span class="text-xs font-semibold text-zinc-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full ml-1">
+                                    <span x-text="(seasons.find(item => item.season_number === activeSeason)?.episodes || []).length"></span> Episode
+                                </span>
+                            </h3>
+
+                            <!-- Season Tabs -->
+                            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                                <template x-for="s in seasons" :key="s.season_number">
+                                    <button @click="activeSeason = s.season_number"
+                                            :class="activeSeason === s.season_number ? 'bg-white text-zinc-950 font-bold shadow' : 'glass-card text-zinc-300 hover:text-white border-white/10'"
+                                            class="px-4 py-2 rounded-2xl text-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5">
+                                        <span x-text="'Season ' + s.season_number"></span>
+                                        <span class="text-[10px] opacity-75" x-text="'(' + s.episodes.length + ' Ep)'"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Episode Cards Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[28rem] overflow-y-auto pr-1">
+                            <template x-for="ep in (seasons.find(item => item.season_number === activeSeason)?.episodes || [])" :key="ep.episode_number">
+                                <a :href="ep.watch_url" class="p-3 rounded-2xl glass-card border border-white/10 hover:border-amber-400/50 hover:bg-white/10 transition-all flex items-center gap-3 group">
+                                    <div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-dark-900 shrink-0 border border-white/10">
+                                        <img :src="ep.thumbnail_url" :alt="ep.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                        <div class="absolute inset-0 bg-black/30 group-hover:bg-amber-500/20 transition-colors flex items-center justify-center">
+                                            <i data-lucide="play-circle" class="w-5 h-5 text-white group-hover:text-amber-300 transition-colors"></i>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                            Eps <span x-text="ep.episode_number"></span>
+                                        </span>
+                                        <h4 class="text-xs font-semibold text-white mt-1 truncate group-hover:text-amber-300 transition-colors" x-text="ep.title"></h4>
+                                        <span class="text-[10px] text-zinc-400 block mt-0.5" x-text="ep.duration_minutes + ' menit'"></span>
+                                    </div>
+                                </a>
                             </template>
                         </div>
-                    </div>
-
-                    <!-- Episode Cards Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[28rem] overflow-y-auto pr-1">
-                        <template x-for="ep in (seasons.find(item => item.season_number === activeSeason)?.episodes || [])" :key="ep.episode_number">
-                            <a :href="ep.watch_url" class="p-3 rounded-2xl glass-card border border-white/10 hover:border-amber-400/50 hover:bg-white/10 transition-all flex items-center gap-3 group">
-                                <div class="relative w-24 aspect-video rounded-xl overflow-hidden bg-dark-900 shrink-0 border border-white/10">
-                                    <img :src="ep.thumbnail_url" :alt="ep.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                    <div class="absolute inset-0 bg-black/30 group-hover:bg-amber-500/20 transition-colors flex items-center justify-center">
-                                        <i data-lucide="play-circle" class="w-5 h-5 text-white group-hover:text-amber-300 transition-colors"></i>
-                                    </div>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                        Eps <span x-text="ep.episode_number"></span>
-                                    </span>
-                                    <h4 class="text-xs font-semibold text-white mt-1 truncate group-hover:text-amber-300 transition-colors" x-text="ep.title"></h4>
-                                    <span class="text-[10px] text-zinc-400 block mt-0.5" x-text="ep.duration_minutes + ' menit'"></span>
-                                </div>
-                            </a>
-                        </template>
-                    </div>
-                </section>
+                    </section>
+                </div>
             @endif
 
             <!-- Cast / Actors -->

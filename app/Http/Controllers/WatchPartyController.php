@@ -254,10 +254,11 @@ class WatchPartyController extends Controller
             return response()->json(['error' => 'Hanya Host yang dapat mengontrol video.'], 403);
         }
 
-        $action = $request->input('action', 'sync'); // play, pause, seek, sync
+        $action = $request->input('action', 'sync'); // play, pause, seek, playback_rate_change, episode_change, heartbeat
         $position = (float)$request->input('position', 0);
         $isPlaying = (bool)$request->input('is_playing', false);
         $speed = (float)$request->input('speed', 1.0);
+        $serverTime = microtime(true);
 
         $watchParty->update([
             'current_position_seconds' => $position,
@@ -267,6 +268,18 @@ class WatchPartyController extends Controller
         ]);
 
         try {
+            broadcast(new \App\Events\PlaybackStateChanged(
+                $watchParty->room_code,
+                $action,
+                $position,
+                $serverTime,
+                $isPlaying,
+                $speed,
+                $participant->display_name,
+                $watchParty->season_number,
+                $watchParty->episode_number
+            ))->toOthers();
+
             broadcast(new WatchPartyPlaybackUpdated(
                 $watchParty->room_code,
                 $action,
@@ -275,9 +288,16 @@ class WatchPartyController extends Controller
                 $speed,
                 $participant->display_name
             ))->toOthers();
-        } catch (Exception $e) {}
+        } catch (\Throwable $e) {}
 
-        return response()->json(['status' => 'ok', 'position' => $position, 'is_playing' => $isPlaying]);
+        return response()->json([
+            'status'           => 'ok',
+            'action'           => $action,
+            'position'         => $position,
+            'is_playing'       => $isPlaying,
+            'speed'            => $speed,
+            'server_timestamp' => $serverTime,
+        ]);
     }
 
     /**
@@ -507,9 +527,11 @@ class WatchPartyController extends Controller
      */
     public function syncState(Request $request, string $roomCode)
     {
-        $watchParty = WatchParty::with(['participants.user'])
+        $watchParty = WatchParty::with(['film', 'participants.user'])
             ->where('room_code', strtoupper($roomCode))
             ->firstOrFail();
+
+        $film = $watchParty->film;
 
         $lastMsgId = (int)$request->query('last_msg_id', 0);
         $lastRxId  = (int)$request->query('last_rx_id', 0);
@@ -568,38 +590,56 @@ class WatchPartyController extends Controller
         $latestMsgId = !empty($newMessages) ? end($newMessages)['id'] : $lastMsgId;
         $latestRxId  = !empty($newReactions) ? end($newReactions)['id'] : $lastRxId;
 
-        // Active stream for current season & episode
-        $activeStream = null;
-        if ($film->moviebox_subject_id) {
-            try {
-                $resourcesData = $this->movieBox->getResources(
-                    $film->moviebox_subject_id,
-                    $watchParty->season_number,
-                    $watchParty->episode_number,
-                    1
-                );
-                $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
-                if (!empty($resourceList)) {
-                    $h264Item = null;
-                    foreach ($resourceList as $resItem) {
-                        $codec = strtolower($resItem['codecName'] ?? '');
-                        if ($codec === 'h264' || $codec === 'avc') {
-                            $h264Item = $resItem;
-                            break;
+        // Only fetch stream & captions if season or episode changed
+        $reqSeason = (int)$request->query('season', 0);
+        $reqEpisode = (int)$request->query('episode', 0);
+        
+        $proxyActiveStream = null;
+        $subtitles = null;
+
+        if ($reqSeason === 0 || $reqSeason !== (int)$watchParty->season_number || $reqEpisode !== (int)$watchParty->episode_number) {
+            $activeStream = null;
+            if ($film && $film->moviebox_subject_id) {
+                try {
+                    $resourcesData = $this->movieBox->getResources(
+                        $film->moviebox_subject_id,
+                        $watchParty->season_number,
+                        $watchParty->episode_number,
+                        1
+                    );
+                    $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
+                    if (!empty($resourceList)) {
+                        $h264Item = null;
+                        foreach ($resourceList as $resItem) {
+                            $codec = strtolower($resItem['codecName'] ?? '');
+                            if ($codec === 'h264' || $codec === 'avc') {
+                                $h264Item = $resItem;
+                                break;
+                            }
                         }
+                        $selectedItem = $h264Item ?? $resourceList[0];
+                        $activeStream = $selectedItem['resourceLink'] ?? $selectedItem['url'] ?? $selectedItem['playUrl'] ?? null;
                     }
-                    $selectedItem = $h264Item ?? $resourceList[0];
-                    $activeStream = $selectedItem['resourceLink'] ?? $selectedItem['url'] ?? $selectedItem['playUrl'] ?? null;
-                }
-            } catch (Exception $e) {}
+                } catch (Exception $e) {}
+            }
+            $subtitles = ($film && $film->moviebox_subject_id) ? $this->movieBox->getCaptions($film->moviebox_subject_id, $watchParty->season_number, $watchParty->episode_number) : [];
+            $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . urlencode($film->moviebox_subject_id) . '&se=' . $watchParty->season_number . '&ep=' . $watchParty->episode_number : '';
         }
-        $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $watchParty->season_number, $watchParty->episode_number) : [];
+
+        $calcPosition = (float)$watchParty->current_position_seconds;
+        if ($watchParty->is_playing && $watchParty->updated_at) {
+            $elapsedSeconds = max(0, time() - $watchParty->updated_at->timestamp);
+            $calcPosition += $elapsedSeconds * (float)($watchParty->playback_speed ?: 1.0);
+        }
 
         return response()->json([
             'room_code'           => $watchParty->room_code,
-            'position'            => (float)$watchParty->current_position_seconds,
+            'current_action'      => $watchParty->is_playing ? 'play' : 'pause',
+            'position'            => $calcPosition,
             'is_playing'          => (bool)$watchParty->is_playing,
             'speed'               => (float)$watchParty->playback_speed,
+            'server_timestamp'    => microtime(true),
+            'last_updated_at'     => $watchParty->updated_at ? $watchParty->updated_at->toIso8601String() : null,
             'status'              => $watchParty->status,
             'is_locked'           => (bool)$watchParty->is_locked,
             'season_number'       => (int)$watchParty->season_number,
@@ -720,6 +760,89 @@ class WatchPartyController extends Controller
             'episode_number'      => $epNum,
             'proxy_active_stream' => $proxyActiveStream,
             'subtitles'           => $subtitles,
+        ]);
+    }
+
+    /**
+     * Update participant's nickname (for guests and logged in users)
+     */
+    public function updateNickname(Request $request, string $roomCode)
+    {
+        $request->validate([
+            'nickname' => 'required|string|max:50',
+        ]);
+
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = Auth::user();
+        $sessionId = session()->getId();
+        $newNickname = trim(e($request->nickname));
+
+        $participant = WatchPartyParticipant::where('watch_party_id', $watchParty->id)
+            ->where(function ($q) use ($user, $sessionId) {
+                if ($user) {
+                    $q->where('user_id', $user->id)->orWhere('session_id', $sessionId);
+                } else {
+                    $q->where('session_id', $sessionId);
+                }
+            })
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            return response()->json(['error' => 'Peserta tidak ditemukan.'], 404);
+        }
+
+        $oldName = $participant->display_name;
+        $participant->update([
+            'guest_name' => $newNickname,
+        ]);
+
+        if ($participant->is_host) {
+            $watchParty->update(['host_guest_name' => $newNickname]);
+        }
+
+        $systemMsg = WatchPartyMessage::create([
+            'watch_party_id' => $watchParty->id,
+            'user_id'        => $user ? $user->id : null,
+            'sender_name'    => 'System',
+            'message'        => "{$oldName} mengubah nama menjadi {$newNickname}",
+            'is_system'      => true,
+        ]);
+
+        try {
+            broadcast(new WatchPartyMessageSent(
+                $watchParty->room_code,
+                'System',
+                "{$oldName} mengubah nama menjadi {$newNickname}",
+                true
+            ));
+
+            $activeParticipants = $watchParty->participants()->whereNull('left_at')->get()->map(fn($p) => [
+                'id'          => $p->id,
+                'userId'      => $p->user_id,
+                'displayName' => $p->display_name,
+                'isHost'      => (bool)$p->is_host,
+                'isMuted'     => (bool)$p->is_muted,
+            ])->toArray();
+
+            broadcast(new WatchPartyParticipantJoined(
+                $watchParty->room_code,
+                $newNickname,
+                (bool)$participant->is_host,
+                $activeParticipants
+            ));
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'status'     => 'ok',
+            'nickname'   => $newNickname,
+            'systemMsg'  => [
+                'id'         => $systemMsg->id,
+                'isSystem'   => true,
+                'senderName' => 'System',
+                'message'    => $systemMsg->message,
+                'time'       => $systemMsg->created_at->format('H:i'),
+            ]
         ]);
     }
 

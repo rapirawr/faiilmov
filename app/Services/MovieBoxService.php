@@ -123,10 +123,17 @@ class MovieBoxService
         int $episode = 0,
         int $page = 1,
         ?string $resolution = null,
-        int $perPage = 20
+        int $perPage = 20,
+        bool $forceRefresh = false,
+        bool $includeCaptions = true
     ): mixed {
-        $cacheKey = sprintf('mb_res_%s_%d_%d_%d_%s', $subjectId, $season, $episode, $page, $resolution ?? 'all');
-        return Cache::remember($cacheKey, 60, function () use ($subjectId, $season, $episode, $page, $resolution, $perPage) {
+        $cacheKey = sprintf('mb_res_%s_%d_%d_%d_%s_%d', $subjectId, $season, $episode, $page, $resolution ?? 'all', $includeCaptions ? 1 : 0);
+        
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, 7200, function () use ($subjectId, $season, $episode, $page, $resolution, $perPage, $includeCaptions) {
             $resolutionsToFetch = $resolution ? [$resolution] : ['1080', '720', '480', '360'];
             $combinedList = [];
             $firstResponse = null;
@@ -178,7 +185,53 @@ class MovieBoxService
                 $response['list'] = $combinedList;
             }
 
+            // Attach subtitles array to response root and to each resource item in list
+            if ($includeCaptions) {
+                $captions = $this->getCaptions($subjectId, $season, $episode);
+                $response['subtitles'] = $captions;
+                $response['extCaptions'] = $captions;
+
+                if (!empty($response['list']) && is_array($response['list'])) {
+                    foreach ($response['list'] as &$item) {
+                        $item['subtitles'] = $captions;
+                        $item['extCaptions'] = $captions;
+                    }
+                }
+            }
+
             return $response;
+        });
+    }
+
+    /**
+     * Get external captions from MovieBox API for a subject and resourceId
+     */
+    public function getExtCaptions(string $subjectId, string $resourceId): array
+    {
+        $cacheKey = sprintf('mb_ext_cap_%s_%s', $subjectId, $resourceId);
+        return Cache::remember($cacheKey, 7200, function () use ($subjectId, $resourceId) {
+            $path = sprintf('/wefeed-mobile-bff/subject-api/get-ext-captions?subjectId=%s&resourceId=%s', $subjectId, $resourceId);
+            try {
+                $res = $this->get($path);
+                if (is_array($res)) {
+                    if (!empty($res['extCaptions']) && is_array($res['extCaptions'])) {
+                        return $res['extCaptions'];
+                    }
+                    if (!empty($res['captions']) && is_array($res['captions'])) {
+                        return $res['captions'];
+                    }
+                    if (!empty($res['subtitles']) && is_array($res['subtitles'])) {
+                        return $res['subtitles'];
+                    }
+                    if (isset($res[0]) && is_array($res[0])) {
+                        return $res;
+                    }
+                }
+                return [];
+            } catch (Exception $e) {
+                Log::debug(sprintf('MovieBox getExtCaptions failed for subject %s resource %s: %s', $subjectId, $resourceId, $e->getMessage()));
+                return [];
+            }
         });
     }
 
@@ -188,54 +241,139 @@ class MovieBoxService
     public function getCaptions(string $subjectId, int $season = 0, int $episode = 0): array
     {
         try {
-            $resourcesData = $this->getResources($subjectId, $season, $episode, 1);
+            $resourcesData = $this->getResources($subjectId, $season, $episode, 1, null, 20, false, false);
             $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
+
+            if (empty($resourceList) && ($season > 0 || $episode > 0)) {
+                $resourcesData = $this->getResources($subjectId, 0, 0, 1, null, 20, false, false);
+                $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
+            }
+
+            $allCaptionLists = [];
+
+            // 1. Fetch external captions for each unique resourceId from MovieBox API
+            $seenResourceIds = [];
+            foreach ($resourceList as $res) {
+                $rId = (string)($res['resourceId'] ?? $res['id'] ?? $res['resId'] ?? '');
+                if ($rId !== '' && !isset($seenResourceIds[$rId])) {
+                    $seenResourceIds[$rId] = true;
+                    $extCaps = $this->getExtCaptions($subjectId, $rId);
+                    if (!empty($extCaps) && is_array($extCaps)) {
+                        $allCaptionLists[] = $extCaps;
+                    }
+                }
+            }
+
+            // 2. Fallback: Combine root-level captions and item-level captions if present
+            if (!empty($resourcesData['extCaptions']) && is_array($resourcesData['extCaptions'])) {
+                $allCaptionLists[] = $resourcesData['extCaptions'];
+            }
+            if (!empty($resourcesData['subtitles']) && is_array($resourcesData['subtitles'])) {
+                $allCaptionLists[] = $resourcesData['subtitles'];
+            }
+            if (!empty($resourcesData['captions']) && is_array($resourcesData['captions'])) {
+                $allCaptionLists[] = $resourcesData['captions'];
+            }
+
+            foreach ($resourceList as $res) {
+                $extCaptions = $res['extCaptions'] ?? $res['subtitles'] ?? $res['captions'] ?? $res['captionList'] ?? $res['subTitleList'] ?? [];
+                if (is_string($extCaptions)) {
+                    $decoded = json_decode($extCaptions, true);
+                    if (is_array($decoded)) {
+                        $extCaptions = $decoded;
+                    }
+                }
+                if (is_array($extCaptions) && !empty($extCaptions)) {
+                    $allCaptionLists[] = $extCaptions;
+                }
+            }
 
             $captions = [];
             $seenLangs = [];
 
-            foreach ($resourceList as $res) {
-                $extCaptions = $res['extCaptions'] ?? $res['subtitles'] ?? [];
-                if (!is_array($extCaptions)) continue;
+            $labelMap = [
+                'in_id' => 'Bahasa Indonesia',
+                'ind'   => 'Bahasa Indonesia',
+                'id'    => 'Bahasa Indonesia',
+                'in'    => 'Bahasa Indonesia',
+                'eng'   => 'English',
+                'en'    => 'English',
+                'spa'   => 'Español',
+                'es'    => 'Español',
+                'fra'   => 'Français',
+                'fr'    => 'Français',
+                'zho'   => '中文',
+                'zh'    => '中文',
+                'jpn'   => '日本語',
+                'ja'    => '日本語',
+                'kor'   => '한국어',
+                'ko'    => '한국어',
+                'ara'   => 'العربية',
+                'ar'    => 'العربية',
+                'hin'   => 'हिन्दी',
+                'hi'    => 'हिन्दी',
+                'rus'   => 'Русский',
+                'ru'    => 'Русский',
+                'tha'   => 'ไทย',
+                'th'    => 'ไทย',
+            ];
 
+            foreach ($allCaptionLists as $extCaptions) {
                 foreach ($extCaptions as $cap) {
-                    $rawUrl = $cap['url'] ?? $cap['subPath'] ?? $cap['captionUrl'] ?? $cap['path'] ?? '';
+                    $rawUrl = '';
+                    $langName = 'Subtitle';
+                    $rawLangCode = 'en';
+
+                    if (is_string($cap)) {
+                        $rawUrl = $cap;
+                    } elseif (is_array($cap)) {
+                        $rawUrl = $cap['url'] ?? $cap['subPath'] ?? $cap['captionUrl'] ?? $cap['path'] ?? $cap['fileUrl'] ?? $cap['downloadUrl'] ?? $cap['link'] ?? $cap['src'] ?? '';
+                        $langName = $cap['lanName'] ?? $cap['languageName'] ?? $cap['lan'] ?? $cap['language'] ?? $cap['name'] ?? 'Subtitle';
+                        $rawLangCode = strtolower((string)($cap['lan'] ?? $cap['lang'] ?? $cap['language'] ?? 'en'));
+                    }
+
                     if (!$rawUrl) continue;
 
-                    $langName = $cap['lanName'] ?? $cap['languageName'] ?? $cap['lan'] ?? $cap['language'] ?? 'English';
-                    $langCode = strtolower($cap['lan'] ?? $cap['lang'] ?? $cap['language'] ?? 'en');
+                    // Standardize srclang for browser HTML5 <track>
+                    $srcLang = match ($rawLangCode) {
+                        'in_id', 'ind', 'in', 'id' => 'id',
+                        'eng', 'en' => 'en',
+                        'spa', 'es' => 'es',
+                        'fra', 'fr' => 'fr',
+                        'zho', 'zh' => 'zh',
+                        'jpn', 'ja' => 'ja',
+                        'kor', 'ko' => 'ko',
+                        'ara', 'ar' => 'ar',
+                        'hin', 'hi' => 'hi',
+                        'rus', 'ru' => 'ru',
+                        'tha', 'th' => 'th',
+                        default => substr($rawLangCode, 0, 2),
+                    };
 
-                    $labelMap = [
-                        'ind' => 'Bahasa Indonesia',
-                        'id'  => 'Bahasa Indonesia',
-                        'in'  => 'Bahasa Indonesia',
-                        'eng' => 'English',
-                        'en'  => 'English',
-                        'spa' => 'Español',
-                        'es'  => 'Español',
-                        'zho' => '中文',
-                        'zh'  => '中文',
-                        'jpn' => '日本語',
-                        'ja'  => '日本語',
-                        'kor' => '한국어',
-                        'ko'  => '한국어',
-                    ];
-
-                    $label = $labelMap[$langCode] ?? ucfirst($langName);
-                    $key = $langCode . '_' . md5($rawUrl);
+                    $label = $labelMap[$rawLangCode] ?? ($langName !== 'Subtitle' ? ucfirst($langName) : strtoupper($srcLang));
+                    $key = $srcLang . '_' . md5($rawUrl);
 
                     if (isset($seenLangs[$key])) continue;
                     $seenLangs[$key] = true;
 
                     $captions[] = [
-                        'id'      => $cap['id'] ?? md5($rawUrl),
+                        'id'      => is_array($cap) && isset($cap['id']) ? (string)$cap['id'] : md5($rawUrl),
                         'label'   => $label,
-                        'srclang' => $langCode,
+                        'srclang' => $srcLang,
                         'url'     => url('/moviebox/proxy-subtitle') . '?url=' . urlencode($rawUrl),
                         'raw_url' => $rawUrl,
                     ];
                 }
             }
+
+            // Prioritize Indonesian first, then English, then others
+            usort($captions, function ($a, $b) {
+                if ($a['srclang'] === 'id') return -1;
+                if ($b['srclang'] === 'id') return 1;
+                if ($a['srclang'] === 'en') return -1;
+                if ($b['srclang'] === 'en') return 1;
+                return 0;
+            });
 
             return $captions;
         } catch (Exception $e) {

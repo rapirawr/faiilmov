@@ -56,6 +56,9 @@ class MovieDetailController extends Controller
             $film->load('seasons.episodes');
         }
 
+        // Increment view count
+        $film->increment('view_count');
+
         $userWatchlist = null;
         $userReview = null;
         $lastWatchedHistory = null;

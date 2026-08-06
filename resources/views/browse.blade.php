@@ -16,7 +16,7 @@
         @if(request('type'))
             <input type="hidden" name="type" value="{{ request('type') }}">
         @endif
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-center">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 items-center">
             
             <!-- Search Query -->
             <div>
@@ -31,7 +31,7 @@
             <!-- Genre Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Genre</label>
-                <select name="genre" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">
+                <select name="genre" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
                     <option value="">Semua Genre</option>
                     @foreach($genres as $g)
                         <option value="{{ $g->slug }}" {{ request('genre') == $g->slug ? 'selected' : '' }}>{{ $g->name }}</option>
@@ -42,7 +42,7 @@
             <!-- Min Rating Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Minimal Rating</label>
-                <select name="min_rating" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">
+                <select name="min_rating" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
                     <option value="">Semua Rating</option>
                     <option value="4.5" {{ request('min_rating') == '4.5' ? 'selected' : '' }}>⭐ 4.5 ke atas</option>
                     <option value="4.0" {{ request('min_rating') == '4.0' ? 'selected' : '' }}>⭐ 4.0 ke atas</option>
@@ -53,7 +53,7 @@
             <!-- Sorting Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Urutkan</label>
-                <select name="sort" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">
+                <select name="sort" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
                     <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
                     <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>Rating Tertinggi</option>
                     <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Judul (A-Z)</option>
@@ -61,7 +61,7 @@
             </div>
 
             <!-- Submit Filter Button -->
-            <div class="flex items-end gap-2 pt-4 md:pt-0">
+            <div class="flex items-end gap-2 pt-2 sm:pt-0">
                 <button type="submit" class="w-full py-2.5 bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs rounded-2xl transition-colors flex items-center justify-center gap-1.5 shadow-md cursor-pointer">
                     <i data-lucide="filter" class="w-3.5 h-3.5"></i>
                     <span>Filter</span>

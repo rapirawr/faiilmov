@@ -61,7 +61,16 @@ class HomeController extends Controller
         }
 
         $genres        = Genre::all();
-        $heroFilms     = Film::orderByDesc('rating')->limit(5)->get();
+        
+        $featuredIds   = json_decode(\App\Models\Setting::get('featured_film_ids', '[]'), true) ?: [];
+        if (!empty($featuredIds)) {
+            $heroFilms = Film::whereIn('id', array_map('intval', $featuredIds))->get();
+            if ($heroFilms->isEmpty()) {
+                $heroFilms = Film::orderByDesc('rating')->limit(5)->get();
+            }
+        } else {
+            $heroFilms = Film::orderByDesc('rating')->limit(5)->get();
+        }
         $popularSeries = Film::where('subject_type', 'series')->orderByDesc('rating')->limit(12)->get();
         if ($popularSeries->isEmpty()) {
             $popularSeries = Film::orderByDesc('rating')->limit(12)->get();

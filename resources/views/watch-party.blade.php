@@ -4,7 +4,9 @@
 
 @section('content')
 @php
-    $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) : '';
+    $currentSe = $watchParty->season_number ?? 1;
+    $currentEp = $watchParty->episode_number ?? 1;
+    $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . urlencode($film->moviebox_subject_id) . '&se=' . $currentSe . '&ep=' . $currentEp : '';
     
     // Sort resourceList so h264/avc codecs come before hevc
     $sortedList = $resourceList ?? [];
@@ -36,7 +38,7 @@
             'res_num' => $resNum,
             'codec'   => strtoupper($res['codecName'] ?? 'H264'),
             'size'    => isset($res['size']) ? number_format($res['size'] / 1048576, 1) . ' MB' : '',
-            'url'     => url('/moviebox/proxy-stream') . '?url=' . urlencode($rawUrl),
+            'url'     => url('/moviebox/proxy-stream') . '?url=' . urlencode($rawUrl) . '&id=' . urlencode($film->moviebox_subject_id) . '&se=' . $currentSe . '&ep=' . $currentEp,
         ];
     }
 
@@ -49,24 +51,24 @@
 @endphp
 
 <div class="min-h-screen bg-dark-950 pb-16 overflow-x-hidden" 
-     x-data="watchPartyRoom({
-        roomCode: '{{ $watchParty->room_code }}',
+     x-data='watchPartyRoom({
+        roomCode: @json($watchParty->room_code),
         filmId: {{ $film->id }},
-        subjectType: '{{ $film->subject_type }}',
+        subjectType: @json($film->subject_type),
         currentSeason: {{ $watchParty->season_number ?? 1 }},
         currentEpisode: {{ $watchParty->episode_number ?? 1 }},
         seasons: @json($film->seasons ?? []),
         isHost: {{ $isHost ? 'true' : 'false' }},
         isLocked: {{ $watchParty->is_locked ? 'true' : 'false' }},
-        myDisplayName: '{{ $participant->display_name }}',
-        activeStream: '{{ $proxyActiveStream }}',
-        qualities: {{ $qualitiesJson }},
-        subtitles: {{ $subtitlesJson }},
+        myDisplayName: @json($participant->display_name),
+        activeStream: @json($proxyActiveStream),
+        qualities: @json($processedQualities),
+        subtitles: @json($subtitles ?? []),
         initialPosition: {{ $watchParty->current_position_seconds }},
         initialIsPlaying: {{ $watchParty->is_playing ? 'true' : 'false' }},
-        initialParticipants: {{ $initialParticipantsJson }},
-        initialMessages: {{ $initialMessagesJson }}
-     })">
+        initialParticipants: @json($initialParticipants ?? []),
+        initialMessages: @json($initialMessages ?? [])
+     })'>
     
     <!-- Top Bar Navigation & Watch Party Header -->
     <div class="glass-panel border-b border-white/10 py-3.5 px-4 sm:px-8 backdrop-blur-md relative z-40">
@@ -134,17 +136,57 @@
     </div>
 
     <!-- Main Layout Container (Theater & Sidebar split-view) -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+    <div class="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         
         <!-- Left 2 Columns: Video Player & Floating Reaction Overlay -->
-        <div class="lg:col-span-2 space-y-6">
+        <div x-ref="theaterPlaceholder" class="lg:col-span-2 space-y-6">
             
-            <!-- Video Player Theater Wrapper -->
+            <!-- Placeholder card in theater area when video is floating in Mini Player -->
+            <div x-show="isMiniPlayer" 
+                 x-transition:enter="transition ease-out duration-300 opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 class="w-full aspect-video rounded-3xl glass-panel border border-white/10 flex flex-col items-center justify-center text-center p-6 gap-3 shadow-inner my-2" style="display:none;">
+                <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center animate-bounce">
+                    <i data-lucide="tv" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Watch Party Diputar dalam Mini Player</h4>
+                    <p class="text-xs text-zinc-400 mt-1">Video sedang melayang di sudut layar (Picture-in-Page)</p>
+                </div>
+                <button @click="expandMiniPlayer()" class="px-4 py-2 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors flex items-center gap-2 shadow-md cursor-pointer">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                    <span>Kembali ke Pemutar Utama</span>
+                </button>
+            </div>
+
+            <!-- Video Player Theater Wrapper (Full Custom Controls Base & Floating Mini Player) -->
             <div x-ref="playerContainer" 
                  @mousemove="resetHideTimer()" 
                  @mouseleave="startHideTimer()"
                  @wheel.prevent="handleWheelVolume($event)"
-                 class="relative aspect-video w-full rounded-3xl overflow-hidden bg-black border border-white/10 shadow-2xl group select-none">
+                 :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'">
+                
+                <!-- Mini Player Top Floating Header Bar -->
+                <div x-show="isMiniPlayer" 
+                     class="absolute top-0 inset-x-0 z-50 bg-gradient-to-b from-black/90 via-black/60 to-transparent p-2.5 flex items-center justify-between gap-2 pointer-events-auto"
+                     style="display:none;">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+                        <span class="text-[11px] font-bold text-white truncate">{{ $room->room_name }}</span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button @click.stop="expandMiniPlayer()" 
+                                class="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                                title="Perbesar ke Layar Utama">
+                            <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button @click.stop="dismissMiniPlayer()" 
+                                class="p-1 rounded-lg bg-white/10 hover:bg-red-500/80 text-white transition-colors cursor-pointer"
+                                title="Tutup Mini Player">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
                 
                 <template x-if="activeStream">
                     <div class="relative w-full h-full flex items-center justify-center bg-black">
@@ -159,7 +201,13 @@
                                @mousedown="startPressAndHold()"
                                @mouseup="stopPressAndHold()"
                                @mouseleave="stopPressAndHold()"
-                               class="w-full h-full object-contain cursor-pointer"></video>
+                               :class="{
+                                   'object-contain transform-none': aspectRatioMode === 'contain',
+                                   'object-cover transform-none': aspectRatioMode === 'cover',
+                                   'object-fill transform-none': aspectRatioMode === 'fill',
+                                   'object-contain scale-125': aspectRatioMode === 'zoom'
+                               }"
+                               class="w-full h-full cursor-pointer transition-all duration-300"></video>
 
                         <!-- Top & Bottom Gradient Shadows -->
                         <div class="absolute inset-0 pointer-events-none transition-opacity duration-300"
@@ -231,7 +279,42 @@
                             <span class="text-xs font-extrabold">+10 Detik</span>
                         </div>
 
-                        <!-- Center Play/Pause Indicator -->
+                        <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
+                        <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
+                             :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                            
+                            <!-- Rewind 10s Center Button -->
+                            <button @click.stop="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
+                                    :disabled="!isHost"
+                                    :class="isHost ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-not-allowed opacity-50'"
+                                    class="w-11 h-11 sm:w-14 sm:h-14 rounded-full glass-panel flex flex-col items-center justify-center border border-white/20 text-white shadow-2xl transition-all bg-black/40 backdrop-blur-md"
+                                    title="-10 Detik (Host Only)">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4 sm:w-6 sm:h-6"></i>
+                                <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">10s</span>
+                            </button>
+
+                            <!-- Center Play/Pause Button -->
+                            <button @click.stop="togglePlay()" 
+                                    :disabled="!isHost"
+                                    :class="isHost ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-not-allowed opacity-60'"
+                                    class="w-14 h-14 sm:w-16 sm:h-16 rounded-full glass-panel flex items-center justify-center border border-white/30 text-white shadow-2xl transition-all bg-white/15 backdrop-blur-lg"
+                                    title="Play/Pause (Host Only)">
+                                <svg x-show="!isPlaying" class="w-6 h-6 sm:w-8 sm:h-8 fill-white ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <svg x-show="isPlaying" class="w-6 h-6 sm:w-8 sm:h-8 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            </button>
+
+                            <!-- Forward 10s Center Button -->
+                            <button @click.stop="if(isHost) { seek(currentTime + 10); triggerRipple('forward'); }" 
+                                    :disabled="!isHost"
+                                    :class="isHost ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-not-allowed opacity-50'"
+                                    class="w-11 h-11 sm:w-14 sm:h-14 rounded-full glass-panel flex flex-col items-center justify-center border border-white/20 text-white shadow-2xl transition-all bg-black/40 backdrop-blur-md"
+                                    title="+10 Detik (Host Only)">
+                                <i data-lucide="rotate-cw" class="w-4 h-4 sm:w-6 sm:h-6"></i>
+                                <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">10s</span>
+                            </button>
+                        </div>
+
+                        <!-- Center Pulse Feedback Indicator -->
                         <div x-show="centerPulseIcon" 
                              x-transition:enter="transition ease-out duration-150 scale-50 opacity-0"
                              x-transition:enter-end="scale-100 opacity-100"
@@ -244,7 +327,7 @@
                         </div>
 
                         <!-- Video Controls Overlay -->
-                        <div class="absolute inset-x-0 bottom-0 z-30 p-4 sm:p-6 transition-opacity duration-300 flex flex-col justify-end gap-3"
+                        <div class="absolute inset-x-0 bottom-0 z-30 p-2 sm:p-5 pb-2.5 sm:pb-6 transition-opacity duration-300 flex flex-col justify-end gap-2 sm:gap-3"
                              :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                             
                             <!-- Timeline Scrubber Bar -->
@@ -270,81 +353,81 @@
                             </div>
 
                             <!-- Control Buttons Row -->
-                            <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center justify-between gap-1 sm:gap-4 py-0.5 relative z-40">
                                 
                                 <!-- Left Controls Group -->
-                                <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="flex items-center gap-0.5 sm:gap-2.5 shrink-0">
                                     <!-- Play / Pause Toggle Button -->
                                     <button @click="togglePlay()" 
                                             :disabled="!isHost"
                                             :class="isHost ? 'cursor-pointer hover:bg-white/20' : 'cursor-not-allowed opacity-60'"
-                                            class="p-2 rounded-xl transition-colors text-white flex items-center justify-center" 
+                                            class="p-1.5 sm:p-2 rounded-xl transition-colors text-white flex items-center justify-center" 
                                             title="Play/Pause (Host Only)">
-                                        <svg x-show="!isPlaying" class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                        <svg x-show="isPlaying" class="w-5 h-5 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                        <svg x-show="!isPlaying" class="w-4 h-4 sm:w-5 sm:h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                        <svg x-show="isPlaying" class="w-4 h-4 sm:w-5 sm:h-5 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                     </button>
 
-                                    <!-- Skip Rewind 10s -->
+                                    <!-- Skip Rewind 10s (Desktop Only) -->
                                     <button @click="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
                                             :disabled="!isHost"
                                             :class="isHost ? 'cursor-pointer hover:bg-white/20 text-zinc-300 hover:text-white' : 'cursor-not-allowed opacity-50 text-zinc-500'"
-                                            class="p-2 rounded-xl transition-colors" title="-10 Detik (Host Only)">
-                                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                            class="p-1.5 sm:p-2 rounded-xl transition-colors hidden sm:flex items-center justify-center" title="-10 Detik (Host Only)">
+                                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                     </button>
 
-                                    <!-- Skip Forward 10s -->
+                                    <!-- Skip Forward 10s (Desktop Only) -->
                                     <button @click="if(isHost) { seek(currentTime + 10); triggerRipple('forward'); }" 
                                             :disabled="!isHost"
                                             :class="isHost ? 'cursor-pointer hover:bg-white/20 text-zinc-300 hover:text-white' : 'cursor-not-allowed opacity-50 text-zinc-500'"
-                                            class="p-2 rounded-xl transition-colors" title="+10 Detik (Host Only)">
-                                        <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                                            class="p-1.5 sm:p-2 rounded-xl transition-colors hidden sm:flex items-center justify-center" title="+10 Detik (Host Only)">
+                                        <i data-lucide="rotate-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                     </button>
 
                                     <!-- Volume Control Group -->
-                                    <div class="flex items-center gap-2 group/volume relative" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
-                                        <button @click="toggleMute()" class="p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white flex items-center justify-center" title="Mute / Unmute (M)">
-                                            <svg x-show="isMuted || volume === 0" class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                                            <svg x-show="!isMuted && volume > 0 && volume < 0.5" class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" style="display: none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                                            <svg x-show="!isMuted && volume >= 0.5" class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" style="display: none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                    <div class="flex items-center gap-1 group/volume relative" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
+                                        <button @click="toggleMute()" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white flex items-center justify-center" title="Mute / Unmute (M)">
+                                            <svg x-show="isMuted || volume === 0" class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                                            <svg x-show="!isMuted && volume > 0 && volume < 0.5" class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" style="display: none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                            <svg x-show="!isMuted && volume >= 0.5" class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" style="display: none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                                         </button>
 
-                                        <!-- Volume Slider -->
+                                        <!-- Volume Slider (Desktop Only) -->
                                         <input type="range" 
                                                min="0" 
                                                max="1" 
                                                step="0.05" 
                                                :value="isMuted ? 0 : volume"
                                                @input="setVolume($event.target.value)"
-                                               class="w-16 h-1 accent-white bg-white/30 rounded-lg cursor-pointer transition-all duration-200">
+                                               class="w-14 sm:w-16 h-1 accent-white bg-white/30 rounded-lg cursor-pointer transition-all duration-200 hidden md:block">
                                     </div>
 
                                     <!-- Timestamp Display -->
-                                    <div class="text-[11px] font-semibold text-zinc-300 tracking-wider">
+                                    <div class="text-[10px] sm:text-[11px] font-semibold text-zinc-300 tracking-tight sm:tracking-wider whitespace-nowrap shrink-0 ml-0.5 sm:ml-1">
                                         <span x-text="formatTime(currentTime)"></span>
                                         <span class="text-zinc-500 mx-0.5">/</span>
                                         <span x-text="formatTime(duration)"></span>
                                     </div>
                                 </div>
 
-                                <!-- Right Controls Group: Speed, Quality, Fullscreen -->
-                                <div class="flex items-center gap-2">
+                                <!-- Right Controls Group: Speed, Quality, Subtitle, Aspect, Fullscreen -->
+                                <div class="flex items-center gap-1 sm:gap-2 shrink-0">
                                     
                                     <!-- Playback Speed Selector Dropdown -->
                                     <div class="relative" @click.outside="speedDropdownOpen = false">
-                                        <button @click="if(isHost) speedDropdownOpen = !speedDropdownOpen" 
+                                        <button @click.stop="if(isHost) { speedDropdownOpen = !speedDropdownOpen; qualityDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false; }" 
                                                 :class="isHost ? 'cursor-pointer hover:border-white/30' : 'cursor-not-allowed opacity-60'"
-                                                class="px-2.5 py-1 rounded-xl glass-chip text-[11px] font-bold text-zinc-200 transition-all flex items-center gap-1">
+                                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 transition-all flex items-center gap-1">
                                             <span x-text="playbackSpeed + 'x'"></span>
                                         </button>
 
                                         <div x-show="speedDropdownOpen" 
                                              x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
                                              x-transition:enter-end="scale-100 opacity-100"
-                                             class="absolute bottom-full right-0 mb-2 w-28 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-40"
+                                             class="absolute bottom-full right-0 mb-2 w-28 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
                                              style="display: none;">
                                             <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kecepatan</div>
                                             <template x-for="spd in speeds" :key="spd">
-                                                <button @click="setPlaybackSpeed(spd)" 
+                                                <button @click.stop="setPlaybackSpeed(spd); speedDropdownOpen = false" 
                                                         :class="playbackSpeed === spd ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
                                                         class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
                                                     <span x-text="spd + 'x'"></span>
@@ -356,8 +439,8 @@
 
                                     <!-- Resolution / Quality Selector Dropdown -->
                                     <div class="relative" @click.outside="qualityDropdownOpen = false" x-show="qualities.length > 0">
-                                        <button @click="qualityDropdownOpen = !qualityDropdownOpen" 
-                                                class="px-2.5 py-1 rounded-xl glass-chip text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
+                                        <button @click.stop="qualityDropdownOpen = !qualityDropdownOpen; speedDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
                                             <span x-text="activeQuality"></span>
                                             <i data-lucide="chevron-up" class="w-3 h-3 text-zinc-400"></i>
                                         </button>
@@ -365,11 +448,11 @@
                                         <div x-show="qualityDropdownOpen" 
                                              x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
                                              x-transition:enter-end="scale-100 opacity-100"
-                                             class="absolute bottom-full right-0 mb-2 w-36 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-40"
+                                             class="absolute bottom-full right-0 mb-2 w-36 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
                                              style="display: none;">
                                             <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kualitas Video</div>
                                             <template x-for="q in qualities" :key="q.url">
-                                                <button @click="setQuality(q.url, q.quality)" 
+                                                <button @click.stop="setQuality(q.url, q.quality); qualityDropdownOpen = false" 
                                                         :class="activeQuality === q.quality ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
                                                         class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
                                                     <div>
@@ -384,9 +467,9 @@
 
                                     <!-- Subtitle / Caption Selector Dropdown -->
                                     <div class="relative" @click.outside="subtitleDropdownOpen = false">
-                                        <button @click="subtitleDropdownOpen = !subtitleDropdownOpen" 
+                                        <button @click.stop="subtitleDropdownOpen = !subtitleDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
                                                 :class="activeSubtitle !== 'off' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
-                                                class="px-2.5 py-1 rounded-xl glass-chip text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
                                                 title="Subtitle / Teks">
                                             <i data-lucide="subtitles" class="w-3.5 h-3.5"></i>
                                             <span>CC</span>
@@ -395,26 +478,52 @@
                                         <div x-show="subtitleDropdownOpen" 
                                              x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
                                              x-transition:enter-end="scale-100 opacity-100"
-                                             class="absolute bottom-full right-0 mb-2 w-48 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-40"
+                                             class="absolute bottom-full right-0 mb-2 w-56 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
                                              style="display: none;">
-                                            <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Subtitle</div>
+                                            <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i data-lucide="subtitles" class="w-3 h-3"></i>
+                                                <span>Subtitle</span>
+                                            </div>
                                             
                                             <!-- Off Option -->
-                                            <button @click="setSubtitle('off'); subtitleDropdownOpen = false" 
+                                            <button @click.stop="setSubtitle('off'); subtitleDropdownOpen = false" 
                                                     :class="activeSubtitle === 'off' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
                                                     class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                                <span>Matikan Subtitle</span>
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="subtitles" class="w-3.5 h-3.5 opacity-60"></i>
+                                                    <span>Matikan Subtitle</span>
+                                                </span>
                                                 <i x-show="activeSubtitle === 'off'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
                                             </button>
 
-                                            <!-- API Subtitles -->
-                                            <template x-for="sub in subtitles" :key="sub.id || sub.url">
-                                                <button @click="setSubtitle(sub.url); subtitleDropdownOpen = false" 
-                                                        :class="activeSubtitle === sub.url ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                                    <span x-text="sub.label"></span>
-                                                    <i x-show="activeSubtitle === sub.url" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                                </button>
+                                            <!-- Empty State (No Subtitles from API) -->
+                                            <template x-if="subtitles.length === 0">
+                                                <div class="px-2.5 py-2 text-[11px] text-zinc-400 italic flex items-center gap-1.5 border-t border-b border-white/5 my-1">
+                                                    <i data-lucide="info" class="w-3.5 h-3.5 text-zinc-500 shrink-0"></i>
+                                                    <span>Tidak ada subtitle otomatis</span>
+                                                </div>
+                                            </template>
+
+                                            <!-- API Subtitles List -->
+                                            <template x-if="subtitles.length > 0">
+                                                <div class="border-t border-white/5 mt-1 pt-1">
+                                                    <div class="text-[9px] font-bold text-zinc-500 px-2 pt-1 pb-1 uppercase tracking-wider">Tersedia</div>
+                                                    <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                                        <template x-for="sub in subtitles" :key="sub.id || sub.url">
+                                                            <button @click.stop="setSubtitle(sub.url, sub.label, sub.srclang); subtitleDropdownOpen = false" 
+                                                                    :class="activeSubtitle === sub.url ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                                <span class="flex items-center gap-2 truncate">
+                                                                    <span class="px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-extrabold uppercase tracking-wide shrink-0" 
+                                                                          :class="activeSubtitle === sub.url ? 'bg-zinc-950/20 text-zinc-950' : ''"
+                                                                          x-text="(sub.srclang || 'id').toUpperCase().substring(0,2)"></span>
+                                                                    <span class="truncate" x-text="sub.label"></span>
+                                                                </span>
+                                                                <i x-show="activeSubtitle === sub.url" data-lucide="check" class="w-3 h-3 text-zinc-950 shrink-0 ml-1"></i>
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
                                             </template>
 
                                             <!-- Custom Subtitle File Upload -->
@@ -428,7 +537,81 @@
                                         </div>
                                     </div>
 
-                                    <!-- Fullscreen Toggle -->
+                                    <!-- Display Mode / Aspect Ratio Selector Dropdown -->
+                                    <div class="relative" @click.outside="aspectRatioDropdownOpen = false">
+                                        <button @click.stop="aspectRatioDropdownOpen = !aspectRatioDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false" 
+                                                :class="aspectRatioMode !== 'contain' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
+                                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
+                                                title="Gaya Layar (Fit, Cover, Stretch, Zoom)">
+                                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                            <span x-text="aspectRatioMode === 'contain' ? 'Fit' : (aspectRatioMode === 'cover' ? 'Cover' : (aspectRatioMode === 'fill' ? 'Stretch' : 'Zoom'))"></span>
+                                        </button>
+
+                                        <div x-show="aspectRatioDropdownOpen" 
+                                             x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                             x-transition:enter-end="scale-100 opacity-100"
+                                             class="absolute bottom-full right-0 mb-2 w-44 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
+                                             style="display: none;">
+                                            <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i data-lucide="scan" class="w-3 h-3"></i>
+                                                <span>Gaya Layar (Aspect)</span>
+                                            </div>
+
+                                            <!-- Fit (Default) -->
+                                            <button @click.stop="setAspectRatioMode('contain')" 
+                                                    :class="aspectRatioMode === 'contain' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="shrink" class="w-3.5 h-3.5 opacity-70"></i>
+                                                    <span>Fit (Proporsional)</span>
+                                                </span>
+                                                <i x-show="aspectRatioMode === 'contain'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                            </button>
+
+                                            <!-- Cover (Crop) -->
+                                            <button @click.stop="setAspectRatioMode('cover')" 
+                                                    :class="aspectRatioMode === 'cover' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5 opacity-70"></i>
+                                                    <span>Cover (Potong Tepi)</span>
+                                                </span>
+                                                <i x-show="aspectRatioMode === 'cover'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                            </button>
+
+                                            <!-- Stretch (Fill) -->
+                                            <button @click.stop="setAspectRatioMode('fill')" 
+                                                    :class="aspectRatioMode === 'fill' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="scaling" class="w-3.5 h-3.5 opacity-70"></i>
+                                                    <span>Stretch (Penuhi Layar)</span>
+                                                </span>
+                                                <i x-show="aspectRatioMode === 'fill'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                            </button>
+
+                                            <!-- Zoom 125% -->
+                                            <button @click.stop="setAspectRatioMode('zoom')" 
+                                                    :class="aspectRatioMode === 'zoom' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="zoom-in" class="w-3.5 h-3.5 opacity-70"></i>
+                                                    <span>Zoom (125%)</span>
+                                                </span>
+                                                <i x-show="aspectRatioMode === 'zoom'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                     <!-- In-App Mini Player (Picture-in-Page) Toggle -->
+                                     <button @click.stop="toggleMiniPlayer()" 
+                                             :class="isMiniPlayer ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-zinc-300 hover:text-white'"
+                                             class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center border border-transparent" 
+                                             title="Mini Player (Picture-in-Page)">
+                                         <i data-lucide="airplay" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                                     </button>
+
+                                     <!-- Fullscreen Toggle -->
                                     <button @click="toggleFullscreen()" class="p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white flex items-center justify-center" title="Fullscreen (F)">
                                         <svg x-show="!isFullscreen" class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
                                         <svg x-show="isFullscreen" class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" style="display: none;"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>
@@ -551,7 +734,7 @@
         </div>
 
         <!-- Right 1 Column: Active Members, Host Management, Live Chat, Floating Emoji Bar -->
-        <div class="space-y-6 flex flex-col h-[38rem] lg:h-auto">
+        <div class="space-y-6 flex flex-col">
             
             <!-- Active Participants & Host Management Card -->
             <div class="glass-panel p-4 rounded-3xl border border-white/10 shadow-xl relative z-30">
@@ -560,12 +743,13 @@
                         <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
                         <span>Anggota Room (<span x-text="participants.length"></span>)</span>
                     </h3>
-                    <template x-if="isHost">
-                        <span class="text-[10px] text-zinc-400 font-semibold">Klik anggota untuk opsi Host</span>
-                    </template>
+                    <button type="button" @click="openEditNicknameModal()" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 transition-all hover:bg-amber-500/20">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                        <span>Ubah Nama</span>
+                    </button>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 py-1 relative z-20 overflow-visible">
+                <div class="flex flex-wrap items-center gap-2 py-1 relative z-20 overflow-y-auto max-h-[140px]">
                     <template x-for="p in participants" :key="p.id || p.name">
                         <div class="relative" @click.outside="if (selectedMemberId == p.id) selectedMemberId = null">
                             <button type="button" 
@@ -611,7 +795,7 @@
             </div>
 
             <!-- Live Chat Box Container -->
-            <div class="glass-panel p-4 rounded-3xl border border-white/10 shadow-xl flex-1 flex flex-col justify-between overflow-hidden min-h-[18rem]">
+            <div class="glass-panel p-4 rounded-3xl border border-white/10 shadow-xl flex flex-col justify-between overflow-hidden max-h-[320px] lg:max-h-[400px]">
                 
                 <div class="border-b border-white/10 pb-2 mb-3 flex items-center justify-between">
                     <span class="text-xs font-bold text-white flex items-center gap-1.5">
@@ -627,7 +811,7 @@
                 </div>
 
                 <!-- Chat History Messages Scroll Box -->
-                <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs" x-ref="chatScroll">
+                <div class="overflow-y-auto space-y-3 pr-1 text-xs max-h-[240px] lg:max-h-[280px]" x-ref="chatScroll">
                     <template x-for="(msg, i) in chatMessages" :key="msg.id || i">
                         <div>
                             <!-- System Message Notification -->
@@ -681,6 +865,8 @@
             </div>
 
         </div>
+        
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mt-4"></div>
 
     <!-- Reusable Custom Glass Confirmation Modal -->
     <div x-show="confirmModal.open"
@@ -745,6 +931,69 @@
                     class="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg transition-all active:scale-95 cursor-pointer">
                 Mengerti
             </button>
+        </div>
+    </div>
+
+    <!-- WebSockets Disconnection Notice Modal -->
+    <div x-show="isDisconnected" 
+         x-transition:enter="transition ease-out duration-300 opacity-0"
+         x-transition:enter-end="opacity-100"
+         class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+         style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl border border-rose-500/30 max-w-md w-full text-center space-y-4 shadow-2xl animate-fade-in">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center mx-auto">
+                <i data-lucide="wifi-off" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-white">Koneksi Ke Server Terputus</h3>
+                <p class="text-xs text-zinc-300 mt-1.5 leading-relaxed">Koneksi real-time ke room Nobar terhenti. Sinkronisasi pemutaran video dijeda sampai koneksi terhubung kembali.</p>
+            </div>
+            <button @click="reconnectSocket()" 
+                    :disabled="isReconnecting"
+                    class="w-full py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/20">
+                <template x-if="isReconnecting">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+                        <span>Menghubungkan Ulang...</span>
+                    </div>
+                </template>
+                <template x-if="!isReconnecting">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Coba Hubungkan Ulang</span>
+                    </div>
+                </template>
+            </button>
+        </div>
+    </div>
+
+    <!-- Edit Nickname Modal -->
+    <div x-show="editNicknameModalOpen" 
+         x-transition:enter="transition ease-out duration-200 opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+         style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl border border-white/20 max-w-sm w-full space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-4 h-4 text-amber-400"></i>
+                    <span>Ubah Nama Tampilan</span>
+                </h3>
+                <button @click="editNicknameModalOpen = false" class="text-zinc-400 hover:text-white text-xs">✕</button>
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">Nama Tampilan Baru</label>
+                <input type="text" 
+                       x-model="newNicknameInput" 
+                       @keydown.enter="submitNicknameChange()"
+                       maxlength="50" 
+                       placeholder="Masukkan nama tampilan..." 
+                       class="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button @click="editNicknameModalOpen = false" type="button" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-zinc-300 text-xs font-bold transition-colors">Batal</button>
+                <button @click="submitNicknameChange()" type="button" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors">Simpan Nama</button>
+            </div>
         </div>
     </div>
 
@@ -817,6 +1066,7 @@
             hideTimer: null,
             isBuffering: false,
             isFullscreen: false,
+            isSyncing: false,
             
             hoverTime: 0,
             hoverPos: 0,
@@ -830,9 +1080,17 @@
             speedDropdownOpen: false,
             qualityDropdownOpen: false,
             subtitleDropdownOpen: false,
+            aspectRatioDropdownOpen: false,
+            aspectRatioMode: localStorage.getItem('faii_player_aspect_mode') || 'contain',
             subtitles: config.subtitles || [],
             activeSubtitle: 'off',
             clickTimer: null,
+
+            setAspectRatioMode(mode) {
+                this.aspectRatioMode = mode;
+                this.aspectRatioDropdownOpen = false;
+                localStorage.setItem('faii_player_aspect_mode', mode);
+            },
 
             participants: config.initialParticipants || [],
             chatMessages: config.initialMessages || [],
@@ -862,6 +1120,38 @@
 
             lastMsgId: 0,
             lastRxId: 0,
+            isSyncing: false,
+            isPollingBusy: false,
+            isDisconnected: false,
+            isReconnecting: false,
+            editNicknameModalOpen: false,
+            newNicknameInput: '',
+            isSyncingFromServer: false,
+            lastHardSeekTime: 0,
+            isMiniPlayer: false,
+            isMiniDismissed: false,
+
+            toggleMiniPlayer() {
+                if (this.isMiniPlayer) {
+                    this.expandMiniPlayer();
+                } else {
+                    this.isMiniPlayer = true;
+                    this.isMiniDismissed = false;
+                }
+            },
+
+            expandMiniPlayer() {
+                this.isMiniPlayer = false;
+                this.isMiniDismissed = false;
+                if (this.$refs.theaterPlaceholder) {
+                    this.$refs.theaterPlaceholder.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
+
+            dismissMiniPlayer() {
+                this.isMiniPlayer = false;
+                this.isMiniDismissed = true;
+            },
 
             init() {
                 if (this.chatMessages.length > 0) {
@@ -873,12 +1163,53 @@
                     const video = this.$refs.video;
                     if (!video) return;
 
-                    video.currentTime = this.initialPosition;
+                    // IntersectionObserver for Auto Floating Mini Player when scrolling
+                    if (this.$refs.theaterPlaceholder) {
+                        const observer = new IntersectionObserver((entries) => {
+                            const entry = entries[0];
+                            if (!entry.isIntersecting && this.isPlaying && !this.isMiniDismissed && this.currentTime > 2) {
+                                this.isMiniPlayer = true;
+                            } else if (entry.isIntersecting && this.isMiniPlayer) {
+                                this.isMiniPlayer = false;
+                            }
+                        }, { threshold: 0.25 });
+
+                        observer.observe(this.$refs.theaterPlaceholder);
+                    }
+
+                    // Auto seek if URL query string contains ?t= (from Mini Player Expand)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const timeParam = urlParams.get('t');
+                    if (timeParam && !isNaN(parseFloat(timeParam))) {
+                        video.currentTime = parseFloat(timeParam);
+                    } else {
+                        video.currentTime = this.initialPosition;
+                    }
+                    
+                    if (!this.isHost && this.initialIsPlaying) {
+                        video.play().catch(() => {});
+                    }
 
                     video.addEventListener('timeupdate', () => {
                         this.currentTime = video.currentTime;
                         this.duration = video.duration || 0;
                         this.progressPercent = this.duration > 0 ? (this.currentTime / this.duration) * 100 : 0;
+
+                        // Sync active stream state for Global Cross-Page Floating Mini Player
+                        if (this.isPlaying && this.activeStream && this.currentTime > 2) {
+                            try {
+                                localStorage.setItem('faiilmov_global_miniplayer', JSON.stringify({
+                                    active: true,
+                                    filmTitle: '{{ $room->room_name }}',
+                                    streamUrl: this.activeStream,
+                                    currentTime: this.currentTime,
+                                    duration: this.duration,
+                                    posterUrl: '{{ $film->poster_url }}',
+                                    watchUrl: window.location.pathname,
+                                    timestamp: Date.now()
+                                }));
+                            } catch(e) {}
+                        }
                     });
 
                     video.addEventListener('progress', () => {
@@ -893,10 +1224,21 @@
                         this.isBuffering = false; 
                         this.isPlaying = true;
                         this.resetHideTimer();
+                        if (!this.isSyncingFromServer && this.isHost) {
+                            this.sendHostPlaybackState('play');
+                        }
                     });
                     video.addEventListener('pause', () => { 
                         this.isPlaying = false; 
                         this.showControls = true;
+                        if (!this.isSyncingFromServer && this.isHost) {
+                            this.sendHostPlaybackState('pause');
+                        }
+                    });
+                    video.addEventListener('seeked', () => {
+                        if (!this.isSyncingFromServer && this.isHost) {
+                            this.sendHostPlaybackState('seek');
+                        }
                     });
                     video.addEventListener('ended', () => {
                         this.isPlaying = false;
@@ -930,28 +1272,65 @@
                         this.isFullscreen = !!document.fullscreenElement;
                     });
 
+                    // Subtitle Auto-Fetch & Auto-Enable
+                    if (this.subtitles.length === 0) {
+                        this.fetchSubtitles();
+                    } else if (this.subtitles.length > 0) {
+                        const defaultSub = this.subtitles.find(s => s.srclang === 'id') || this.subtitles[0];
+                        if (defaultSub && (this.activeSubtitle === 'off' || !this.activeSubtitle)) {
+                            this.setSubtitle(defaultSub.url, defaultSub.label, defaultSub.srclang);
+                        }
+                    }
+
                     this.initBroadcastListeners();
                     this.startPollingSync();
+                    if (this.isHost) this.startHostPositionSync();
                     this.scrollChatToBottom();
 
                     if (window.lucide) lucide.createIcons();
                 });
             },
 
+            async fetchSubtitles() {
+                const mbSubjectId = '{{ $film->moviebox_subject_id }}';
+                if (!mbSubjectId) return;
+                try {
+                    const res = await fetch(`/moviebox/subtitles/${mbSubjectId}?se=${this.currentSeason}&ep=${this.currentEpisode}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            this.subtitles = data;
+                            if (this.activeSubtitle === 'off' || !this.activeSubtitle) {
+                                const defaultSub = data.find(s => s.srclang === 'id') || data[0];
+                                if (defaultSub) {
+                                    this.setSubtitle(defaultSub.url, defaultSub.label, defaultSub.srclang);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Fetch subtitles error:', e);
+                }
+            },
+
             initBroadcastListeners() {
                 if (window.Echo) {
+                    if (window.Echo.connector && window.Echo.connector.pusher) {
+                        const pusher = window.Echo.connector.pusher;
+                        pusher.connection.bind('disconnected', () => { this.isDisconnected = true; });
+                        pusher.connection.bind('unavailable', () => { this.isDisconnected = true; });
+                        pusher.connection.bind('connected', () => { this.isDisconnected = false; this.isReconnecting = false; });
+                    }
+
                     window.Echo.channel('watch-party.' + this.roomCode)
+                        .listen('.PlaybackStateChanged', (e) => {
+                            if (!this.isHost) {
+                                this.applySync(e);
+                            }
+                        })
                         .listen('.PlaybackUpdated', (e) => {
-                            if (!this.isHost && this.$refs.video) {
-                                const video = this.$refs.video;
-                                if (Math.abs(video.currentTime - e.position) > 1.5) {
-                                    video.currentTime = e.position;
-                                }
-                                if (e.isPlaying && video.paused) {
-                                    video.play();
-                                } else if (!e.isPlaying && !video.paused) {
-                                    video.pause();
-                                }
+                            if (!this.isHost) {
+                                this.applySync(e);
                             }
                         })
                         .listen('.MessageSent', (e) => {
@@ -978,6 +1357,158 @@
                 }
             },
 
+            reconnectSocket() {
+                this.isReconnecting = true;
+                if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+                    window.Echo.connector.pusher.connect();
+                }
+                setTimeout(() => {
+                    this.isReconnecting = false;
+                    this.isDisconnected = false;
+                }, 2000);
+            },
+
+            openEditNicknameModal() {
+                this.newNicknameInput = this.myDisplayName || '';
+                this.editNicknameModalOpen = true;
+            },
+
+            async submitNicknameChange() {
+                const nick = this.newNicknameInput.trim();
+                if (!nick) return;
+
+                try {
+                    const res = await fetch(`/watch-party/${this.roomCode}/update-nickname`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        body: JSON.stringify({ nickname: nick })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        this.myDisplayName = data.nickname;
+                        this.editNicknameModalOpen = false;
+                        if (data.systemMsg && !this.chatMessages.some(m => m.id === data.systemMsg.id)) {
+                            this.chatMessages.push(data.systemMsg);
+                            this.scrollChatToBottom();
+                        }
+                    } else {
+                        alert(data.error || 'Gagal mengubah nama');
+                    }
+                } catch (e) {
+                    alert('Terjadi kesalahan jaringan.');
+                }
+            },
+
+            applySync(state) {
+                if (!this.$refs.video || this.isHost) return;
+                const video = this.$refs.video;
+
+                const nowSec = Date.now() / 1000;
+                const serverTs = state.server_timestamp || state.serverTimestamp || nowSec;
+                const latency = Math.max(0, nowSec - serverTs);
+
+                let videoPos = 0;
+                if (state.timestamp_video !== undefined) videoPos = state.timestamp_video;
+                else if (state.timestampVideo !== undefined) videoPos = state.timestampVideo;
+                else if (state.position !== undefined) videoPos = state.position;
+
+                let isPlaying = false;
+                if (state.is_playing !== undefined) isPlaying = state.is_playing;
+                else if (state.isPlaying !== undefined) isPlaying = state.isPlaying;
+
+                let targetSpeed = 1.0;
+                if (state.playback_rate !== undefined) targetSpeed = state.playback_rate;
+                else if (state.playbackRate !== undefined) targetSpeed = state.playbackRate;
+                else if (state.speed !== undefined) targetSpeed = state.speed;
+
+                const action = state.action || state.current_action || (isPlaying ? 'play' : 'pause');
+                const targetPos = isPlaying ? (videoPos + (latency * targetSpeed)) : videoPos;
+                const diff = Math.abs(video.currentTime - targetPos);
+
+                console.log(`[WatchParty Sync] action: ${action}, targetPos: ${targetPos.toFixed(2)}s, currentPos: ${video.currentTime.toFixed(2)}s, diff: ${diff.toFixed(2)}s, latency: ${latency.toFixed(3)}s`);
+
+                if (action === 'episode_change' && (state.season_number || state.seasonNumber)) {
+                    const se = state.season_number || state.seasonNumber;
+                    const ep = state.episode_number || state.episodeNumber;
+                    if (this.currentSeason !== se || this.currentEpisode !== ep) {
+                        this.currentSeason = se;
+                        this.currentEpisode = ep;
+                        this.selectedSeasonNumber = se;
+                        if (state.proxy_active_stream) {
+                            this.isSyncingFromServer = true;
+                            video.src = state.proxy_active_stream;
+                            video.currentTime = 0;
+                            setTimeout(() => { this.isSyncingFromServer = false; }, 500);
+                        }
+                    }
+                }
+
+                if (diff > 1.5) {
+                    if ((nowSec - this.lastHardSeekTime) > 2.5) {
+                        this.isSyncingFromServer = true;
+                        this.lastHardSeekTime = nowSec;
+                        video.currentTime = targetPos;
+                        console.log(`[WatchParty Sync] Hard Seek performed to ${targetPos.toFixed(2)}s`);
+                        setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                    }
+                } else if (diff >= 0.5 && diff <= 1.5 && isPlaying) {
+                    const adjustFactor = video.currentTime < targetPos ? 1.05 : 0.95;
+                    video.playbackRate = targetSpeed * adjustFactor;
+                    console.log(`[WatchParty Sync] Soft Rate Adjust applied: ${video.playbackRate.toFixed(2)}x`);
+                    setTimeout(() => {
+                        if (this.$refs.video) this.$refs.video.playbackRate = targetSpeed;
+                    }, 1500);
+                } else if (diff < 0.5) {
+                    if (video.playbackRate !== targetSpeed) {
+                        video.playbackRate = targetSpeed;
+                    }
+                }
+
+                if (isPlaying && video.paused) {
+                    this.isSyncingFromServer = true;
+                    video.play().catch(() => {});
+                    setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                } else if (!isPlaying && !video.paused) {
+                    this.isSyncingFromServer = true;
+                    video.pause();
+                    setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                }
+
+                this.playbackSpeed = targetSpeed;
+            },
+
+            startHostPositionSync() {
+                const hostSyncInterval = 6000;
+                setInterval(() => {
+                    if (this.isHost && this.$refs.video) {
+                        this.sendHostPlaybackState('heartbeat');
+                    }
+                }, hostSyncInterval);
+            },
+
+            sendHostPlaybackState(action) {
+                if (!this.isHost || !this.$refs.video) return;
+                const video = this.$refs.video;
+
+                fetch(`/watch-party/${this.roomCode}/playback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        position: video.currentTime,
+                        is_playing: !video.paused,
+                        speed: video.playbackRate
+                    })
+                }).catch(() => {});
+            },
+
             startPollingSync() {
                 const pollInterval = window.Echo ? 6000 : 3000;
                 setInterval(async () => {
@@ -985,7 +1516,7 @@
                     this.isPollingBusy = true;
 
                     try {
-                        const url = `/watch-party/${this.roomCode}/state?last_msg_id=${this.lastMsgId}&last_rx_id=${this.lastRxId}`;
+                        const url = `/watch-party/${this.roomCode}/state?last_msg_id=${this.lastMsgId}&last_rx_id=${this.lastRxId}&season=${this.currentSeason || 1}&episode=${this.currentEpisode || 1}`;
                         const res = await fetch(url);
                         if (res.ok) {
                             const data = await res.json();
@@ -1018,15 +1549,7 @@
                             this.participants = data.participants || [];
 
                             if (!this.isHost && this.$refs.video) {
-                                const video = this.$refs.video;
-                                if (Math.abs(video.currentTime - data.position) > 2) {
-                                    video.currentTime = data.position;
-                                }
-                                if (data.is_playing && video.paused) {
-                                    video.play();
-                                } else if (!data.is_playing && !video.paused) {
-                                    video.pause();
-                                }
+                                this.applySync(data);
                             }
 
                             if (data.season_number && data.episode_number) {
@@ -1214,7 +1737,7 @@
                 } catch (e) {}
             },
 
-            setSubtitle(url) {
+            setSubtitle(url, label = 'Subtitle', srclang = 'id') {
                 this.activeSubtitle = url;
                 const video = this.$refs.video;
                 if (!video) return;
@@ -1225,8 +1748,8 @@
                 if (url && url !== 'off') {
                     const track = document.createElement('track');
                     track.kind = 'subtitles';
-                    track.label = 'Subtitle';
-                    track.srclang = 'id';
+                    track.label = label;
+                    track.srclang = srclang || 'id';
                     track.src = url;
                     track.default = true;
                     video.appendChild(track);

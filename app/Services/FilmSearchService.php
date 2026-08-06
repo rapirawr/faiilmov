@@ -103,12 +103,35 @@ class FilmSearchService
 
     /**
      * Return autocomplete suggestions (max 8) — supports ampersand & symbol normalization.
+     * Also handles popular film recommendations when query is empty or isPopular is true.
      * Cached per query for 5 minutes.
      */
-    public function autocomplete(string $query): array
+    public function autocomplete(string $query, bool $isPopular = false): array
     {
         $query = trim($query);
-        if (mb_strlen($query) < self::MIN_QUERY_LENGTH) {
+
+        if ($isPopular || mb_strlen($query) < self::MIN_QUERY_LENGTH) {
+            if ($isPopular || mb_strlen($query) === 0) {
+                return Cache::remember('autocomplete_popular_films_v2', now()->addMinutes(15), function () {
+                    return Film::select('id', 'title', 'slug', 'release_year', 'poster_url', 'subject_type', 'rating')
+                        ->orderByDesc('rating')
+                        ->orderByDesc('id')
+                        ->limit(4)
+                        ->get()
+                        ->map(function ($film) {
+                            return [
+                                'id'     => $film->id,
+                                'title'  => $film->title,
+                                'slug'   => $film->slug,
+                                'year'   => $film->release_year,
+                                'poster' => $film->thumbnail_url,
+                                'type'   => $film->subject_type,
+                                'rating' => $film->rating,
+                                'url'    => route('film.show', $film->slug),
+                            ];
+                        })->values()->toArray();
+                });
+            }
             return [];
         }
 
