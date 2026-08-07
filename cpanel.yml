@@ -2,9 +2,9 @@
 deployment:
   tasks:
     # ─── Variabel path ────────────────────────────────────────────
-    - export APPPATH=/home/faiiller/movie.faiillery.my.id/faiilmov-repo
-    - export DOMAINPATH=/home/faiiller/movie.faiillery.my.id
-    - export DEPLOYPATH=/home/faiiller/movie.faiillery.my.id/public
+    - export APPPATH=/home/faiiller/faiilmov.my.id/faiilmov-repo
+    - export DOMAINPATH=/home/faiiller/faiilmov.my.id
+    - export DEPLOYPATH=/home/faiiller/faiilmov.my.id/public
 
     # ─── 1. Install Composer dependencies (no dev) ────────────────
     - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
@@ -26,7 +26,6 @@ deployment:
 
     # ─── 6. Fix storage & cache permissions ───────────────────────
     - /bin/chmod -R 775 storage bootstrap/cache
-    - /bin/chown -R faiiller:faiiller storage bootstrap/cache
 
     # ─── 7. Deploy public folder ke document root ─────────────────
     - /bin/mkdir -p $DEPLOYPATH
@@ -36,5 +35,4 @@ deployment:
     - /bin/cp $APPPATH/.htaccess $DOMAINPATH/.htaccess
 
     # ─── 9. Arahkan index.php ke app root yang benar ──────────────
-    - /bin/sed -i "s|__DIR__.'/../vendor|'$APPPATH/vendor|g" $DEPLOYPATH/index.php
-    - /bin/sed -i "s|__DIR__.'/..|'$APPPATH|g" $DEPLOYPATH/index.php
+    - /bin/sed -i "s|__DIR__.'/..|$APPPATH|g" $DEPLOYPATH/index.php
