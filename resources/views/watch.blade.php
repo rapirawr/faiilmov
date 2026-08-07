@@ -190,6 +190,7 @@
                     <!-- Native HTML5 Video Element -->
                     <video x-ref="video" 
                            :src="activeStream" 
+                           x-on:error="handleVideoError($event)"
                            autoplay 
                            playsinline
                            referrerpolicy="no-referrer"
@@ -218,7 +219,7 @@
                          x-transition:enter="transition ease-out duration-200 opacity-0"
                          x-transition:enter-end="opacity-100"
                          x-transition:leave="transition ease-in duration-200 opacity-0"
-                         class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center gap-3 bg-black/40 backdrop-blur-[2px] z-20">
+                         class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-md z-35">
                         <div class="w-12 h-12 rounded-full border-3 border-white/20 border-t-white animate-spin"></div>
                         <span class="text-xs font-semibold text-zinc-300">Memuat Video...</span>
                     </div>
@@ -254,7 +255,7 @@
 
                     <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
                     <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
-                         :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                         :class="!isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
                         <!-- Rewind 10s Center Button -->
                         <button @click.stop="seek(currentTime - 10); triggerRipple('rewind')" 
@@ -1038,6 +1039,7 @@
 
             async switchEpisode(seasonNum, episodeNum) {
                 this.isBuffering = true;
+                this.failedStreams = new Set();
                 this.currentSeason = seasonNum;
                 this.currentEpisode = episodeNum;
                 this.selectedSeasonNumber = seasonNum;
@@ -1363,6 +1365,22 @@
                 });
 
                 this.qualityDropdownOpen = false;
+            },
+
+            handleVideoError(e) {
+                console.warn('Video stream error occurred:', e);
+                if (!this.failedStreams) this.failedStreams = new Set();
+                if (this.activeStream) this.failedStreams.add(this.activeStream);
+
+                if (this.qualities && this.qualities.length > 0) {
+                    const altQ = this.qualities.find(q => !this.failedStreams.has(q.url));
+                    if (altQ) {
+                        this.setQuality(altQ.url, altQ.quality);
+                        return;
+                    }
+                }
+                this.activeStream = null;
+                this.isBuffering = false;
             },
 
             togglePiP() {

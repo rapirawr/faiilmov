@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'faiilmov — Official MovieBox Web Client')
+@section('title', 'faiilmov')
 
 @section('content')
 <div class="space-y-8 pb-16">

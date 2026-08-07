@@ -227,8 +227,12 @@
 
         @auth
             <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm">
-                <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center font-bold text-xs text-zinc-950 shadow">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center font-bold text-xs text-zinc-950 shadow overflow-hidden">
+                    @if(Auth::user()->avatar)
+                        <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    @endif
                 </div>
                 <span class="text-xs font-semibold text-white hidden lg:inline">{{ Auth::user()->name }}</span>
             </a>

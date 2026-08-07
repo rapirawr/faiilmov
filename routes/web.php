@@ -59,6 +59,10 @@ use App\Http\Controllers\Admin\AdminActivityLogController;
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::delete('/profile/watchlist', [ProfileController::class, 'clearWatchlist'])->name('profile.clear-watchlist');
+    Route::delete('/profile/delete-account', [ProfileController::class, 'deleteAccount'])->name('profile.delete-account');
 
     Route::post('/film/{film}/review', [ReviewController::class, 'store'])->name('review.store');
     Route::post('/film/{film}/review/{review}/report', [AdminReviewController::class, 'storeReport'])->name('review.report');

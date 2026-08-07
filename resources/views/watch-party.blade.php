@@ -245,7 +245,10 @@
 
                         <!-- Loading & Sync Overlay -->
                         <div x-show="isBuffering" 
-                             class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-[2px] z-20">
+                             x-transition:enter="transition ease-out duration-200 opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-200 opacity-0"
+                             class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-md z-35">
                             <div class="w-12 h-12 rounded-full border-3 border-white/20 border-t-white animate-spin"></div>
                             <span class="text-xs font-semibold text-zinc-300">Menyinkronkan Video...</span>
                         </div>
@@ -281,7 +284,7 @@
 
                         <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
                         <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
-                             :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                             :class="!isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                             
                             <!-- Rewind 10s Center Button -->
                             <button @click.stop="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
