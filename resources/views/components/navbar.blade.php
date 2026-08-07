@@ -14,17 +14,34 @@
         </a>
     </div>
 
-    <!-- Center: Compact Capsule Autocomplete Search Bar -->
-    <div class="relative flex-1 max-w-xl mx-2 sm:mx-4"
-         x-data="searchAutocomplete()"  
-         @click.outside="closePanel()"
-         @keydown.escape.window="closePanel()"
-         @keydown.window.ctrl.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select()"
-         @keydown.window.cmd.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select()">
+    <!-- Center: Compact Capsule Autocomplete Search Bar with Expand/Collapse Animation -->
+    <div class="relative flex-1 max-w-xl mx-2 sm:mx-4 flex justify-center"
+         x-data="{ 
+             ...searchAutocomplete(), 
+             isExpanded: false, 
+             expandSearch() { 
+                 this.isExpanded = true; 
+                 this.openPanel(); 
+             }, 
+             collapseSearch() { 
+                 if (this.query.trim().length === 0) { 
+                     this.isExpanded = false; 
+                 } 
+                 this.closePanel(); 
+             } 
+         }"  
+         @click.outside="collapseSearch()"
+         @keydown.escape.window="collapseSearch(); $refs.searchInput.blur()"
+         @keydown.window.ctrl.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select(); expandSearch()"
+         @keydown.window.cmd.k.prevent="$refs.searchInput.focus(); $refs.searchInput.select(); expandSearch()">
         
-        <form :action="'{{ route('browse') }}'" method="GET" class="relative flex items-center w-full bg-dark-900/90 backdrop-blur-md rounded-full border border-white/10 focus-within:border-white/30 focus-within:bg-dark-950 transition-all shadow-inner" @submit="selectFocused()">
+        <form :action="'{{ route('browse') }}'" 
+              method="GET" 
+              class="relative flex items-center bg-dark-900/90 backdrop-blur-md rounded-full border border-white/10 focus-within:border-white/30 focus-within:bg-dark-950 transition-all duration-300 ease-out shadow-inner overflow-hidden"
+              :class="isExpanded ? 'w-full max-w-[500px]' : 'w-[220px] sm:w-[260px]'"
+              @submit="selectFocused()">
             <!-- Search Icon (Left) -->
-            <i data-lucide="search" class="w-4 h-4 text-gray-500 shrink-0 ml-3 sm:ml-3.5 pointer-events-none"></i>
+            <i data-lucide="search" class="w-4 h-4 text-zinc-400 shrink-0 ml-3.5 pointer-events-none transition-colors duration-200"></i>
             
             <!-- Input Field (Center) -->
             <input type="text"
@@ -35,23 +52,38 @@
                    @keydown.arrow-down.prevent="navigateDown()"
                    @keydown.arrow-up.prevent="navigateUp()"
                    @keydown.enter.prevent="selectFocused()"
-                   @focus="openPanel()"
+                   @focus="expandSearch()"
+                   @blur="collapseSearch()"
                    placeholder="Cari film..."
                    autocomplete="off"
-                   class="flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 px-3 py-2.5 outline-none">
+                   class="min-w-0 flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 px-2 py-2 outline-none">
             
             <!-- Right Section: Clear Button or Ctrl K Badge -->
-            <div class="flex items-center gap-2 mr-3 sm:mr-3.5 shrink-0">
-                <!-- Clear Button -->
-                <button type="button" x-show="query.length > 0" @click="clearSearch()"
+            <div class="flex items-center gap-1.5 mr-2 shrink-0">
+                <!-- Clear Button (muncul saat ada text) -->
+                <button type="button" 
+                        x-show="query.length > 0" 
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-90"
+                        @click="clearSearch()"
                         class="text-zinc-500 hover:text-white transition-colors p-1 cursor-pointer flex items-center justify-center">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
 
-                <!-- Shortcut Badge Indicator (Ctrl K) -->
-                <kbd x-show="query.length === 0" 
-                     class="hidden sm:flex items-center gap-1 pointer-events-none text-xs font-medium text-zinc-500 bg-white/10 px-2.5 py-1 rounded-md border border-white/20 font-sans">
-                    <span>Ctrl</span>
+                <!-- Shortcut Badge Indicator (Cmd/Ctrl K) - fade out saat expanded -->
+                <kbd x-show="query.length === 0 && !isExpanded" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="hidden sm:flex items-center gap-1 pointer-events-none text-[10px] font-semibold text-zinc-400 bg-white/10 px-2 py-0.5 rounded-md border border-white/15 font-sans">
+                    <i data-lucide="command" class="w-3 h-3"></i>
                     <span>K</span>
                 </kbd>
             </div>

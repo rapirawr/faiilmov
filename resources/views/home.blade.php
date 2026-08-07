@@ -180,8 +180,8 @@
                      class="space-y-4">
                 
                 <div class="flex items-center justify-between">
-                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight">Trending Movies</h2>
-                    <a href="{{ route('browse', ['type' => 'movie']) }}" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight">Trending & Paling Banyak Dilihat</h2>
+                    <a href="{{ route('browse', ['type' => 'movie', 'sort' => 'rating_desc']) }}" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
                         <span>More</span>
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </a>
@@ -201,8 +201,13 @@
                                          class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
                                     
                                     <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-200 rounded-xl flex items-center gap-1 shadow-md">
-                                        <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                        <span>{{ number_format($film->rating, 1) }}</span>
+                                        @if($film->view_count > 0)
+                                            <i data-lucide="eye" class="w-3 h-3 text-sky-400"></i>
+                                            <span>{{ number_format($film->view_count) }}</span>
+                                        @else
+                                            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
+                                            <span>{{ number_format($film->rating, 1) }}</span>
+                                        @endif
                                     </div>
                                     @if($film->max_resolution)
                                         <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">

@@ -14,10 +14,12 @@ use Exception;
 class MovieDetailController extends Controller
 {
     protected MovieBoxService $movieBox;
+    protected \App\Services\FilmSearchService $filmSearch;
 
-    public function __construct(MovieBoxService $movieBox)
+    public function __construct(MovieBoxService $movieBox, \App\Services\FilmSearchService $filmSearch)
     {
         $this->movieBox = $movieBox;
+        $this->filmSearch = $filmSearch;
         $this->movieBox->init();
     }
 
@@ -69,7 +71,7 @@ class MovieDetailController extends Controller
             $lastWatchedHistory = Auth::user()->watchHistories()->where('film_id', $film->id)->first();
         }
 
-        $relatedFilms = Film::where('id', '!=', $film->id)->limit(4)->get();
+        $relatedFilms = $this->filmSearch->getSimilarFilms($film, 6);
 
         return view('detail', compact('film', 'userWatchlist', 'userReview', 'lastWatchedHistory', 'relatedFilms'));
     }
@@ -219,7 +221,7 @@ class MovieDetailController extends Controller
             ]);
         }
 
-        $relatedFilms = Film::where('id', '!=', $film->id)->limit(4)->get();
+        $relatedFilms = $this->filmSearch->getSimilarFilms($film, 6);
 
         return view('watch', compact(
             'film',

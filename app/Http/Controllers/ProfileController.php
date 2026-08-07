@@ -13,16 +13,19 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $watchlists = $user->watchlists()
+            ->whereHas('film')
             ->with('film')
             ->latest()
             ->get();
 
         $reviews = $user->reviews()
+            ->whereHas('film')
             ->with('film')
             ->latest()
             ->get();
 
         $watchHistories = $user->watchHistories()
+            ->whereHas('film')
             ->with(['film.seasons.episodes'])
             ->latest('updated_at')
             ->get();

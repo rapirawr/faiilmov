@@ -751,7 +751,7 @@
             </div>
 
             <!-- Sidebar Related -->
-            @if($relatedFilms->count() > 0)
+            @if(isset($relatedFilms) && count($relatedFilms) > 0)
                 <div class="space-y-3">
                     <h3 class="font-serif font-bold text-sm text-white">Rekomendasi Lainnya</h3>
                     @foreach($relatedFilms as $rel)

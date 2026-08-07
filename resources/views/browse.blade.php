@@ -76,6 +76,39 @@
         </div>
     </form>
 
+    <!-- AI Interpretation Badge (shown when AI successfully interpreted the query) -->
+    @if(!empty($aiInterpretation) && !empty($searchQuery))
+        <div class="glass-chip p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5">
+            <div class="flex items-start gap-3">
+                <i data-lucide="sparkles" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+                <div class="flex-1 space-y-1">
+                    <p class="text-xs font-bold text-amber-300">AI menerjemahkan pencarian Anda:</p>
+                    <div class="flex flex-wrap gap-2 text-[11px]">
+                        @if(!empty($aiInterpretation['genres']))
+                            @foreach($aiInterpretation['genres'] as $genre)
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-200 border border-amber-500/30">{{ $genre }}</span>
+                            @endforeach
+                        @endif
+                        @if(!empty($aiInterpretation['type']))
+                            <span class="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-200 border border-sky-500/30">{{ ucfirst($aiInterpretation['type']) }}</span>
+                        @endif
+                        @if(!empty($aiInterpretation['min_rating']))
+                            <span class="px-2.5 py-1 rounded-lg bg-green-500/20 text-green-200 border border-green-500/30">Rating ≥ {{ $aiInterpretation['min_rating'] }}</span>
+                        @endif
+                        @if(!empty($aiInterpretation['mood_keywords']))
+                            @foreach($aiInterpretation['mood_keywords'] as $keyword)
+                                <span class="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30">{{ $keyword }}</span>
+                            @endforeach
+                        @endif
+                        @if(!empty($aiInterpretation['similar_to_title']))
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-500/30">Mirip: {{ $aiInterpretation['similar_to_title'] }}</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Gray Glass Catalog Film Grid -->
     @if($films->count() > 0)
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">

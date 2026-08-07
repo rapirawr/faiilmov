@@ -4,26 +4,22 @@ namespace App\Services;
 
 use App\Models\Film;
 use App\Models\SearchLog;
+use App\Models\Genre;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class FilmSearchService
 {
-    // Minimum query length to avoid returning thousands of irrelevant results
     const MIN_QUERY_LENGTH = 2;
 
-    /**
-     * Perform a ranked, relevance-ordered film search with full-text and normalized hyphen/space support.
-     * Ranking: exact match > starts with > normalized match (hyphen/space tolerant) > contains / full-text
-     *
-     * @param string      $query      Search keyword
-     * @param array       $filters    ['genre' => slug, 'type' => movie|series, 'min_rating' => float, 'sort' => string]
-     * @param int         $perPage
-     * @param string|null $ip
-     * @return LengthAwarePaginator|null  null if query too short
-     */
+    public function __construct(
+        private NvidiaAiService $nvidia
+    ) {}
+
     public function search(string $query, array $filters = [], int $perPage = 30, ?string $ip = null): ?LengthAwarePaginator
     {
         $query = trim($query);
@@ -32,18 +28,106 @@ class FilmSearchService
             return null;
         }
 
-        $results = $this->buildQuery($query, $filters, $perPage);
+        $aiInterpretation = $this->nvidia->interpretQuery($query);
 
-        // Log the search
+        if ($aiInterpretation) {
+            $results = $this->aiSearch($query, $aiInterpretation, $filters, $perPage);
+        } else {
+            $results = $this->buildQuery($query, $filters, $perPage);
+        }
+
         $resultCount = $results->total();
         $this->logSearch($query, $resultCount, $ip);
 
         return $results;
     }
 
-    /**
-     * Build the search query with ranked relevance ordering.
-     */
+    public function getAiInterpretation(string $query): ?array
+    {
+        if (mb_strlen($query) < self::MIN_QUERY_LENGTH) {
+            return null;
+        }
+
+        return $this->nvidia->interpretQuery($query);
+    }
+
+    private function aiSearch(string $originalQuery, array $interpretation, array $filters, int $perPage): LengthAwarePaginator
+    {
+        $filmQuery = Film::with('genres');
+
+        $this->applyAiFilters($filmQuery, $interpretation);
+
+        $this->applyAiMoodKeywords($filmQuery, $interpretation);
+
+        $sort = $filters['sort'] ?? 'relevance';
+        match ($sort) {
+            'rating_desc' => $filmQuery->orderByDesc('rating'),
+            'title_asc'   => $filmQuery->orderBy('title'),
+            default       => $filmQuery->orderByDesc('rating')->orderByDesc('release_year'),
+        };
+
+        return $filmQuery->paginate($perPage)->withQueryString();
+    }
+
+    private function applyAiFilters($filmQuery, array $interpretation): void
+    {
+        $genres = $interpretation['genres'] ?? [];
+        if (!empty($genres)) {
+            $genreSlugs = array_map(fn($g) => Str::slug($g), $genres);
+            $filmQuery->whereHas('genres', function ($q) use ($genreSlugs) {
+                $q->whereIn('slug', $genreSlugs);
+            });
+        }
+
+        $type = $interpretation['type'] ?? null;
+        if ($type && in_array($type, ['movie', 'series'])) {
+            $filmQuery->where('subject_type', $type);
+        }
+
+        $minRating = $interpretation['min_rating'] ?? null;
+        if ($minRating !== null) {
+            $filmQuery->where('rating', '>=', $minRating);
+        }
+
+        $yearRange = $interpretation['year_range'] ?? null;
+        if ($yearRange) {
+            if (isset($yearRange['min'])) {
+                $filmQuery->where('release_year', '>=', $yearRange['min']);
+            }
+            if (isset($yearRange['max'])) {
+                $filmQuery->where('release_year', '<=', $yearRange['max']);
+            }
+        }
+
+        $similarToTitle = $interpretation['similar_to_title'] ?? null;
+        if ($similarToTitle) {
+            $similarFilm = Film::where('title', 'LIKE', '%' . $similarToTitle . '%')->first();
+            if ($similarFilm) {
+                $similarGenres = $similarFilm->genres->pluck('genre_id')->toArray();
+                if (!empty($similarGenres)) {
+                    $filmQuery->whereHas('genres', fn($q) => $q->whereIn('genres.id', $similarGenres));
+                }
+                $filmQuery->where('id', '!=', $similarFilm->id);
+            }
+        }
+    }
+
+    private function applyAiMoodKeywords($filmQuery, array $interpretation): void
+    {
+        $moodKeywords = $interpretation['mood_keywords'] ?? [];
+        
+        if (empty($moodKeywords)) {
+            return;
+        }
+
+        $filmQuery->where(function ($q) use ($moodKeywords) {
+            foreach ($moodKeywords as $keyword) {
+                $q->orWhere('title', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('synopsis', 'LIKE', '%' . $keyword . '%');
+            }
+        });
+    }
+
     private function buildQuery(string $query, array $filters, int $perPage): LengthAwarePaginator
     {
         $cleanQ = $this->sanitize($query);
@@ -73,7 +157,6 @@ class FilmSearchService
                     ->orWhereRaw("{$sqlNormalizeTitle} LIKE ?", ['%' . $normalizedQ . '%']);
             });
 
-        // Apply optional filters (genre, type, rating)
         if (!empty($filters['genre'])) {
             $filmQuery->whereHas('genres', fn($q) => $q->where('slug', $filters['genre']));
         }
@@ -86,7 +169,6 @@ class FilmSearchService
             $filmQuery->where('rating', '>=', (float)$filters['min_rating']);
         }
 
-        // Sort by relevance first, then user-chosen sort as tiebreaker
         $sort = $filters['sort'] ?? 'relevance';
         if ($sort === 'relevance' || !in_array($sort, ['rating_desc', 'title_asc', 'latest'])) {
             $filmQuery->orderByDesc('relevance_score')->orderByDesc('rating');
@@ -101,11 +183,6 @@ class FilmSearchService
         return $filmQuery->paginate($perPage)->withQueryString();
     }
 
-    /**
-     * Return autocomplete suggestions (max 8) — supports ampersand & symbol normalization.
-     * Also handles popular film recommendations when query is empty or isPopular is true.
-     * Cached per query for 5 minutes.
-     */
     public function autocomplete(string $query, bool $isPopular = false): array
     {
         $query = trim($query);
@@ -165,9 +242,63 @@ class FilmSearchService
         });
     }
 
-    /**
-     * Sanitize query string to prevent SQL injection and strip special chars.
-     */
+    public function getSimilarFilms(Film $film, int $limit = 6): Collection
+    {
+        $embedding = $film->ai_embeddings;
+        
+        if (!empty($embedding) && is_array($embedding)) {
+            return $this->getSimilarByEmbedding($embedding, $film->id, $limit);
+        }
+
+        return $this->getSimilarByGenre($film, $limit);
+    }
+
+    private function getSimilarByEmbedding(array $sourceEmbedding, int $excludeId, int $limit): Collection
+    {
+        $allFilms = Film::where('id', '!=', $excludeId)
+            ->whereNotNull('ai_embeddings')
+            ->limit(500)
+            ->get();
+
+        if ($allFilms->isEmpty()) {
+            return collect();
+        }
+
+        $similarities = [];
+        foreach ($allFilms as $candidate) {
+            $candidateEmbedding = $candidate->ai_embeddings;
+            if (!empty($candidateEmbedding) && is_array($candidateEmbedding)) {
+                $score = $this->nvidia->cosineSimilarity($sourceEmbedding, $candidateEmbedding);
+                $similarities[] = [
+                    'film' => $candidate,
+                    'score' => $score,
+                ];
+            }
+        }
+
+        usort($similarities, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        return collect(array_slice(array_column($similarities, 'film'), 0, $limit));
+    }
+
+    private function getSimilarByGenre(Film $film, int $limit): Collection
+    {
+        $genreIds = $film->genres->pluck('id')->toArray();
+        
+        if (empty($genreIds)) {
+            return Film::where('id', '!=', $film->id)
+                ->orderByDesc('rating')
+                ->limit($limit)
+                ->get();
+        }
+
+        return Film::where('id', '!=', $film->id)
+            ->whereHas('genres', fn($q) => $q->whereIn('genres.id', $genreIds))
+            ->orderByDesc('rating')
+            ->limit($limit)
+            ->get();
+    }
+
     public function sanitize(string $query): string
     {
         $query = preg_replace('/[+\-><\(\)~*"@]+/', ' ', $query);
@@ -175,9 +306,6 @@ class FilmSearchService
         return trim(strip_tags($query));
     }
 
-    /**
-     * Log search query for analytics.
-     */
     private function logSearch(string $query, int $resultCount, ?string $ip): void
     {
         try {
@@ -188,7 +316,6 @@ class FilmSearchService
                 'user_id'      => Auth::id(),
             ]);
         } catch (\Exception $e) {
-            // Silently fail — search logging must never break the main flow
         }
     }
 }

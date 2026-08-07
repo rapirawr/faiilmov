@@ -78,6 +78,9 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach($watchHistories as $item)
+                    @if(!$item->film)
+                        @continue
+                    @endif
                     @php
                         $durMin = 120;
                         if ($item->film->subject_type === 'series') {
@@ -96,12 +99,12 @@
                     <div class="glass-panel rounded-3xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between group shadow-xl relative overflow-hidden">
                         <div>
                             <!-- Poster & Overlay -->
-                            <div class="relative aspect-[16/9] rounded-2xl overflow-hidden mb-3 bg-dark-900 shadow-md">
-                                <img src="{{ $item->film->backdrop_url ?: $item->film->poster_url }}" alt="{{ $item->film->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <a href="{{ $watchUrl }}" class="relative aspect-[16/9] block rounded-2xl overflow-hidden mb-3 bg-dark-900 shadow-md group/poster">
+                                <img src="{{ $item->film->backdrop_url ?: $item->film->poster_url }}" alt="{{ $item->film->title }}" class="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500">
                                 <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent"></div>
                                 
                                 <!-- Category & Ep Badge -->
-                                <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                                <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
                                     <span class="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
                                         {{ $item->film->subject_type === 'series' ? 'Series' : 'Film' }}
                                     </span>
@@ -113,21 +116,14 @@
                                 </div>
 
                                 <!-- Quick Delete Single History -->
-                                <form action="{{ route('watch-history.destroy', $item->id) }}" method="POST" class="absolute top-2.5 right-2.5">
+                                <form action="{{ route('watch-history.destroy', $item->id) }}" method="POST" class="absolute top-2.5 right-2.5 z-20">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-1.5 rounded-xl glass-chip text-zinc-400 hover:text-rose-400 hover:bg-white/10 transition-colors cursor-pointer" title="Hapus dari riwayat">
                                         <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </form>
-
-                                <!-- Play Overlay Button -->
-                                <a href="{{ $watchUrl }}" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-dark-950/40">
-                                    <div class="w-11 h-11 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-xl transform group-hover:scale-110 transition-transform">
-                                        <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
-                                    </div>
-                                </a>
-                            </div>
+                            </a>
 
                             <!-- Title & Metadata -->
                             <h3 class="font-serif font-bold text-sm text-white line-clamp-1 group-hover:text-amber-300 transition-colors mb-1">
@@ -169,7 +165,7 @@
 
     <!-- Tab 2: Watchlist -->
     @php
-        $watchlistJson = json_encode($watchlists->map(function($w) {
+        $watchlistJson = json_encode($watchlists->filter(fn($w) => $w->film)->map(function($w) {
             return [
                 'id' => $w->id,
                 'film_id' => $w->film_id,
@@ -223,6 +219,9 @@
         @if($reviews->count() > 0)
             <div class="space-y-4 max-w-3xl">
                 @foreach($reviews as $rev)
+                    @if(!$rev->film)
+                        @continue
+                    @endif
                     <div class="glass-panel p-6 rounded-3xl border border-white/10 flex items-start gap-4 hover:border-white/20 transition-all shadow-md">
                         <img src="{{ $rev->film->poster_url }}" alt="{{ $rev->film->title }}" class="w-14 h-20 object-cover rounded-2xl shrink-0 bg-dark-900">
                         <div class="flex-1 min-w-0">

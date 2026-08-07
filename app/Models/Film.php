@@ -16,6 +16,7 @@ class Film extends Model
         'title',
         'slug',
         'synopsis',
+        'ai_embeddings',
         'release_year',
         'duration_minutes',
         'poster_url',
@@ -28,10 +29,16 @@ class Film extends Model
     ];
 
     protected $casts = [
+        'ai_embeddings' => 'array',
         'rating' => 'float',
         'view_count' => 'integer',
         'release_year' => 'integer',
         'duration_minutes' => 'integer',
+    ];
+
+    protected $dispatchesEvents = [
+        'created' => \App\Events\FilmCreated::class,
+        'updated' => \App\Events\FilmUpdated::class,
     ];
 
     public function genres()

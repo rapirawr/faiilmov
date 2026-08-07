@@ -302,7 +302,7 @@
             </section>
 
             <!-- Related Films -->
-            @if($relatedFilms->count() > 0)
+            @if(isset($relatedFilms) && count($relatedFilms) > 0)
                 <section>
                     <h3 class="font-serif font-bold text-base text-white mb-4">Film Serupa</h3>
                     <div class="space-y-3">

@@ -13,7 +13,8 @@ class BrowseController extends Controller
 {
     public function __construct(
         protected MovieBoxService $movieBox,
-        protected FilmSearchService $filmSearch
+        protected FilmSearchService $filmSearch,
+        protected \App\Services\NvidiaAiService $nvidia
     ) {}
 
     public function index(Request $request)
@@ -54,7 +55,9 @@ class BrowseController extends Controller
         ];
 
         // Use smart search when query is provided
+        $aiInterpretation = null;
         if ($searchQuery && mb_strlen($searchQuery) >= FilmSearchService::MIN_QUERY_LENGTH) {
+            $aiInterpretation = $this->filmSearch->getAiInterpretation($searchQuery);
             $films = $this->filmSearch->search($searchQuery, $filters, 30, $request->ip());
             $noResults = $films && $films->total() === 0;
         } else {
@@ -86,6 +89,6 @@ class BrowseController extends Controller
             ? Film::orderByDesc('rating')->limit(6)->get()
             : collect();
 
-        return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms'));
+        return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation'));
     }
 }

@@ -75,9 +75,19 @@ class HomeController extends Controller
         if ($popularSeries->isEmpty()) {
             $popularSeries = Film::orderByDesc('rating')->limit(12)->get();
         }
-        $trendingMovies = Film::where('subject_type', 'movie')->orderByDesc('id')->limit(12)->get();
+        $trendingMovies = Film::where('subject_type', 'movie')
+            ->orderByDesc('view_count')
+            ->orderByDesc('rating')
+            ->orderByDesc('id')
+            ->limit(12)
+            ->get();
+            
         if ($trendingMovies->isEmpty()) {
-            $trendingMovies = Film::orderByDesc('id')->limit(12)->get();
+            $trendingMovies = Film::orderByDesc('view_count')
+                ->orderByDesc('rating')
+                ->orderByDesc('id')
+                ->limit(12)
+                ->get();
         }
 
         return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'trendingMovies', 'searchQuery'));

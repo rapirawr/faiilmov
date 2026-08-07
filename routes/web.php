@@ -21,6 +21,7 @@ Route::get('/browse', [BrowseController::class, 'index'])->name('browse');
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
 Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+Route::get('/search/ai-interpret', [SearchController::class, 'aiInterpret'])->name('search.ai-interpret');
 
 // Nonton Bareng (Watch Party) Routes
 Route::post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');

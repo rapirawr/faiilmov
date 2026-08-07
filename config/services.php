@@ -48,4 +48,11 @@ return [
         ],
     ],
 
+    'nvidia' => [
+        'api_key' => env('NVIDIA_API_KEY', ''),
+        'base_url' => env('NVIDIA_API_URL', 'https://integrate.api.nvidia.com/v1'),
+        'llm_model' => env('NVIDIA_LLM_MODEL', 'meta/llama-3.1-8b-instruct'),
+        'embedding_model' => env('NVIDIA_EMBEDDING_MODEL', 'nvidia/nv-embed-v2'),
+    ],
+
 ];
