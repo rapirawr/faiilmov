@@ -2,7 +2,7 @@
 deployment:
   tasks:
     # ─── Variabel path ────────────────────────────────────────────
-    - export APPPATH=/home/faiiller/faiilmov
+    - export APPPATH=/home/faiiller/movie.faiillery.my.id/faiilmov-repo
     - export DEPLOYPATH=/home/faiiller/movie.faiillery.my.id/public
 
     # ─── 1. Install Composer dependencies (no dev) ────────────────
@@ -29,7 +29,7 @@ deployment:
 
     # ─── 7. Deploy public folder ke document root ─────────────────
     - /bin/mkdir -p $DEPLOYPATH
-    - /bin/cp -R public/. $DEPLOYPATH/
+    - /bin/cp -R $APPPATH/public/. $DEPLOYPATH/
 
     # ─── 8. Arahkan index.php ke app root yang benar ──────────────
     - /bin/sed -i "s|__DIR__.'/../vendor|'$APPPATH/vendor|g" $DEPLOYPATH/index.php
