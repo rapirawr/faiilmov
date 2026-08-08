@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/faiiller/faiilmov.my.id/public/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/find public -mindepth 1 ! -name "index.php" -exec /bin/cp -R {} $DEPLOYPATH \;
