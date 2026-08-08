@@ -214,6 +214,48 @@
                         <div class="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
                     </div>
 
+                    <!-- SKIP INTRO BUTTON (Series Only) -->
+                    <template x-if="subjectType === 'series' && introStart > 0 && currentTime >= introStart && !isIntroSkipped">
+                        <div x-transition:enter="transition ease-out duration-300" 
+                             x-transition:leave="transition ease-in duration-200"
+                             class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40">
+                            <button @click="skipIntro()" 
+                                    class="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-sm transition-colors flex items-center gap-2 shadow-lg backdrop-blur-sm border border-amber-500/30">
+                                <i data-lucide="skip-forward" class="w-4 h-4 fill-zinc-950"></i>
+                                <span>Skip Intro</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- AUTO-PLAY NEXT EPISODE COUNTDOWN -->
+                    <template x-if="nextEpisode && showAutoPlayCountdown">
+                        <div x-transition:enter="transition ease-out duration-400"
+                             x-transition:leave="transition ease-in duration-200"
+                             class="absolute bottom-20 left-1/2 -translate-x-1/2 z-40">
+                            <div class="glass-panel p-4 rounded-2xl border border-amber-500/40 shadow-2xl backdrop-blur-md bg-dark-950/80 flex items-center gap-4 min-w-[320px]">
+                                <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                                    <img :src="nextEpisode.thumbnail_url" 
+                                         :alt="nextEpisode.title"
+                                         class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] text-zinc-400 mb-1">Episode Selanjutnya dalam <span x-text="autoPlayCountdown" class="text-amber-400 font-bold"></span>s</p>
+                                    <h4 class="text-xs font-bold text-white truncate" x-text="nextEpisode.title"></h4>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button @click="playNextEpisode()" 
+                                            class="px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors cursor-pointer">
+                                        Putar
+                                    </button>
+                                    <button @click="cancelAutoPlay()" 
+                                            class="p-1.5 rounded-xl hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- Center Loading & Buffering Spinner -->
                     <div x-show="isBuffering" 
                          x-transition:enter="transition ease-out duration-200 opacity-0"
@@ -794,6 +836,13 @@
             seasons: config.seasons || [],
             nextEpisode: config.nextEpisode || null,
             
+            introStart: 0,
+            introEnd: 0,
+            isIntroSkipped: false,
+            showAutoPlayCountdown: false,
+            autoPlayCountdown: 10,
+            autoPlayTimer: null,
+            
             isPlaying: false,
             currentTime: 0,
             duration: 0,
@@ -911,6 +960,38 @@
                         this.duration = video.duration || 0;
                         this.progressPercent = this.duration > 0 ? (this.currentTime / this.duration) * 100 : 0;
                         
+                        // Check for Skip Intro
+                        if (this.subjectType === 'series' && this.introStart > 0 && !this.isIntroSkipped && this.currentTime >= this.introStart) {
+                            // Don't auto-skip, just show the button
+                        }
+                        
+                        // Auto-play countdown - STRICT validation
+                        // Only trigger when:
+                        // 1. There IS a next episode
+                        // 2. Countdown not already showing
+                        // 3. duration is valid (> 60 seconds to avoid false positives)
+                        // 4. video is NOT buffering
+                        // 5. video IS actually playing
+                        // 6. progressPercent >= 95% (truly near the end, not just loading)
+                        if (
+                            this.nextEpisode &&
+                            !this.showAutoPlayCountdown &&
+                            this.duration > 60 &&
+                            !this.isBuffering &&
+                            this.isPlaying &&
+                            this.progressPercent >= 95
+                        ) {
+                            this.showAutoPlayCountdown = true;
+                            this.autoPlayCountdown = 10;
+                            if (this.autoPlayTimer) clearInterval(this.autoPlayTimer);
+                            this.autoPlayTimer = setInterval(() => {
+                                this.autoPlayCountdown--;
+                                if (this.autoPlayCountdown <= 0) {
+                                    this.playNextEpisode();
+                                }
+                            }, 1000);
+                        }
+                        
                         // Auto save position every 5s to localStorage & server
                         if (Math.floor(this.currentTime) % 5 === 0 && this.currentTime > 5) {
                             localStorage.setItem('faiilmov_watch_pos_' + this.filmId + '_s' + this.currentSeason + '_e' + this.currentEpisode, this.currentTime);
@@ -942,6 +1023,13 @@
                     });
 
                     video.addEventListener('waiting', () => { this.isBuffering = true; });
+                    video.addEventListener('canplay', () => { 
+                        this.isBuffering = false;
+                        // Update duration from real video metadata when stream is ready
+                        if (video.duration && isFinite(video.duration) && video.duration > 0) {
+                            this.duration = video.duration;
+                        }
+                    });
                     video.addEventListener('playing', () => { 
                         this.isBuffering = false; 
                         this.isPlaying = true;
@@ -954,11 +1042,17 @@
                     video.addEventListener('ended', () => {
                         this.isPlaying = false;
                         this.showControls = true;
-                        localStorage.removeItem('faiilmov_watch_pos_' + this.filmId + '_s' + this.currentSeason + '_e' + this.currentEpisode);
                         
-                        // Autoplay Next Episode if available
-                        if (this.nextEpisode) {
-                            this.playNextEpisode();
+                        // Only trigger auto-play if video truly ended (progress >= 98%)
+                        if (this.progressPercent >= 98 && this.duration > 0) {
+                            localStorage.removeItem('faiilmov_watch_pos_' + this.filmId + '_s' + this.currentSeason + '_e' + this.currentEpisode);
+                            
+                            // Autoplay Next Episode if available
+                            if (this.nextEpisode && !this.showAutoPlayCountdown) {
+                                setTimeout(() => {
+                                    this.playNextEpisode();
+                                }, 500);
+                            }
                         }
                     });
                     video.addEventListener('volumechange', () => {
@@ -1043,6 +1137,10 @@
                 this.currentSeason = seasonNum;
                 this.currentEpisode = episodeNum;
                 this.selectedSeasonNumber = seasonNum;
+                
+                // CRITICAL: Reset countdown and timer when switching episode
+                this.cancelAutoPlay();
+                this.isIntroSkipped = false;
 
                 const url = `/film/${this.slug}/watch?season=${seasonNum}&episode=${episodeNum}`;
                 window.history.pushState(null, '', url);
@@ -1096,6 +1194,14 @@
                             this.fetchSubtitles();
                         }
                         this.nextEpisode = data.nextEpisode;
+                        
+                        // Reset intro skip and auto-play countdown
+                        this.isIntroSkipped = false;
+                        this.showAutoPlayCountdown = false;
+                        if (this.autoPlayTimer) {
+                            clearInterval(this.autoPlayTimer);
+                            this.autoPlayTimer = null;
+                        }
 
                         this.$nextTick(() => {
                             if (this.$refs.video) {
@@ -1181,6 +1287,21 @@
             playNextEpisode() {
                 if (this.nextEpisode) {
                     this.switchEpisode(this.nextEpisode.season_number, this.nextEpisode.episode_number);
+                }
+            },
+
+            skipIntro() {
+                if (this.$refs.video && this.introEnd > this.introStart) {
+                    this.$refs.video.currentTime = this.introEnd;
+                    this.isIntroSkipped = true;
+                }
+            },
+
+            cancelAutoPlay() {
+                this.showAutoPlayCountdown = false;
+                if (this.autoPlayTimer) {
+                    clearInterval(this.autoPlayTimer);
+                    this.autoPlayTimer = null;
                 }
             },
 
@@ -1353,6 +1474,9 @@
                 this.activeQuality = qualityLabel;
                 const currTime = this.currentTime;
                 const playing = this.isPlaying;
+                
+                // Reset auto-play countdown and interval when changing quality
+                this.cancelAutoPlay();
                 
                 this.activeStream = url;
                 

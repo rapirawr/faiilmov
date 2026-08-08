@@ -7,6 +7,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'faiilmov | Database Film & Streaming')</title>
     
+    <!-- Favicon & App Icon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    
     <!-- Google Fonts: Instrument Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,6 +33,19 @@
                         display: ['"Instrument Sans"', 'sans-serif'],
                     },
                     colors: {
+                        amber: {
+                            50: '#faf9f7',
+                            100: '#f4f3ef',
+                            200: '#eae8e2',
+                            300: '#e4e2dd',
+                            400: '#e4e2dd',
+                            500: '#e4e2dd',
+                            600: '#cfcdb8',
+                            700: '#b2b09a',
+                            800: '#8c8a77',
+                            900: '#646255',
+                            950: '#3a3831',
+                        },
                         dark: {
                             950: '#09090b',
                             900: '#121217',
@@ -112,11 +130,13 @@
     <!-- Top Navigation Header Component -->
     <x-navbar />
 
-    <!-- Left Sidebar Navigation Component -->
-    <x-sidebar />
+    @unless(View::hasSection('hide_sidebar'))
+        <!-- Left Sidebar Navigation Component -->
+        <x-sidebar />
+    @endunless
 
     <!-- Main Content Body -->
-    <main class="pt-20 sm:pt-24 lg:pl-64 flex-grow relative z-10">
+    <main class="pt-20 sm:pt-24 {{ View::hasSection('hide_sidebar') ? '' : 'lg:pl-64' }} flex-grow relative z-10">
         @yield('content')
     </main>
 
@@ -125,6 +145,9 @@
 
     <!-- Persistent Global Cross-Page Floating Mini Player Component -->
     <x-global-mini-player />
+
+    <!-- Reusable Welcome / Benefit Info Modal Component -->
+    <x-welcome-modal />
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

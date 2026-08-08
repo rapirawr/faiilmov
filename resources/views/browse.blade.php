@@ -97,11 +97,11 @@
                         @endif
                         @if(!empty($aiInterpretation['mood_keywords']))
                             @foreach($aiInterpretation['mood_keywords'] as $keyword)
-                                <span class="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30">{{ $keyword }}</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-200 border border-amber-500/30">{{ $keyword }}</span>
                             @endforeach
                         @endif
                         @if(!empty($aiInterpretation['similar_to_title']))
-                            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-500/30">Mirip: {{ $aiInterpretation['similar_to_title'] }}</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-500/30">Mirip: {{ $aiInterpretation['similar_to_title'] }}</span>
                         @endif
                     </div>
                 </div>

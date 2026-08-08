@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminUserController extends Controller
 {
@@ -65,11 +66,18 @@ class AdminUserController extends Controller
             'permanent' => null,
         };
 
-        $user->update([
-            'is_banned' => true,
-            'banned_reason' => $validated['reason'],
-            'banned_until' => $bannedUntil,
-        ]);
+        DB::transaction(function () use ($user, $validated, $bannedUntil) {
+            $user->update([
+                'is_banned' => true,
+                'banned_reason' => $validated['reason'],
+                'banned_until' => $bannedUntil,
+            ]);
+
+            // Invalidate ALL active sessions for this user
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->delete();
+        });
 
         $durationText = $bannedUntil ? "sampai " . $bannedUntil->format('d M Y H:i') : "secara permanen";
         AdminActivityLog::log('banned_user', "Mem-ban user '{$user->name}' ({$user->email}) {$durationText}. Alasan: {$validated['reason']}", 'User', $user->id);

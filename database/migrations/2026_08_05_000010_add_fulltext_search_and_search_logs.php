@@ -10,7 +10,9 @@ return new class extends Migration
     public function up(): void
     {
         // Add MySQL FULLTEXT index on films.title and films.synopsis for fast full-text search
-        DB::statement('ALTER TABLE films ADD FULLTEXT INDEX ft_films_title_synopsis (title, synopsis)');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE films ADD FULLTEXT INDEX ft_films_title_synopsis (title, synopsis)');
+        }
 
         // Create search_logs table for tracking popular queries
         Schema::create('search_logs', function (Blueprint $table) {

@@ -12,8 +12,8 @@
 
         <!-- Header / Logo -->
         <div class="text-center mb-8">
-            <div class="w-14 h-14 rounded-2xl bg-white text-zinc-950 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-white/5 border border-white/20">
-                <i data-lucide="user-plus" class="w-7 h-7"></i>
+            <div class="w-16 h-16 rounded-2xl bg-[#e4e2dd] p-2 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-white/5 border border-white/20">
+                <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="w-full h-full object-contain">
             </div>
             <span class="text-[11px] uppercase tracking-widest text-zinc-400 font-semibold mb-1 block">Bergabung Sekarang</span>
             <h1 class="font-serif font-extrabold text-2xl sm:text-3xl text-white tracking-tight">

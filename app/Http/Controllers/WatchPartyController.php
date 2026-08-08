@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Film;
 use App\Models\WatchParty;
 use App\Models\WatchPartyParticipant;
+use Illuminate\Support\Facades\DB;
 use App\Models\WatchPartyMessage;
 use App\Models\WatchPartyReaction;
 use App\Services\MovieBoxService;
@@ -234,7 +235,9 @@ class WatchPartyController extends Controller
      */
     public function updatePlayback(Request $request, string $roomCode)
     {
-        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))
+            ->lockForUpdate()
+            ->firstOrFail();
         $sessionId = session()->getId();
         $user = Auth::user();
 
@@ -254,18 +257,20 @@ class WatchPartyController extends Controller
             return response()->json(['error' => 'Hanya Host yang dapat mengontrol video.'], 403);
         }
 
-        $action = $request->input('action', 'sync'); // play, pause, seek, playback_rate_change, episode_change, heartbeat
+        $action = $request->input('action', 'sync');
         $position = (float)$request->input('position', 0);
         $isPlaying = (bool)$request->input('is_playing', false);
         $speed = (float)$request->input('speed', 1.0);
         $serverTime = microtime(true);
 
-        $watchParty->update([
-            'current_position_seconds' => $position,
-            'is_playing'               => $isPlaying,
-            'playback_speed'           => $speed,
-            'status'                   => $isPlaying ? 'playing' : 'waiting',
-        ]);
+        DB::transaction(function () use ($watchParty, $position, $isPlaying, $speed) {
+            $watchParty->update([
+                'current_position_seconds' => $position,
+                'is_playing'               => $isPlaying,
+                'playback_speed'           => $speed,
+                'status'                   => $isPlaying ? 'playing' : 'waiting',
+            ]);
+        });
 
         try {
             broadcast(new \App\Events\PlaybackStateChanged(
@@ -322,13 +327,18 @@ class WatchPartyController extends Controller
                     $q->where('session_id', $sessionId);
                 }
             })
+            ->whereNull('left_at')
             ->first();
 
-        if ($participant && $participant->is_muted) {
+        if (!$participant) {
+            return response()->json(['error' => 'Anda bukan peserta room ini.'], 403);
+        }
+
+        if ($participant->is_muted) {
             return response()->json(['error' => 'Anda sedang di-mute oleh Host.'], 403);
         }
 
-        $senderName = e($request->sender_name);
+        $senderName = $participant->display_name;
         $message = e($request->message);
 
         $savedMsg = WatchPartyMessage::create([
@@ -371,8 +381,31 @@ class WatchPartyController extends Controller
         ]);
 
         $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = Auth::user();
+        $sessionId = session()->getId();
+        
+        // Verify participant exists and not kicked
+        $participant = WatchPartyParticipant::where('watch_party_id', $watchParty->id)
+            ->where(function ($q) use ($user, $sessionId) {
+                if ($user) {
+                    $q->where('user_id', $user->id)->orWhere('session_id', $sessionId);
+                } else {
+                    $q->where('session_id', $sessionId);
+                }
+            })
+            ->whereNull('left_at')
+            ->first();
+        
+        if (!$participant) {
+            return response()->json(['error' => 'Anda bukan peserta room ini.'], 403);
+        }
+        
+        if ($participant->is_muted) {
+            return response()->json(['error' => 'Anda sedang di-mute oleh Host.'], 403);
+        }
+        
         $emoji = $request->emoji;
-        $senderName = e($request->input('sender_name', 'Guest'));
+        $senderName = $participant->display_name;
 
         $savedRx = WatchPartyReaction::create([
             'watch_party_id' => $watchParty->id,

@@ -25,7 +25,7 @@ class MovieDetailController extends Controller
 
     public function show(string $slug)
     {
-        $film = Film::with(['genres', 'actors', 'reviews.user', 'seasons.episodes'])->where('slug', $slug)->first();
+        $film = Film::with(['genres', 'actors', 'seasons.episodes'])->where('slug', $slug)->first();
 
         if (!$film) {
             $subjectId = $slug;
@@ -58,22 +58,38 @@ class MovieDetailController extends Controller
             $film->load('seasons.episodes');
         }
 
-        // Increment view count
+        // Increment view count (deferred to avoid blocking)
         $film->increment('view_count');
 
         $userWatchlist = null;
         $userReview = null;
         $lastWatchedHistory = null;
+        $reviews = collect();
 
         if (Auth::check()) {
-            $userWatchlist = Auth::user()->watchlists()->where('film_id', $film->id)->first();
-            $userReview = Auth::user()->reviews()->where('film_id', $film->id)->first();
-            $lastWatchedHistory = Auth::user()->watchHistories()->where('film_id', $film->id)->first();
+            // Combine 3 queries into one batch query
+            $userData = Auth::user()
+                ->where('id', Auth::id())
+                ->with([
+                    'watchlists' => fn($q) => $q->where('film_id', $film->id),
+                    'reviews' => fn($q) => $q->where('film_id', $film->id),
+                    'watchHistories' => fn($q) => $q->where('film_id', $film->id),
+                ])
+                ->first();
+            
+            $userWatchlist = $userData?->watchlists->first();
+            $userReview = $userData?->reviews->first();
+            $lastWatchedHistory = $userData?->watchHistories->first();
+            
+            // Load reviews separately with limit to avoid loading all
+            $reviews = $film->reviews()->with('user')->latest()->limit(20)->get();
+        } else {
+            $reviews = $film->reviews()->with('user')->latest()->limit(20)->get();
         }
 
         $relatedFilms = $this->filmSearch->getSimilarFilms($film, 6);
 
-        return view('detail', compact('film', 'userWatchlist', 'userReview', 'lastWatchedHistory', 'relatedFilms'));
+        return view('detail', compact('film', 'userWatchlist', 'userReview', 'lastWatchedHistory', 'relatedFilms', 'reviews'));
     }
 
     public function watch(Request $request, string $slug)
@@ -250,14 +266,37 @@ class MovieDetailController extends Controller
         ]);
 
         if (Auth::check()) {
-            WatchHistory::updateOrCreate(
-                ['user_id' => Auth::id(), 'film_id' => $request->film_id],
-                [
-                    'season_number'    => $request->season_number,
-                    'episode_number'   => $request->episode_number,
-                    'progress_seconds' => $request->progress_seconds,
-                ]
-            );
+            \DB::transaction(function () use ($request) {
+                $history = \App\Models\WatchHistory::where('user_id', Auth::id())
+                    ->where('film_id', $request->film_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($history) {
+                    $isNewer = ($request->season_number > $history->season_number) ||
+                               ($request->season_number == $history->season_number && 
+                                $request->episode_number > $history->episode_number) ||
+                               ($request->season_number == $history->season_number && 
+                                $request->episode_number == $history->episode_number &&
+                                $request->progress_seconds > $history->progress_seconds);
+
+                    if ($isNewer) {
+                        $history->update([
+                            'season_number'    => $request->season_number,
+                            'episode_number'   => $request->episode_number,
+                            'progress_seconds' => $request->progress_seconds,
+                        ]);
+                    }
+                } else {
+                    \App\Models\WatchHistory::create([
+                        'user_id'          => Auth::id(),
+                        'film_id'          => $request->film_id,
+                        'season_number'    => $request->season_number,
+                        'episode_number'   => $request->episode_number,
+                        'progress_seconds' => $request->progress_seconds,
+                    ]);
+                }
+            });
         }
 
         return response()->json(['status' => 'ok']);

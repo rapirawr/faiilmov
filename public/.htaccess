@@ -12,3 +12,36 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# SECURITY: Prevent direct access to sensitive files
+<FilesMatch "^(\.env|\.env\..*|composer\.(json|lock)|package(-lock)?\.json|\.git|\.gitignore|README\.md|artisan)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(log|sqlite|sqlite3|sql)$">
+    Require all denied
+</FilesMatch>
+
+# SECURITY: Disable directory listing
+Options -Indexes
+
+# SECURITY: Prevent access to hidden files (starting with .)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# SECURITY: Force HTTPS (if SSL available)
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{REQUEST_METHOD} !=POST
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
+
+# SECURITY: Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>

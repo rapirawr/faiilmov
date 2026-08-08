@@ -6,6 +6,7 @@ use App\Models\Film;
 use App\Models\Watchlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WatchlistController extends Controller
 {
@@ -13,41 +14,47 @@ class WatchlistController extends Controller
     {
         $status = $request->input('status', 'plan_to_watch');
 
-        $existing = Watchlist::where('user_id', Auth::id())
-            ->where('film_id', $film->id)
-            ->first();
+        return DB::transaction(function () use ($request, $film, $status) {
+            $existing = Watchlist::where('user_id', Auth::id())
+                ->where('film_id', $film->id)
+                ->lockForUpdate()
+                ->first();
 
-        $message = '';
-        if ($existing) {
-            if ($existing->status === $status && !$request->has('force')) {
-                $existing->delete();
-                $message = 'Film dihapus dari Watchlist.';
+            $message = '';
+            $inWatchlist = true;
+            
+            if ($existing) {
+                if ($existing->status === $status && !$request->has('force')) {
+                    $existing->delete();
+                    $message = 'Film dihapus dari Watchlist.';
+                    $inWatchlist = false;
+                } else {
+                    $existing->update(['status' => $status]);
+                    $message = 'Status Watchlist diperbarui.';
+                }
             } else {
-                $existing->update(['status' => $status]);
-                $message = 'Status Watchlist diperbarui.';
+                Watchlist::create([
+                    'user_id' => Auth::id(),
+                    'film_id' => $film->id,
+                    'status'  => $status,
+                ]);
+                $message = 'Film ditambahkan ke Watchlist.';
             }
-        } else {
-            Watchlist::create([
-                'user_id' => Auth::id(),
-                'film_id' => $film->id,
-                'status'  => $status,
-            ]);
-            $message = 'Film ditambahkan ke Watchlist.';
-        }
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'status'      => 'ok',
-                'message'     => $message,
-                'inWatchlist' => !$existing || ($existing->status !== $status && !$request->has('force'))
-            ]);
-        }
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status'      => 'ok',
+                    'message'     => $message,
+                    'inWatchlist' => $inWatchlist
+                ]);
+            }
 
-        $redirectUrl = url()->previous();
-        if (empty($redirectUrl) || str_contains($redirectUrl, '/search/') || str_contains($redirectUrl, '/moviebox/')) {
-            $redirectUrl = route('film.show', $film->slug);
-        }
+            $redirectUrl = url()->previous();
+            if (empty($redirectUrl) || str_contains($redirectUrl, '/search/') || str_contains($redirectUrl, '/moviebox/')) {
+                $redirectUrl = route('film.show', $film->slug);
+            }
 
-        return redirect($redirectUrl)->with('success', $message);
+            return redirect($redirectUrl)->with('success', $message);
+        });
     }
 }

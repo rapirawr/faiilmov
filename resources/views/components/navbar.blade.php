@@ -8,9 +8,7 @@
         </button>
 
         <a href="{{ route('home') }}" class="hidden sm:flex items-center gap-2.5 group">
-            <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
-                faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
-            </span>
+            <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
         </a>
     </div>
 
@@ -187,7 +185,7 @@
                                         <div class="flex items-center gap-2 mt-0.5">
                                             <span class="text-[10px] text-zinc-400" x-text="item.year"></span>
                                             <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-md"
-                                                  :class="item.type === 'series' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-700/60 text-zinc-300 border border-white/10'"
+                                                  :class="item.type === 'series' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/20' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/20'"
                                                   x-text="item.type === 'series' ? 'Series' : 'Movie'">
                                             </span>
                                             <template x-if="item.rating > 0">
@@ -223,7 +221,10 @@
 
     <!-- Right Action Buttons: Capsule Pill -->
     <div class="flex items-center gap-2.5">
-
+        <a href="{{ route('download.app') }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all text-xs font-semibold shadow-sm" title="App Mobile Flutter">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+            <span>App Mobile</span>
+        </a>
 
         @auth
             <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm">

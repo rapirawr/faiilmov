@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'is_admin', 'is_banned', 'banned_reason', 'banned_until'])]
+#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'is_admin', 'is_banned', 'banned_reason', 'banned_until', 'parental_pin', 'max_allowed_rating', 'has_seen_welcome_modal'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +30,7 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'is_banned' => 'boolean',
             'banned_until' => 'datetime',
+            'has_seen_welcome_modal' => 'boolean',
         ];
     }
 
@@ -79,5 +80,20 @@ class User extends Authenticatable
     public function watchHistories()
     {
         return $this->hasMany(WatchHistory::class);
+    }
+
+    public function profiles()
+    {
+        return $this->hasMany(Profile::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->where('is_read', false);
     }
 }

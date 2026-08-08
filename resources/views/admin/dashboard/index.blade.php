@@ -87,7 +87,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $film->subject_type === 'series' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300' }}">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $film->subject_type === 'series' ? 'bg-teal-500/20 text-teal-300' : 'bg-cyan-500/20 text-cyan-300' }}">
                                         {{ $film->subject_type }}
                                     </span>
                                 </td>

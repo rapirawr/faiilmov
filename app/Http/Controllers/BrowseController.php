@@ -84,9 +84,8 @@ class BrowseController extends Controller
             $noResults = $films->total() === 0;
         }
 
-        // Suggested films shown when results are empty
         $suggestedFilms = $noResults
-            ? Film::orderByDesc('rating')->limit(6)->get()
+            ? Film::with('genres')->orderByDesc('rating')->limit(6)->get()
             : collect();
 
         return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation'));

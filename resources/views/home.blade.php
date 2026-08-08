@@ -6,7 +6,7 @@
 <div class="space-y-8 pb-16">
 
     <!-- Interactive Hero Carousel Banner -->
-    @if(isset($heroFilms) && count($heroFilms) > 0)
+    @if(isset($heroFilms) && is_countable($heroFilms) && count($heroFilms) > 0)
         @php
             $heroData = $heroFilms->map(function($f) {
                 return [
@@ -115,8 +115,152 @@
     <!-- Content Sections Container -->
     <div class="px-4 sm:px-8 space-y-10">
 
+        <!-- CONTINUE WATCHING Section -->
+        @if(isset($continueWatching) && is_countable($continueWatching) && count($continueWatching) > 0)
+            <section x-data="{
+                        scrollNext() { $refs.watchContainer.scrollBy({ left: 300, behavior: 'smooth' }) }
+                     }" 
+                     class="space-y-4">
+                
+                <div class="flex items-center justify-between">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                        <span>Continue Watching</span>
+                    </h2>
+                    <a href="{{ route('profile') }}" class="text-xs font-semibold text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
+                        <span>More</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+
+                <div class="relative group">
+                    <div x-ref="watchContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
+                        @foreach($continueWatching as $film)
+                            @if($film)
+                                <div class="w-36 sm:w-44 shrink-0 group/card">
+                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-amber-500/30 group-hover/card:border-amber-500/50 transition-all duration-300 shadow-lg">
+                                        <img src="{{ $film->thumbnail_url }}" 
+                                             alt="{{ $film->title }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="200"
+                                             height="300"
+                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                                        
+
+                                        @if($film->max_resolution)
+                                            <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
+                                                {{ $film->max_resolution }}
+                                            </div>
+                                        @endif
+                                    </a>
+
+                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-white group-hover/card:text-amber-400 transition-colors truncate block w-full" title="{{ $film->title }}">
+                                        {{ $film->title }}
+                                    </a>
+                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <button @click="scrollNext()" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/80 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500/20 hover:border-amber-500/40 hover:text-amber-300 transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+        @endif
+
+        <!-- BECAUSE YOU WATCHED Section (Personalized) -->
+        @if(isset($becauseYouWatched) && !empty($becauseYouWatched['source_film']) && $becauseYouWatched['recommendations']->count() > 0)
+            <section x-data="{
+                        scrollNext() { $refs.becauseContainer.scrollBy({ left: 300, behavior: 'smooth' }) }
+                     }" 
+                     class="space-y-4">
+                
+                <div class="flex items-center justify-between">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                        <span>Karena Anda Menonton: <span class="text-amber-400">{{ Str::limit($becauseYouWatched['source_film']->title, 25) }}</span></span>
+                    </h2>
+                </div>
+
+                <div class="relative group">
+                    <div x-ref="becauseContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
+                        @foreach($becauseYouWatched['recommendations'] as $film)
+                            @if($film)
+                                <div class="w-36 sm:w-44 shrink-0 group/card">
+                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
+                                        <img src="{{ $film->thumbnail_url }}" 
+                                             alt="{{ $film->title }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="200"
+                                             height="300"
+                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                                    </a>
+
+                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
+                                        {{ $film->title }}
+                                    </a>
+                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
+        <!-- COMING SOON Section -->
+        @if(isset($comingSoon) && is_countable($comingSoon) && count($comingSoon) > 0)
+            <section x-data="{
+                        scrollNext() { $refs.comingContainer.scrollBy({ left: 300, behavior: 'smooth' }) }
+                     }" 
+                     class="space-y-4">
+                
+                <div class="flex items-center justify-between">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 text-amber-400"></i>
+                        <span>Coming Soon</span>
+                    </h2>
+                </div>
+
+                <div class="relative group">
+                    <div x-ref="comingContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
+                        @foreach($comingSoon as $film)
+                            @if($film)
+                                <div class="w-36 sm:w-44 shrink-0 group/card">
+                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
+                                        <img src="{{ $film->thumbnail_url }}" 
+                                             alt="{{ $film->title }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="200"
+                                             height="300"
+                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                                        
+                                        <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-200 rounded-xl flex items-center gap-1 shadow-md">
+                                            <i data-lucide="eye" class="w-3 h-3 text-sky-400"></i>
+                                            <span>{{ number_format($film->rating, 1) }}</span>
+                                        </div>
+                                        <div class="absolute bottom-2 left-2 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg text-amber-300 tracking-wider shadow backdrop-blur-sm">
+                                            Segera
+                                        </div>
+                                    </a>
+
+                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
+                                        {{ $film->title }}
+                                    </a>
+                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
         <!-- 1. Popular Series Row -->
-        @if(isset($popularSeries) && count($popularSeries) > 0)
+        @if(isset($popularSeries) && is_countable($popularSeries) && count($popularSeries) > 0)
             <section x-data="{
                         scrollNext() { $refs.seriesContainer.scrollBy({ left: 300, behavior: 'smooth' }) },
                         scrollPrev() { $refs.seriesContainer.scrollBy({ left: -300, behavior: 'smooth' }) }
@@ -136,32 +280,34 @@
                 <div class="relative group">
                     <div x-ref="seriesContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($popularSeries as $film)
-                            <div class="w-36 sm:w-44 shrink-0 group/card">
-                                <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
-                                    <img src="{{ $film->thumbnail_url }}" 
-                                         alt="{{ $film->title }}"
-                                         loading="lazy"
-                                         decoding="async"
-                                         width="200"
-                                         height="300"
-                                         class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-                                    
-                                    <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-amber-400 rounded-xl flex items-center gap-1 shadow-md">
-                                        <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
-                                        <span>HD</span>
-                                    </div>
-                                    @if($film->max_resolution)
-                                        <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
-                                            {{ $film->max_resolution }}
+                            @if($film)
+                                <div class="w-36 sm:w-44 shrink-0 group/card">
+                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
+                                        <img src="{{ $film->thumbnail_url }}" 
+                                             alt="{{ $film->title }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="200"
+                                             height="300"
+                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                                        
+                                        <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-amber-400 rounded-xl flex items-center gap-1 shadow-md">
+                                            <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
+                                            <span>HD</span>
                                         </div>
-                                    @endif
-                                </a>
+                                        @if($film->max_resolution)
+                                            <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
+                                                {{ $film->max_resolution }}
+                                            </div>
+                                        @endif
+                                    </a>
 
-                                <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
-                                    {{ $film->title }}
-                                </a>
-                                <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
-                            </div>
+                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
+                                        {{ $film->title }}
+                                    </a>
+                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
 
@@ -173,7 +319,7 @@
         @endif
 
         <!-- 2. Trending Movies Row -->
-        @if(isset($trendingMovies) && count($trendingMovies) > 0)
+        @if(isset($trendingMovies) && is_countable($trendingMovies) && count($trendingMovies) > 0)
             <section x-data="{
                         scrollNext() { $refs.moviesContainer.scrollBy({ left: 300, behavior: 'smooth' }) }
                      }" 
@@ -190,6 +336,7 @@
                 <div class="relative group">
                     <div x-ref="moviesContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($trendingMovies as $film)
+                            @if($film)
                             <div class="w-36 sm:w-44 shrink-0 group/card">
                                 <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
                                     <img src="{{ $film->thumbnail_url }}" 
@@ -221,6 +368,7 @@
                                 </a>
                                 <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
                             </div>
+                            @endif
                         @endforeach
                     </div>
 
@@ -232,14 +380,26 @@
         @endif
 
         <!-- 3. Curved Bridge Filter Bar & Full Catalog Grid Section -->
-        <section class="space-y-6 pt-4">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight">Full Film Catalog</h2>
-                <span class="text-xs text-zinc-400 font-medium">Total: {{ $films->total() }}</span>
+        <section id="catalog-section" x-data="catalogAjax()" class="space-y-6 pt-4 relative">
+
+            <!-- Loading Overlay -->
+            <div x-show="loading" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="absolute inset-0 bg-dark-950/70 backdrop-blur-sm z-30 rounded-3xl flex items-center justify-center min-h-[300px]"
+                 style="display: none;">
+                <div class="flex items-center gap-3 bg-dark-900 border border-white/10 px-5 py-3 rounded-2xl shadow-2xl">
+                    <div class="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-xs font-semibold text-zinc-200">Memuat Katalog...</span>
+                </div>
             </div>
 
             <!-- Curved Bridge Component Filter Form -->
-            <form action="{{ route('home') }}" method="GET" class="bridge-container p-4 rounded-[2.5rem]">
+            <form @submit.prevent="submitFilter($event)" action="{{ route('home') }}" method="GET" class="bridge-container p-4 rounded-[2.5rem]">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 items-center">
                     
                     <div>
@@ -285,7 +445,7 @@
                             <span>Filter</span>
                         </button>
                         @if(request()->hasAny(['q', 'genre', 'type', 'sort']))
-                            <a href="{{ route('home') }}" class="p-2.5 rounded-2xl glass-card text-zinc-400 hover:text-white border border-white/10" title="Reset Filter">
+                            <a href="{{ route('home') }}" @click.prevent="fetchCatalog('{{ route('home') }}')" class="p-2.5 rounded-2xl glass-card text-zinc-400 hover:text-white border border-white/10" title="Reset Filter">
                                 <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                             </a>
                         @endif
@@ -294,21 +454,96 @@
                 </div>
             </form>
 
-            <!-- Catalog Grid -->
-            @if($films->count() > 0)
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-                    @foreach($films as $film)
-                        <x-film-card :film="$film" />
-                    @endforeach
-                </div>
+            <!-- Catalog Content Container (Grid + Pagination) -->
+            <div id="catalog-container" @click="handlePaginationClick($event)">
+                @include('partials.catalog-grid')
+            </div>
 
-                <div class="mt-8 flex justify-center">
-                    {{ $films->links() }}
-                </div>
-            @endif
         </section>
 
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function catalogAjax() {
+    return {
+        loading: false,
+
+        async fetchCatalog(url) {
+            this.loading = true;
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    const container = document.getElementById('catalog-container');
+                    if (container) {
+                        container.innerHTML = html;
+                        window.history.pushState(null, '', url);
+                        
+                        if (window.lucide) {
+                            window.lucide.createIcons();
+                        }
+
+                        const section = document.getElementById('catalog-section');
+                        if (section) {
+                            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching catalog:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        handlePaginationClick(e) {
+            const link = e.target.closest('a');
+            if (link && link.href) {
+                const isPaginationLink = link.closest('nav') || 
+                                         link.getAttribute('rel') === 'prev' || 
+                                         link.getAttribute('rel') === 'next' ||
+                                         link.href.includes('page=');
+                if (isPaginationLink) {
+                    e.preventDefault();
+                    this.fetchCatalog(link.href);
+                }
+            }
+        },
+
+        submitFilter(e) {
+            const form = e.target;
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+            
+            for (const [key, value] of Array.from(params.entries())) {
+                if (!value.trim()) {
+                    params.delete(key);
+                }
+            }
+
+            const url = `${form.action}?${params.toString()}`;
+            this.fetchCatalog(url);
+        }
+    };
+}
+
+window.addEventListener('popstate', () => {
+    const catalogSection = document.getElementById('catalog-section');
+    if (catalogSection && window.Alpine) {
+        const alpineData = Alpine.$data(catalogSection);
+        if (alpineData && alpineData.fetchCatalog) {
+            alpineData.fetchCatalog(window.location.href);
+        }
+    }
+});
+</script>
+@endpush
 @endsection

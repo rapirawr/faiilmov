@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Panel | faiilmov')</title>
     
+    <!-- Favicon & App Icon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,8 +17,32 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Alpine JS -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Tailwind CSS CDN & Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        amber: {
+                            50: '#faf9f7',
+                            100: '#f4f3ef',
+                            200: '#eae8e2',
+                            300: '#e4e2dd',
+                            400: '#e4e2dd',
+                            500: '#e4e2dd',
+                            600: '#cfcdb8',
+                            700: '#b2b09a',
+                            800: '#8c8a77',
+                            900: '#646255',
+                            950: '#3a3831',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
@@ -38,14 +66,10 @@
                 
                 <!-- Brand Header -->
                 <div class="flex items-center gap-3 px-2 pb-2 border-b border-white/10">
-                    <div class="w-11 h-11 rounded-full bg-white p-0.5 shadow-lg shadow-white/10 shrink-0">
-                        <div class="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center">
-                            <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
-                        </div>
-                    </div>
+                    <img src="{{ asset('images/logo.png') }}" alt="FAIIlMOV" class="h-10 w-auto object-contain rounded-xl">
                     <div class="flex-1 min-w-0">
                         <h2 class="font-['Outfit'] font-extrabold text-base tracking-wide text-white uppercase truncate">FAIIlMOV</h2>
-                        <p class="text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">ADMIN PANEL FAIIlMOV</p>
+                        <p class="text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">ADMIN PANEL</p>
                     </div>
                     <button @click="sidebarOpen = false" class="lg:hidden text-zinc-400 hover:text-white p-1">
                         <i data-lucide="x" class="w-5 h-5"></i>

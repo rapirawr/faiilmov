@@ -6,12 +6,7 @@
         <!-- Mobile Sidebar Brand Header & Close Button -->
         <div class="flex items-center justify-between pb-3 border-b border-white/10 lg:hidden">
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                <div class="w-8 h-8 rounded-full bg-white text-zinc-950 flex items-center justify-center font-bold shadow-md">
-                    <i data-lucide="film" class="w-4 h-4"></i>
-                </div>
-                <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
-                    faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
-                </span>
+                <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
             </a>
             <button type="button" @click="sidebarOpen = false" class="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>
@@ -116,14 +111,14 @@
     <div class="glass-panel p-4 rounded-3xl border border-white/10 space-y-3">
         <span class="text-xs font-bold text-white block">Get faiilmov</span>
         <div class="grid grid-cols-2 gap-2">
-            <a href="{{ route('browse') }}" class="px-3 py-2 rounded-2xl bg-white text-zinc-950 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-zinc-200 transition-colors shadow-sm">
+            <a href="{{ route('download.app') }}" class="px-3 py-2 rounded-2xl bg-white text-zinc-950 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-zinc-200 transition-colors shadow-sm">
                 <i data-lucide="smartphone" class="w-3 h-3"></i>
                 <span>Mobile</span>
             </a>
-            <a href="{{ route('browse') }}" class="px-3 py-2 rounded-2xl bg-dark-900 text-zinc-300 text-[10px] font-semibold flex items-center justify-center gap-1 border border-white/10 hover:text-white">
+            {{-- <a href="{{ route('browse') }}" class="px-3 py-2 rounded-2xl bg-dark-900 text-zinc-300 text-[10px] font-semibold flex items-center justify-center gap-1 border border-white/10 hover:text-white">
                 <i data-lucide="laptop" class="w-3 h-3"></i>
                 <span>macOS</span>
-            </a>
+            </a> --}}
         </div>
     </div>
 

@@ -30,7 +30,7 @@ class ProfileController extends Controller
 
         $watchHistories = $user->watchHistories()
             ->whereHas('film')
-            ->with(['film.seasons.episodes'])
+            ->with(['film.genres', 'film.seasons.episodes'])
             ->latest('updated_at')
             ->get();
 
