@@ -25,3 +25,8 @@ Homestead.yaml
 Thumbs.db
 /prompt/
 /scratch/
+
+FINAL_TESTING_REPORT.md
+security_audit_composer.txt
+security_audit_npm.txt
+SECURITY_AUDIT_REPORT.md
