@@ -25,11 +25,3 @@ Homestead.yaml
 Thumbs.db
 /prompt/
 /scratch/
-
-# Untracked project files
-/app/Http/Controllers/Api/MobileApiController.php
-/config/cors.php
-/database/migrations/2026_08_07_000001_add_profile_fields_to_users_table.php
-/database/migrations/2026_08_07_132538_add_profile_fields_to_users_table.php
-/public/fonts-manifest.dev.json
-/routes/api.php

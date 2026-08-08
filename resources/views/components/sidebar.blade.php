@@ -6,7 +6,10 @@
         <!-- Mobile Sidebar Brand Header & Close Button -->
         <div class="flex items-center justify-between pb-3 border-b border-white/10 lg:hidden">
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
+                <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105">
+                <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
+                    faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
+                </span>
             </a>
             <button type="button" @click="sidebarOpen = false" class="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>

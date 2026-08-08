@@ -8,7 +8,10 @@
         </button>
 
         <a href="{{ route('home') }}" class="hidden sm:flex items-center gap-2.5 group">
-            <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
+            <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105">
+            <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
+                faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
+            </span>
         </a>
     </div>
 
