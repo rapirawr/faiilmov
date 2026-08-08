@@ -32,6 +32,10 @@ class FilmSearchService
 
         if ($aiInterpretation) {
             $results = $this->aiSearch($query, $aiInterpretation, $filters, $perPage);
+            
+            if ($results->total() === 0) {
+                $results = $this->buildQuery($query, $filters, $perPage);
+            }
         } else {
             $results = $this->buildQuery($query, $filters, $perPage);
         }

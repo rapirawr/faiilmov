@@ -7,6 +7,7 @@ use App\Models\Genre;
 use App\Services\MovieBoxService;
 use App\Services\FilmSearchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class HomeController extends Controller
@@ -90,6 +91,18 @@ class HomeController extends Controller
                 ->get();
         }
 
-        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'trendingMovies', 'searchQuery'));
+        $continueWatching = null;
+        if (Auth::check()) {
+            $continueWatching = Auth::user()
+                ->watchHistories()
+                ->with(['film' => fn($q) => $q->select('id', 'title', 'slug', 'poster_url', 'rating', 'release_year', 'subject_type')])
+                ->whereNotExists(fn($q) => $q->from('watchlists')->whereColumn('watchlists.film_id', 'watch_histories.film_id')->whereColumn('watchlists.user_id', 'watch_histories.user_id')->where('status', 'completed'))
+                ->orderByDesc('updated_at')
+                ->limit(8)
+                ->get()
+                ->pluck('film');
+        }
+
+        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'trendingMovies', 'continueWatching', 'searchQuery'));
     }
 }
