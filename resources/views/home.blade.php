@@ -244,10 +244,10 @@
                     
                     <div>
                         <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Cari Film</label>
-                        <div class="relative">
+                        <div class="flex items-center gap-2.5 px-3.5 rounded-2xl border border-white/10 bg-dark-950/70 focus-within:border-white/30 transition-colors shadow-inner">
+                            <i data-lucide="search" class="w-4 h-4 shrink-0 text-zinc-400"></i>
                             <input type="text" name="q" value="{{ request('q') }}" placeholder="Judul film..." 
-                                   class="w-full bg-dark-950/70 text-xs text-white placeholder-zinc-500 pl-9 pr-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors">
-                            <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                   class="w-full min-w-0 bg-transparent text-xs text-white placeholder-zinc-500 py-2.5 border-none outline-none focus:outline-none focus:ring-0">
                         </div>
                     </div>
 

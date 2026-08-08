@@ -24,50 +24,30 @@
             </p>
         </div>
 
-        <form action="{{ route('login') }}" method="POST" class="space-y-5" x-data="{ showPass: false }">
+        <form action="{{ route('login') }}" method="POST" class="space-y-5">
             @csrf
 
             <!-- Email Field -->
-            <div>
-                <label for="email" class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-2">
-                    Alamat Email
-                </label>
-                <div class="relative">
-                    <i data-lucide="mail" class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                           placeholder="nama@email.com" 
-                           class="w-full bg-zinc-900/80 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 pl-11 pr-4 py-3.5 rounded-2xl border border-white/10 focus:outline-none focus:border-zinc-300 focus:bg-zinc-800/90 transition-all shadow-inner">
-                </div>
-                @error('email')
-                    <p class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1 font-medium">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                        <span>{{ $message }}</span>
-                    </p>
-                @enderror
-            </div>
+            <x-input 
+                name="email" 
+                type="email" 
+                label="Alamat Email" 
+                icon="mail" 
+                :value="old('email')" 
+                placeholder="nama@email.com" 
+                required 
+                autofocus 
+            />
 
             <!-- Password Field -->
-            <div>
-                <label for="password" class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-2">
-                    Kata Sandi
-                </label>
-                <div class="relative">
-                    <i data-lucide="lock" class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                    <input id="password" :type="showPass ? 'text' : 'password'" name="password" required
-                           placeholder="••••••••" 
-                           class="w-full bg-zinc-900/80 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 pl-11 pr-11 py-3.5 rounded-2xl border border-white/10 focus:outline-none focus:border-zinc-300 focus:bg-zinc-800/90 transition-all shadow-inner">
-                    <button type="button" @click="showPass = !showPass" class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors focus:outline-none">
-                        <i x-show="!showPass" data-lucide="eye" class="w-4 h-4"></i>
-                        <i x-show="showPass" data-lucide="eye-off" class="w-4 h-4" style="display: none;"></i>
-                    </button>
-                </div>
-                @error('password')
-                    <p class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1 font-medium">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                        <span>{{ $message }}</span>
-                    </p>
-                @enderror
-            </div>
+            <x-input 
+                name="password" 
+                type="password" 
+                label="Kata Sandi" 
+                icon="lock" 
+                placeholder="••••••••" 
+                required 
+            />
 
             <!-- Remember Me -->
             <div class="flex items-center justify-between text-xs text-zinc-400 pt-1">
