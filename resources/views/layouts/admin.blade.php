@@ -53,17 +53,21 @@
                 </div>
 
                 <!-- Search Input Bar -->
-                <div class="relative">
-                    <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <div class="flex items-center gap-2.5 px-3.5 rounded-full border border-white/15 bg-zinc-950/90 focus-within:border-white/50 transition-colors">
+                    <i data-lucide="search" class="w-4 h-4 shrink-0 text-zinc-400"></i>
                     <input type="text" 
                            x-model="searchQuery"
                            placeholder="Search movies..." 
-                           class="w-full bg-zinc-950/90 border border-white/15 rounded-full pl-9 pr-16 py-2 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-white/50 transition-colors">
+                           class="w-full min-w-0 bg-transparent py-2 text-xs text-white placeholder-zinc-400 border-none outline-none focus:outline-none focus:ring-0">
                     
-                    <kbd x-show="!searchQuery" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none text-[10px] font-semibold text-zinc-400 bg-white/10 px-1.5 py-0.5 rounded-md border border-white/15 font-sans">
+                    <kbd x-show="!searchQuery" class="shrink-0 flex items-center gap-1 pointer-events-none text-[10px] font-semibold text-zinc-400 bg-white/10 px-1.5 py-0.5 rounded-md border border-white/15 font-sans">
                         <span class="text-[9px]">Ctrl</span>
                         <span class="font-mono font-bold">K</span>
                     </kbd>
+                    
+                    <button type="button" x-show="searchQuery" @click="searchQuery = ''" class="shrink-0 text-zinc-400 hover:text-white p-1" style="display: none;">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
                 </div>
 
                 <!-- Navigation Links -->

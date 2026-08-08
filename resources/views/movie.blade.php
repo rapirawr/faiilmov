@@ -104,15 +104,15 @@
 
             <!-- Search Bar -->
             <div class="flex-1 max-w-xl relative">
-                <div class="relative">
+                <div class="flex items-center gap-3 px-4 rounded-full border border-slate-700/60 bg-dark-800/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                    <i data-lucide="search" class="w-5 h-5 shrink-0 text-slate-400"></i>
                     <input type="text" 
                            x-model="searchQuery" 
                            @input.debounce.400ms="handleSearch()"
                            placeholder="Search movies, TV series, anime..." 
-                           class="w-full bg-dark-800/80 text-sm text-slate-100 placeholder-slate-400 pl-11 pr-10 py-3 rounded-full border border-slate-700/60 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
-                    <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                           class="w-full min-w-0 bg-transparent py-3 text-sm text-slate-100 placeholder-slate-400 border-none outline-none focus:outline-none focus:ring-0">
                     
-                    <button x-show="searchQuery" @click="clearSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1">
+                    <button type="button" x-show="searchQuery" @click="clearSearch()" class="shrink-0 text-slate-400 hover:text-white p-1" style="display: none;">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>

@@ -47,10 +47,10 @@
         
         <!-- Search & Filter Form -->
         <form method="GET" action="{{ route('admin.films.index') }}" class="flex flex-wrap items-center gap-3 flex-1">
-            <div class="relative flex-1 min-w-[200px]">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <div class="flex items-center gap-2.5 px-3 rounded-xl border border-white/10 bg-zinc-900 focus-within:border-amber-500 transition-all flex-1 min-w-[200px]">
+                <i data-lucide="search" class="w-4 h-4 shrink-0 text-zinc-500"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul film..." 
-                       class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500">
+                       class="w-full min-w-0 bg-transparent py-2 text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
             </div>
 
             <select name="type" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
