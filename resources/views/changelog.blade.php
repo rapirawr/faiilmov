@@ -73,28 +73,28 @@
     </div>
 
     <!-- Changelog Timeline Section -->
-    <div class="relative space-y-12 before:absolute before:inset-0 before:left-4 sm:before:left-32 before:w-0.5 before:bg-gradient-to-b before:from-amber-500/40 before:via-white/10 before:to-transparent">
+    <div class="relative space-y-8 {{ $changelogs->count() > 0 ? 'before:absolute before:inset-0 before:left-3 sm:before:left-[143px] before:w-0.5 before:bg-gradient-to-b before:from-amber-500/40 before:via-white/10 before:to-transparent' : '' }}">
 
         @forelse($changelogs as $log)
-            <div class="relative flex flex-col sm:flex-row items-start gap-6 sm:gap-10 group" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+            <div class="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-8 group" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
                 
                 <!-- Left Date / Version Badge Column (Desktop) -->
-                <div class="sm:w-32 shrink-0 sm:text-right space-y-1 pl-10 sm:pl-0">
-                    <span class="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono font-extrabold text-sm inline-block shadow-md">
+                <div class="sm:w-28 shrink-0 sm:text-right space-y-1 pl-8 sm:pl-0">
+                    <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono font-extrabold text-xs inline-block shadow-md">
                         {{ $log->version }}
                     </span>
-                    <p class="text-xs text-zinc-400 font-mono">
+                    <p class="text-[11px] text-zinc-400 font-mono">
                         {{ $log->release_date ? $log->release_date->format('d M Y') : '' }}
                     </p>
                 </div>
 
                 <!-- Timeline Node Indicator Circle -->
-                <div class="absolute left-1.5 sm:left-[120px] top-1.5 w-5 h-5 rounded-full bg-dark-950 border-2 border-amber-500 flex items-center justify-center shadow-lg group-hover:scale-125 transition-transform duration-300 z-10">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <div class="absolute left-1 sm:left-[135px] top-2.5 w-4 h-4 rounded-full bg-dark-950 border-2 border-amber-500 flex items-center justify-center shadow-lg group-hover:scale-125 transition-transform duration-300 z-10">
+                    <span class="w-1 h-1 rounded-full bg-amber-400"></span>
                 </div>
 
                 <!-- Right Card Container (Collapsible FAQ Accordion) -->
-                <div class="flex-1 glass-card p-6 sm:p-8 rounded-3xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl shadow-xl transition-all">
+                <div class="flex-1 min-w-0 glass-card p-6 sm:p-8 rounded-3xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl shadow-xl transition-all">
                     
                     <!-- Header Title & Type Badge (Clickable Accordion Header) -->
                     <div @click="open = !open" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none group/header">
