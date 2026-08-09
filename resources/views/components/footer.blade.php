@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-2.5">
             <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-6 w-auto object-contain">
-            <span class="hidden sm:inline">| Streaming platform for my special gf</span>
+            <span class="hidden sm:inline">| Streaming platform for my ailll</span>
         </div>
         <div class="flex items-center gap-5 text-xs">
             <a href="{{ route('home') }}" class="hover:text-white transition-colors">Home</a>
