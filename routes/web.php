@@ -23,6 +23,34 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/browse', [BrowseController::class, 'index'])->name('browse');
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
+
+// Soundtrack MP3 Direct Download Proxy Route
+Route::get('/soundtrack/download', function (\Illuminate\Http\Request $request) {
+    $url = $request->query('url');
+    $title = $request->query('title', 'soundtrack');
+    $artist = $request->query('artist', 'artist');
+
+    if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+        abort(400, 'URL audio tidak valid.');
+    }
+
+    $cleanFilename = \Illuminate\Support\Str::slug($title . '-' . $artist) . '.mp3';
+
+    try {
+        $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
+        if ($response->successful()) {
+            return response($response->body(), 200, [
+                'Content-Type' => 'audio/mpeg',
+                'Content-Disposition' => 'attachment; filename="' . $cleanFilename . '"',
+                'Content-Length' => strlen($response->body()),
+            ]);
+        }
+    } catch (\Exception $e) {
+    }
+
+    return redirect($url);
+})->name('soundtrack.download');
+
 Route::get('/download', [\App\Http\Controllers\DownloadAppController::class, 'index'])->name('download.app');
 Route::get('/mobile-app', function() { return redirect()->route('download.app'); });
 Route::post('/download/notify-me', [\App\Http\Controllers\DownloadAppController::class, 'notifyMe'])->name('download.notify-me');

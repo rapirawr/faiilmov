@@ -367,13 +367,24 @@
                                 </div>
 
                                 @if($st['preview_audio_url'])
-                                    <div class="shrink-0">
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <!-- Play / Pause Button -->
                                         <button type="button" 
                                                 @click="togglePlay('{{ $st['preview_audio_url'] }}', '{{ addslashes($st['track_name']) }}', '{{ addslashes($st['artist_name']) }}')"
                                                 :class="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30' : 'bg-white/5 hover:bg-white/15 text-zinc-300 border border-white/10'"
-                                                class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer">
+                                                class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+                                                title="Putar Audio Preview">
                                             <i :data-lucide="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'pause' : 'play'" class="w-4 h-4"></i>
                                         </button>
+
+                                        <!-- Download MP3 Button -->
+                                        <a href="{{ route('soundtrack.download') }}?url={{ urlencode($st['preview_audio_url']) }}&title={{ urlencode($st['track_name']) }}&artist={{ urlencode($st['artist_name']) }}" 
+                                           target="_blank"
+                                           download
+                                           class="w-8 h-8 rounded-xl bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 flex items-center justify-center transition-all cursor-pointer"
+                                           title="Download MP3 ({{ $st['track_name'] }})">
+                                            <i data-lucide="download" class="w-4 h-4 text-purple-400"></i>
+                                        </a>
                                     </div>
                                 @endif
                             </div>
@@ -396,8 +407,15 @@
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <button type="button" @click="stopPlay()" class="px-3 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 text-xs font-bold cursor-pointer">
-                                Stop Audio
+                            <a :href="'{{ route('soundtrack.download') }}?url=' + encodeURIComponent(currentAudioUrl) + '&title=' + encodeURIComponent(activeTrackName) + '&artist=' + encodeURIComponent(activeArtistName)" 
+                               target="_blank"
+                               download
+                               class="px-3 py-1.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Download MP3</span>
+                            </a>
+                            <button type="button" @click="stopPlay()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-purple-200 text-xs font-bold cursor-pointer">
+                                Stop
                             </button>
                         </div>
                     </div>
