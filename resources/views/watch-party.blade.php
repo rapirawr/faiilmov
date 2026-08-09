@@ -1226,7 +1226,7 @@
                             try {
                                 localStorage.setItem('faiilmov_global_miniplayer', JSON.stringify({
                                     active: true,
-                                    filmTitle: '{{ $room->room_name }}',
+                                    filmTitle: '{{ $film->title }}',
                                     streamUrl: this.activeStream,
                                     currentTime: this.currentTime,
                                     duration: this.duration,
