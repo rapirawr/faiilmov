@@ -8,7 +8,7 @@
         <div class="flex items-center gap-5 text-xs">
             <a href="{{ route('home') }}" class="hover:text-white transition-colors">Home</a>
             <a href="{{ route('browse') }}" class="hover:text-white transition-colors">Katalog Film</a>
-            <a href="{{ route('changelog') }}" class="hover:text-white transition-colors flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i><span>Changelog</span></a>
+            <a href="{{ route('changelog') }}" class="hover:text-white transition-colors flex items-center gap-1"><i data-lucide="history" class="w-3 h-3 text-amber-400"></i><span>Changelog</span></a>
             <a href="{{ route('privacy-policy') }}" class="hover:text-white transition-colors">Kebijakan Privasi</a>
             <a href="{{ route('terms-of-service') }}" class="hover:text-white transition-colors">Syarat & Ketentuan</a>
             <a href="{{ route('download.app') }}" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors">

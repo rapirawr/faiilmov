@@ -51,7 +51,7 @@
             </a>
 
             <a href="{{ route('changelog') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ request()->routeIs('changelog') ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+                <i data-lucide="history" class="w-5 h-5 text-amber-400"></i>
                 <span>Changelog</span>
             </a>
 

@@ -20,7 +20,7 @@
 
             <div class="space-y-3 max-w-3xl">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-lg">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <i data-lucide="history" class="w-4 h-4"></i>
                     <span>SYSTEM CHANGELOG & RELEASE NOTES</span>
                 </div>
 
