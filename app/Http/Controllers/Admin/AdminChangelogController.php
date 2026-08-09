@@ -22,7 +22,7 @@ class AdminChangelogController extends Controller
             });
         }
 
-        $changelogs = $query->orderBy('release_date', 'desc')->paginate(15)->withQueryString();
+        $changelogs = $query->orderByDesc('release_date')->orderByDesc('id')->paginate(15)->withQueryString();
         $nextVersion = $this->calculateNextVersion();
 
         return view('admin.changelogs.index', compact('changelogs', 'nextVersion'));

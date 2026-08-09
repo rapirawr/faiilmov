@@ -35,6 +35,6 @@ class Changelog extends Model
 
     public function scopePublished($query)
     {
-        return $query->where('is_published', true)->orderBy('release_date', 'desc');
+        return $query->where('is_published', true)->orderByDesc('release_date')->orderByDesc('id');
     }
 }
