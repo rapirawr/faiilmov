@@ -77,63 +77,91 @@ class Film extends Model
     }
 
     /**
-     * Auto determine content rating based on genres, title, and synopsis
+    /**
+     * Auto determine content rating based on genres, title, and synopsis with strict age classification
      */
     public function autoDetermineContentRating(): string
     {
-        $genreNames = $this->genres()->pluck('name')->map(fn($g) => strtolower($g))->toArray();
+        $genreNames = $this->genres()->pluck('name')->map(fn($g) => strtolower(trim($g)))->toArray();
+        $titleLower = strtolower($this->title ?? '');
         $text = strtolower(($this->title ?? '') . ' ' . ($this->synopsis ?? ''));
 
-        // 18+ Keywords / Genres
-        $adultKeywords = ['erotic', 'porn', 'nsfw', 'slasher', 'gore', 'psycho', 'brutal', 'massacre', 'serial killer', 'sex'];
-        if (in_array('horror', $genreNames, true) && in_array('crime', $genreNames, true)) {
+        // 1. Check for 18+ (Explicit Adult, Heavy Horror, Bloody, Slashers, Erotica, Demons, Serial Killers)
+        $heavyAdultKeywords = [
+            'erotic', 'porn', 'nsfw', 'slasher', 'gore', 'psycho', 'brutal', 'massacre', 
+            'serial killer', 'sex', 'nun', 'exorcist', 'possession', 'demon', 'devil', 
+            'curse', 'blood', 'bloody', 'slaughter', 'killing', 'deadly', 'haunted',
+            'watcher', 'watchers', 'bad nun', 'creepy', 'torture', 'hostel', 'saw', 'conjuring',
+            'annabelle', 'insidious', 'paranormal', 'sinister', 'evil', 'satan', 'hell'
+        ];
+
+        if (in_array('horror', $genreNames, true) || in_array('erotic', $genreNames, true)) {
+            foreach ($heavyAdultKeywords as $kw) {
+                if (str_contains($text, $kw)) {
+                    return '18+';
+                }
+            }
             return '18+';
         }
-        foreach ($adultKeywords as $kw) {
+
+        foreach ($heavyAdultKeywords as $kw) {
             if (str_contains($text, $kw)) {
                 return '18+';
             }
         }
 
-        // 16+ Keywords / Genres
-        $matureKeywords = ['violence', 'blood', 'mafia', 'murder', 'gangster', 'killer', 'drug', 'revenge', 'terror', 'zombie', 'war'];
-        if (in_array('horror', $genreNames, true) || in_array('crime', $genreNames, true)) {
+        // 2. Check for 16+ (Crime, Thriller, Heavy Action, Violence, Gangster, Mafia, Murder, Zombie, War)
+        $matureKeywords = [
+            'violence', 'mafia', 'murder', 'gangster', 'killer', 'drug', 'revenge', 
+            'terror', 'zombie', 'war', 'assassin', 'shooting', 'weapon', 'thriller', 
+            'suspense', 'kidnap', 'heist', 'syndicate', 'cartel', 'death', 'crime'
+        ];
+
+        if (in_array('thriller', $genreNames, true) || in_array('crime', $genreNames, true) || in_array('war', $genreNames, true)) {
             return '16+';
         }
+
         foreach ($matureKeywords as $kw) {
             if (str_contains($text, $kw)) {
                 return '16+';
             }
         }
 
-        // 13+ Keywords / Genres
-        $teenKeywords = ['fight', 'weapon', 'gun', 'alien', 'threat', 'hero', 'superhero', 'monster', 'dark', 'ghost', 'action'];
-        if (in_array('action', $genreNames, true) || in_array('thriller', $genreNames, true) || in_array('sci-fi', $genreNames, true)) {
+        // 3. Check for 13+ (Action, Sci-Fi, Mystery, Fantasy, Dark Themes, Fighting)
+        $teenKeywords = [
+            'fight', 'gun', 'alien', 'threat', 'hero', 'superhero', 'monster', 'dark', 
+            'ghost', 'action', 'mystery', 'sci-fi', 'fantasy', 'battle', 'warrior', 'space'
+        ];
+
+        if (in_array('action', $genreNames, true) || in_array('sci-fi', $genreNames, true) || in_array('mystery', $genreNames, true) || in_array('fantasy', $genreNames, true)) {
             return '13+';
         }
+
         foreach ($teenKeywords as $kw) {
             if (str_contains($text, $kw)) {
                 return '13+';
             }
         }
 
-        // SU / G (Kids & Family & Animation)
-        if (in_array('animation', $genreNames, true) || in_array('family', $genreNames, true) || in_array('children', $genreNames, true)) {
-            return 'SU';
-        }
-        $kidsKeywords = ['cartoon', 'kid', 'toy', 'fairy', 'magic', 'disney', 'princess', 'school', 'barbie'];
+        // 4. Strict SU (Semua Umur / All Ages)
+        // ONLY for Animation, Family, Children that DO NOT contain violence, horror, or dark keywords!
+        $isKidsGenre = in_array('animation', $genreNames, true) || in_array('family', $genreNames, true) || in_array('children', $genreNames, true);
+        $kidsKeywords = ['cartoon', 'kid', 'kids', 'toy', 'fairy', 'magic', 'disney', 'pixar', 'princess', 'barbie', 'cocomelon', 'chuchu', 'peppa'];
+        
+        $hasKidsKeyword = false;
         foreach ($kidsKeywords as $kw) {
             if (str_contains($text, $kw)) {
-                return 'SU';
+                $hasKidsKeyword = true;
+                break;
             }
         }
 
-        // PG (Default for General Adventure / Romance / Comedy)
-        if (in_array('adventure', $genreNames, true) || in_array('comedy', $genreNames, true) || in_array('romance', $genreNames, true)) {
-            return 'PG';
+        if ($isKidsGenre || $hasKidsKeyword) {
+            return 'SU';
         }
 
-        return 'PG';
+        // 5. Default fallback for General Comedy, Romance, Drama, Documentary, Sports
+        return '13+';
     }
 
     public function seasons()
@@ -243,7 +271,7 @@ class Film extends Model
             $maxRes = '1080P';
         }
 
-        return static::updateOrCreate(
+        $film = static::updateOrCreate(
             ['moviebox_subject_id' => $subjectId],
             [
                 'title' => $cleanTitle,
@@ -258,6 +286,12 @@ class Film extends Model
                 'max_resolution' => $maxRes,
             ]
         );
+
+        if (!$film->content_rating || $film->content_rating === 'SU') {
+            $film->update(['content_rating' => $film->autoDetermineContentRating()]);
+        }
+
+        return $film;
     }
 
     public static function isExcludedTitle(string $title): bool

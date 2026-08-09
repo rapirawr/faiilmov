@@ -1,16 +1,30 @@
 @props(['film'])
 
 @php
-    $age = $film->content_rating ? strtoupper($film->content_rating) : '13+';
-    if (in_array($age, ['R', 'NC-17'])) $age = '18+';
-    if (in_array($age, ['PG', 'G'])) $age = 'SU';
+    $rawAge = $film->content_rating ? strtoupper(trim($film->content_rating)) : '13+';
+    $titleLower = strtolower($film->title ?? '');
+
+    // Emergency check for horror/watcher titles if rating was unrated or incorrectly SU
+    if (str_contains($titleLower, 'horror') || str_contains($titleLower, 'watcher') || str_contains($titleLower, 'nun') || str_contains($titleLower, 'dead') || str_contains($titleLower, 'blood') || str_contains($titleLower, 'slasher') || str_contains($titleLower, 'kill')) {
+        $age = '18+';
+    } elseif (in_array($rawAge, ['R', 'NC-17', '18+'])) {
+        $age = '18+';
+    } elseif (in_array($rawAge, ['16+', 'TV-MA'])) {
+        $age = '16+';
+    } elseif (in_array($rawAge, ['13+', 'PG-13', 'TV-14', 'PG'])) {
+        $age = '13+';
+    } elseif ($rawAge === 'SU' || $rawAge === 'G' || $rawAge === 'TV-Y') {
+        $age = 'SU';
+    } else {
+        $age = '13+';
+    }
     
     $ageBadgeClass = match($age) {
-        '18+' => 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-        '16+' => 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-        '13+' => 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-        'SU'  => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-        default => 'bg-zinc-800 text-zinc-300 border-white/20',
+        '18+' => 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold',
+        '16+' => 'bg-orange-500/20 text-orange-300 border-orange-500/40 font-bold',
+        '13+' => 'bg-sky-500/20 text-sky-300 border-sky-500/40 font-bold',
+        'SU'  => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold',
+        default => 'bg-sky-500/20 text-sky-300 border-white/20 font-bold',
     };
 
     $dur = '1h 30m';
