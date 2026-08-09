@@ -68,10 +68,15 @@
                         <tr class="hover:bg-white/5 transition-colors">
                             <td class="px-4 py-3.5 flex items-center gap-3">
                                 @if($a->photo_url)
-                                    <img src="{{ $a->photo_url }}" class="w-8 h-8 rounded-full object-cover shrink-0">
+                                    <img src="{{ $a->photo_url }}" 
+                                         class="w-8 h-8 rounded-full object-cover shrink-0 border border-white/10" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 text-zinc-400 flex items-center justify-center shrink-0" style="display: none;">
+                                        <svg class="w-4 h-4 fill-zinc-400" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                    </div>
                                 @else
-                                    <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0">
-                                        {{ strtoupper(substr($a->name, 0, 1)) }}
+                                    <div class="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 text-zinc-400 flex items-center justify-center shrink-0">
+                                        <svg class="w-4 h-4 fill-zinc-400" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                                     </div>
                                 @endif
                                 <span class="font-bold text-white text-sm">{{ $a->name }}</span>

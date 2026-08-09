@@ -78,7 +78,7 @@ class SyncActorsJob implements ShouldQueue
 
                         $avatarUrl = $staff['avatarUrl'] ?? $staff['avatar'] ?? $staff['photo'] ?? null;
                         if (empty($avatarUrl)) {
-                            $avatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300';
+                            $avatarUrl = null;
                         }
 
                         $slug = Str::slug($name);
