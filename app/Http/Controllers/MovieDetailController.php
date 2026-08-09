@@ -324,6 +324,8 @@ class MovieDetailController extends Controller
         
         // Skip network API calls if seasons & episodes are already stored in local DB
         if ($film->seasons()->exists()) return;
+
+        try {
             $details = $this->movieBox->getDetails($film->moviebox_subject_id);
             $seasonsData = $details['seasons']['seasons'] ?? [];
 
