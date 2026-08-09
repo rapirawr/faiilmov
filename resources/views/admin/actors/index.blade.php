@@ -33,7 +33,8 @@
         </div>
     </div>
 
-    <!-- Actors Table -->
+    <!-- Actors Table (2 Columns Span) -->
+    <div class="lg:col-span-2 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 class="text-base font-bold text-white font-['Outfit']">Daftar Aktor</h3>
             
