@@ -92,7 +92,8 @@ class RecommendationService
     }
 
     /**
-     * Get films similar to active profile's last watched film
+     * Get films highly relevant to active profile's last watched film
+     * Strictly requires at least 2 overlapping genres or matching actors + same subject_type
      */
     public function getBecauseYouWatched(?User $user, $profileId = null, int $limit = 12): Collection
     {
@@ -100,7 +101,7 @@ class RecommendationService
 
         $lastWatched = WatchHistory::where('user_id', $user->id)
             ->where('profile_id', $profileId)
-            ->with('film')
+            ->with(['film.genres', 'film.actors'])
             ->orderByDesc('updated_at')
             ->first();
 
@@ -114,25 +115,54 @@ class RecommendationService
             ->pluck('film_id')
             ->toArray();
 
-        $similar = collect();
+        $genreIds = $film->genres->pluck('id')->toArray();
+        $actorIds = $film->actors->pluck('id')->toArray();
 
-        if (!empty($film->ai_embeddings)) {
-            $similar = $this->getSimilarByEmbedding($film->ai_embeddings, $watchedIds, $limit);
+        if (empty($genreIds)) {
+            return collect();
         }
 
-        if ($similar->isEmpty()) {
-            $genreIds = $film->genres->pluck('id')->toArray();
-            if (!empty($genreIds)) {
-                $similar = Film::forActiveProfile()
-                    ->whereNotIn('id', $watchedIds)
-                    ->whereHas('genres', fn($q) => $q->whereIn('genres.id', $genreIds))
-                    ->orderByDesc('rating')
-                    ->limit($limit)
-                    ->get();
+        // Query candidates sharing the SAME subject_type and overlapping genres/actors
+        $candidates = Film::forActiveProfile()
+            ->whereNotIn('id', $watchedIds)
+            ->where('subject_type', $film->subject_type)
+            ->where(function ($q) use ($genreIds, $actorIds) {
+                $q->whereHas('genres', fn($g) => $g->whereIn('genres.id', $genreIds));
+                if (!empty($actorIds)) {
+                    $q->orWhereHas('actors', fn($a) => $a->whereIn('actors.id', $actorIds));
+                }
+            })
+            ->with(['genres', 'actors'])
+            ->limit(100)
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return collect();
+        }
+
+        // Rank candidates strictly by genre & actor overlap score
+        $scored = [];
+        foreach ($candidates as $candidate) {
+            $candGenreIds = $candidate->genres->pluck('id')->toArray();
+            $candActorIds = $candidate->actors->pluck('id')->toArray();
+
+            $genreOverlap = count(array_intersect($genreIds, $candGenreIds));
+            $actorOverlap = count(array_intersect($actorIds, $candActorIds));
+
+            // Strict relevance check: must share at least 2 genres OR at least 1 actor
+            if ($genreOverlap >= 2 || $actorOverlap >= 1) {
+                $totalScore = ($genreOverlap * 4) + ($actorOverlap * 6) + ($candidate->rating * 0.5);
+                $scored[] = ['film' => $candidate, 'score' => $totalScore];
             }
         }
 
-        return $similar;
+        if (empty($scored)) {
+            return collect();
+        }
+
+        usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        return collect(array_slice(array_column($scored, 'film'), 0, $limit));
     }
 
     private function getSimilarByEmbedding(array $sourceEmbedding, array $excludeIds, int $limit): Collection
