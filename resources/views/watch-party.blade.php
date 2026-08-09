@@ -164,7 +164,8 @@
                  @mousemove="resetHideTimer()" 
                  @mouseleave="startHideTimer()"
                  @wheel.prevent="handleWheelVolume($event)"
-                 :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'">
+                 :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'"
+                 :style="!showControls && isPlaying ? 'cursor: none !important;' : ''">
                 
                 <!-- Mini Player Top Floating Header Bar -->
                 <div x-show="isMiniPlayer" 
@@ -172,7 +173,7 @@
                      style="display:none;">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
-                        <span class="text-[11px] font-bold text-white truncate">{{ $room->room_name }}</span>
+                        <span class="text-[11px] font-bold text-white truncate">{{ $film->title }}</span>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <button @click.stop="expandMiniPlayer()" 
@@ -205,9 +206,11 @@
                                    'object-contain transform-none': aspectRatioMode === 'contain',
                                    'object-cover transform-none': aspectRatioMode === 'cover',
                                    'object-fill transform-none': aspectRatioMode === 'fill',
-                                   'object-contain scale-125': aspectRatioMode === 'zoom'
+                                   'object-contain scale-125': aspectRatioMode === 'zoom',
+                                   'cursor-none': !showControls && isPlaying,
+                                   'cursor-pointer': showControls || !isPlaying
                                }"
-                               class="w-full h-full cursor-pointer transition-all duration-300"></video>
+                               class="w-full h-full transition-all duration-300"></video>
 
                         <!-- Top & Bottom Gradient Shadows -->
                         <div class="absolute inset-0 pointer-events-none transition-opacity duration-300"
@@ -2062,10 +2065,10 @@
             },
 
             startHideTimer() {
-                if (this.isPlaying) {
+                if (this.isPlaying && !this.subtitleDropdownOpen && !this.qualityDropdownOpen && !this.speedDropdownOpen && !this.aspectRatioDropdownOpen) {
                     this.hideTimer = setTimeout(() => {
                         this.showControls = false;
-                    }, 3500);
+                    }, 2500);
                 }
             },
 
