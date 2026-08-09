@@ -313,6 +313,97 @@
                 </section>
             @endif
 
+            <!-- Soundtrack & OST Film Section -->
+            @if(isset($soundtracks) && count($soundtracks) > 0)
+                <section class="glass-panel p-7 rounded-3xl border border-white/10" x-data="soundtrackPlayer()">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                        <div>
+                            <h3 class="font-serif font-bold text-xl text-white flex items-center gap-2">
+                                <i data-lucide="music" class="w-5 h-5 text-purple-400"></i>
+                                <span>Soundtrack & Lagu Film (OST)</span>
+                            </h3>
+                            <p class="text-xs text-zinc-400 mt-1">Dengarkan cuplikan audio lagu resmi yang menghiasi film {{ $film->title }}.</p>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="https://open.spotify.com/search/{{ urlencode($film->title . ' Soundtrack') }}" target="_blank" rel="noopener noreferrer" 
+                               class="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-all flex items-center gap-1.5">
+                                <i data-lucide="disc" class="w-3.5 h-3.5"></i>
+                                <span>Cari di Spotify</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        @foreach($soundtracks as $idx => $st)
+                            <div class="p-3 rounded-2xl glass-card border border-white/10 hover:border-purple-500/40 transition-all flex items-center gap-3 group relative overflow-hidden">
+                                <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 shrink-0 border border-white/10 shadow-md">
+                                    <img src="{{ $st['artwork_url'] ?: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150' }}" 
+                                         alt="{{ $st['track_name'] }}" 
+                                         class="w-full h-full object-cover">
+                                    
+                                    @if($st['preview_audio_url'])
+                                        <button type="button" 
+                                                @click="togglePlay('{{ $st['preview_audio_url'] }}', '{{ addslashes($st['track_name']) }}', '{{ addslashes($st['artist_name']) }}')"
+                                                class="absolute inset-0 bg-black/40 group-hover:bg-purple-950/60 transition-colors flex items-center justify-center cursor-pointer">
+                                            <i :data-lucide="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'pause' : 'play'" 
+                                               class="w-5 h-5 text-white group-hover:scale-110 transition-transform"></i>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs font-bold text-white truncate group-hover:text-purple-300 transition-colors">
+                                        {{ $st['track_name'] }}
+                                    </h4>
+                                    <p class="text-[11px] text-zinc-400 truncate mt-0.5">
+                                        {{ $st['artist_name'] }}
+                                    </p>
+                                    @if($st['collection_name'])
+                                        <p class="text-[9.5px] text-zinc-500 truncate mt-0.5">
+                                            {{ $st['collection_name'] }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                @if($st['preview_audio_url'])
+                                    <div class="shrink-0">
+                                        <button type="button" 
+                                                @click="togglePlay('{{ $st['preview_audio_url'] }}', '{{ addslashes($st['track_name']) }}', '{{ addslashes($st['artist_name']) }}')"
+                                                :class="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30' : 'bg-white/5 hover:bg-white/15 text-zinc-300 border border-white/10'"
+                                                class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer">
+                                            <i :data-lucide="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'pause' : 'play'" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Mini Audio Bar Player when track is playing -->
+                    <div x-show="currentAudioUrl" 
+                         x-cloak 
+                         x-transition
+                         class="mt-4 p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="music" class="w-4 h-4 animate-pulse text-purple-400"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-white truncate" x-text="activeTrackName"></p>
+                                <p class="text-[10px] text-purple-300 truncate" x-text="activeArtistName"></p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" @click="stopPlay()" class="px-3 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 text-xs font-bold cursor-pointer">
+                                Stop Audio
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
             <!-- Reviews & Community Ratings Section -->
             <section class="glass-panel p-7 rounded-3xl border border-white/10">
                 <h3 class="font-serif font-bold text-xl text-white mb-6 flex items-center justify-between">
@@ -512,6 +603,66 @@
                     this.isFetchingStreams = false;
                     this.$nextTick(() => lucide.createIcons());
                 }
+            }
+        }
+    }
+
+    function soundtrackPlayer() {
+        return {
+            audioObj: null,
+            currentAudioUrl: null,
+            isPlaying: false,
+            activeTrackName: '',
+            activeArtistName: '',
+
+            togglePlay(url, title, artist) {
+                if (this.currentAudioUrl === url && this.isPlaying) {
+                    this.pauseAudio();
+                } else {
+                    this.playAudio(url, title, artist);
+                }
+            },
+
+            playAudio(url, title, artist) {
+                if (this.audioObj) {
+                    this.audioObj.pause();
+                }
+
+                this.currentAudioUrl = url;
+                this.activeTrackName = title;
+                this.activeArtistName = artist;
+                this.audioObj = new Audio(url);
+
+                this.audioObj.play().then(() => {
+                    this.isPlaying = true;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                }).catch(e => {
+                    console.error('Audio playback error:', e);
+                });
+
+                this.audioObj.onended = () => {
+                    this.isPlaying = false;
+                    this.currentAudioUrl = null;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                };
+            },
+
+            pauseAudio() {
+                if (this.audioObj) {
+                    this.audioObj.pause();
+                }
+                this.isPlaying = false;
+                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+            },
+
+            stopPlay() {
+                if (this.audioObj) {
+                    this.audioObj.pause();
+                    this.audioObj = null;
+                }
+                this.currentAudioUrl = null;
+                this.isPlaying = false;
+                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
             }
         }
     }

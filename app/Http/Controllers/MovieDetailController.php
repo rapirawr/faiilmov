@@ -92,8 +92,9 @@ class MovieDetailController extends Controller
         }
 
         $relatedFilms = $this->filmSearch->getSimilarFilms($film, 6);
+        $soundtracks = app(\App\Services\SoundtrackService::class)->getSoundtracksForFilm($film);
 
-        return view('detail', compact('film', 'userWatchlist', 'userReview', 'lastWatchedHistory', 'relatedFilms', 'reviews'));
+        return view('detail', compact('film', 'userWatchlist', 'userReview', 'lastWatchedHistory', 'relatedFilms', 'reviews', 'soundtracks'));
     }
 
     public function watch(Request $request, string $slug)
