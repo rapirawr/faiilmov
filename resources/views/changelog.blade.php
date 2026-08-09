@@ -60,8 +60,8 @@
                     Minor Updates
                 </a>
                 <a href="{{ route('changelog', ['type' => 'security']) }}" 
-                   class="px-3.5 py-2 rounded-xl border transition-all font-semibold {{ request('type') === 'security' ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-lg shadow-amber-500/20' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white' }}">
-                    Security Patches
+                   class="px-3.5 py-2 rounded-xl border transition-all font-semibold {{ in_array(request('type'), ['security', 'patch']) ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-lg shadow-amber-500/20' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white' }}">
+                    Security & Patches
                 </a>
             </div>
 
