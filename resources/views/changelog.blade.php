@@ -97,26 +97,26 @@
                 <div class="flex-1 glass-card p-6 sm:p-8 rounded-3xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl shadow-xl space-y-5">
                     
                     <!-- Header Title & Type Badge -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-                        <h2 class="font-serif font-bold text-lg sm:text-2xl text-white group-hover:text-amber-300 transition-colors">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-white/10 pb-4">
+                        <h2 class="font-serif font-bold text-lg sm:text-2xl text-white group-hover:text-amber-300 transition-colors flex-1 min-w-0 leading-tight">
                             {{ $log->title }}
                         </h2>
 
-                        <div>
+                        <div class="shrink-0 whitespace-nowrap">
                             @if($log->type === 'major')
-                                <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">
+                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[11px] uppercase border border-amber-500/30 whitespace-nowrap inline-block shadow-sm">
                                     🚀 Major Release
                                 </span>
                             @elseif($log->type === 'minor')
-                                <span class="px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[10px] uppercase border border-sky-500/30">
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[11px] uppercase border border-sky-500/30 whitespace-nowrap inline-block shadow-sm">
                                     ✨ Feature Update
                                 </span>
                             @elseif($log->type === 'security')
-                                <span class="px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[10px] uppercase border border-purple-500/30">
+                                <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[11px] uppercase border border-purple-500/30 whitespace-nowrap inline-block shadow-sm">
                                     🛡️ Security Patch
                                 </span>
                             @else
-                                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] uppercase border border-emerald-500/30">
+                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[11px] uppercase border border-emerald-500/30 whitespace-nowrap inline-block shadow-sm">
                                     🔧 Patch & Fixes
                                 </span>
                             @endif
