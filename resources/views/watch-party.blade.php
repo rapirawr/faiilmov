@@ -163,6 +163,7 @@
             <div x-ref="playerContainer" 
                  @mousemove="resetHideTimer()" 
                  @mouseleave="startHideTimer()"
+                 @contextmenu.prevent
                  @wheel.prevent="handleWheelVolume($event)"
                  :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'"
                  :style="!showControls && isPlaying ? 'cursor: none !important;' : ''">
@@ -586,7 +587,7 @@
                                 </button>
 
                                 <!-- Skip Rewind 10s (Desktop Only) -->
-                                <button @click="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
+                                <button @click.stop="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
                                         :disabled="!isHost"
                                         :class="isHost ? 'cursor-pointer hover:bg-white/20 text-zinc-300 hover:text-white' : 'cursor-not-allowed opacity-50 text-zinc-500'"
                                         class="p-1.5 sm:p-2 rounded-xl transition-colors hidden sm:flex items-center justify-center" title="-10 Detik (Host Only)">
@@ -594,7 +595,7 @@
                                 </button>
 
                                 <!-- Skip Forward 10s (Desktop Only) -->
-                                <button @click="if(isHost) { seek(currentTime + 10); triggerRipple('forward'); }" 
+                                <button @click.stop="if(isHost) { seek(currentTime + 10); triggerRipple('forward'); }" 
                                         :disabled="!isHost"
                                         :class="isHost ? 'cursor-pointer hover:bg-white/20 text-zinc-300 hover:text-white' : 'cursor-not-allowed opacity-50 text-zinc-500'"
                                         class="p-1.5 sm:p-2 rounded-xl transition-colors hidden sm:flex items-center justify-center" title="+10 Detik (Host Only)">
@@ -1891,7 +1892,7 @@
                     this.clickTimer = setTimeout(() => {
                         this.togglePlay();
                         this.clickTimer = null;
-                    }, 250);
+                    }, 320);
                 }
             },
 
@@ -1937,10 +1938,33 @@
                 this.showSpeedingBadge = false;
             },
 
+            safePlay() {
+                const video = this.$refs.video;
+                if (!video) return;
+                const promise = video.play();
+                if (promise !== undefined) {
+                    promise.then(() => {
+                        this.isPlaying = true;
+                    }).catch(() => {
+                        video.muted = true;
+                        this.isMuted = true;
+                        video.play().then(() => {
+                            this.isPlaying = true;
+                        }).catch(() => {
+                            this.isPlaying = false;
+                        });
+                    });
+                }
+            },
+
             seek(seconds) {
                 if (!this.$refs.video) return;
+                const wasPlaying = this.isPlaying || !this.$refs.video.paused;
                 this.currentTime = Math.max(0, Math.min(this.duration, seconds));
                 this.$refs.video.currentTime = this.currentTime;
+                if (wasPlaying) {
+                    this.safePlay();
+                }
                 if (this.isHost) {
                     this.broadcastPlaybackState('seek');
                 }

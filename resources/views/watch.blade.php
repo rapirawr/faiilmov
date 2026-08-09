@@ -144,6 +144,7 @@
         <div x-ref="playerContainer" 
              @mousemove="resetHideTimer()" 
              @mouseleave="startHideTimer()"
+             @contextmenu.prevent
              @wheel.prevent="handleWheelVolume($event)"
              :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'"
              :style="!showControls && isPlaying ? 'cursor: none !important;' : ''">
@@ -573,13 +574,13 @@
                                     <svg x-show="isPlaying" class="w-4 h-4 sm:w-5 sm:h-5 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                 </button>
 
-                                <!-- Skip Rewind 10s (Desktop Only) -->
-                                <button @click="seek(currentTime - 10); triggerRipple('rewind')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="-10 Detik">
+                                 <!-- Skip Rewind 10s (Desktop Only) -->
+                                <button @click.stop="seek(currentTime - 10); triggerRipple('rewind')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="-10 Detik">
                                     <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </button>
 
                                 <!-- Skip Forward 10s (Desktop Only) -->
-                                <button @click="seek(currentTime + 10); triggerRipple('forward')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="+10 Detik">
+                                <button @click.stop="seek(currentTime + 10); triggerRipple('forward')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="+10 Detik">
                                     <i data-lucide="rotate-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </button>
 
@@ -1468,7 +1469,7 @@
                     this.clickTimer = setTimeout(() => {
                         this.togglePlay();
                         this.clickTimer = null;
-                    }, 250);
+                    }, 320);
                 }
             },
 
@@ -1513,8 +1514,12 @@
 
             seek(seconds) {
                 if (!this.$refs.video) return;
+                const wasPlaying = this.isPlaying || !this.$refs.video.paused;
                 this.currentTime = Math.max(0, Math.min(this.duration, seconds));
                 this.$refs.video.currentTime = this.currentTime;
+                if (wasPlaying) {
+                    this.safePlay();
+                }
             },
 
             handleScrubberClick(e) {
