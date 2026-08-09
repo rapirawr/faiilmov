@@ -145,7 +145,8 @@
              @mousemove="resetHideTimer()" 
              @mouseleave="startHideTimer()"
              @wheel.prevent="handleWheelVolume($event)"
-             :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'">
+             :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'"
+             :style="!showControls && isPlaying ? 'cursor: none !important;' : ''">
             
             <!-- Mini Player Top Floating Header Bar -->
             <div x-show="isMiniPlayer" 
@@ -188,9 +189,11 @@
                                'object-contain transform-none': aspectRatioMode === 'contain',
                                'object-cover transform-none': aspectRatioMode === 'cover',
                                'object-fill transform-none': aspectRatioMode === 'fill',
-                               'object-contain scale-125': aspectRatioMode === 'zoom'
+                               'object-contain scale-125': aspectRatioMode === 'zoom',
+                               'cursor-none': !showControls && isPlaying,
+                               'cursor-pointer': showControls || !isPlaying
                            }"
-                           class="w-full h-full cursor-pointer transition-all duration-300"></video>
+                           class="w-full h-full transition-all duration-300"></video>
 
                     <!-- Top & Bottom Gradient Shadows for Controls Readability -->
                     <div class="absolute inset-0 pointer-events-none transition-opacity duration-300"
@@ -1660,10 +1663,10 @@
             },
 
             startHideTimer() {
-                if (this.isPlaying) {
+                if (this.isPlaying && !this.subtitleDropdownOpen && !this.qualityDropdownOpen && !this.speedDropdownOpen && !this.aspectRatioDropdownOpen) {
                     this.hideTimer = setTimeout(() => {
                         this.showControls = false;
-                    }, 3500);
+                    }, 2500);
                 }
             },
 
