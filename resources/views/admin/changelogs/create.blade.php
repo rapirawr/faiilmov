@@ -4,143 +4,7 @@
 @section('page_title', 'Tambah Catatan Rilis Baru')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6" x-data="{
-    version: '{{ old('version') }}',
-    title: '{{ old('title') }}',
-    type: '{{ old('type', 'minor') }}',
-    release_date: '{{ old('release_date', date('Y-m-d')) }}',
-    summary: '{{ old('summary') }}',
-    changes: [
-        { type: 'feature', text: '' }
-    ],
-    showImportModal: false,
-    importFormat: 'json',
-    rawImportText: '',
-    copiedPrompt: false,
-
-    copyPrompt() {
-        const jsonPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:
-
-{
-  \"version\": \"v2.6.0\",
-  \"title\": \"Judul Pembaruan Singkat\",
-  \"type\": \"minor\",
-  \"release_date\": \"${new Date().toISOString().split('T')[0]}\",
-  \"summary\": \"Ringkasan singkat pembaruan...\",
-  \"changes\": [
-    { \"type\": \"feature\", \"text\": \"Deskripsi fitur baru\" },
-    { \"type\": \"improvement\", \"text\": \"Deskripsi peningkatan\" },
-    { \"type\": \"fix\", \"text\": \"Deskripsi perbaikan bug\" }
-  ]
-}`;
-        const mdPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:
-
-# v2.6.0 - Judul Pembaruan Singkat
-**Tanggal**: ${new Date().toISOString().split('T')[0]}
-**Tipe**: minor
-**Ringkasan**: Ringkasan singkat pembaruan...
-
-### Perubahan:
-- [feature] Deskripsi fitur baru
-- [improvement] Deskripsi peningkatan
-- [fix] Deskripsi perbaikan bug`;
-
-        const promptText = this.importFormat === 'json' ? jsonPrompt : mdPrompt;
-        navigator.clipboard.writeText(promptText);
-        this.copiedPrompt = true;
-        setTimeout(() => this.copiedPrompt = false, 2500);
-    },
-
-    parseAndPopulate() {
-        if (!this.rawImportText.trim()) return;
-
-        try {
-            if (this.importFormat === 'json') {
-                const cleanJson = this.rawImportText.replace(/^```(?:json)?\s*|\s*```$/gi, '').trim();
-                const parsed = JSON.parse(cleanJson);
-                const data = Array.isArray(parsed) ? parsed[0] : parsed;
-
-                if (data.version) this.version = data.version;
-                if (data.title) this.title = data.title;
-                if (data.type) this.type = data.type;
-                if (data.release_date) this.release_date = data.release_date;
-                if (data.summary) this.summary = data.summary;
-
-                if (Array.isArray(data.changes) && data.changes.length > 0) {
-                    this.changes = data.changes.map(c => {
-                        if (typeof c === 'string') return { type: 'feature', text: c };
-                        return { type: c.type || 'feature', text: c.text || '' };
-                    });
-                }
-            } else {
-                // Markdown Client Parser
-                const text = this.rawImportText.trim();
-                const lines = text.split('\n');
-                let firstLine = lines.shift() || '';
-
-                const vMatch = firstLine.match(/^#+\s*(v?\d+\.\d+(?:\.\d+)?)(?:\s*[:-]\s*(.+))?/i);
-                if (vMatch) {
-                    this.version = vMatch[1];
-                    if (vMatch[2]) this.title = vMatch[2].trim();
-                }
-
-                let newChanges = [];
-                let currentType = 'feature';
-                let summaryArr = [];
-
-                lines.forEach(line => {
-                    line = line.trim();
-                    if (!line) return;
-
-                    const dateMatch = line.match(/(?:\*\*|\*)?(?:tanggal|date)(?:\*\*|\*)?\s*:\s*(\d{4}-\d{2}-\d{2})/i);
-                    if (dateMatch) { this.release_date = dateMatch[1]; return; }
-
-                    const typeMatch = line.match(/(?:\*\*|\*)?(?:tipe|type)(?:\*\*|\*)?\s*:\s*(major|minor|patch|security)/i);
-                    if (typeMatch) { this.type = typeMatch[1].toLowerCase(); return; }
-
-                    const sumMatch = line.match(/(?:\*\*|\*)?(?:ringkasan|summary)(?:\*\*|\*)?\s*:\s*(.+)/i);
-                    if (sumMatch) { summaryArr.push(sumMatch[1].trim()); return; }
-
-                    const subMatch = line.match(/^#+\s*(fitur|feature|peningkatan|improvement|perbaikan|fix|bug|keamanan|security)/i);
-                    if (subMatch) {
-                        const sub = subMatch[1].toLowerCase();
-                        if (sub.includes('fix') || sub.includes('perbaikan') || sub.includes('bug')) currentType = 'fix';
-                        else if (sub.includes('improve') || sub.includes('peningkatan')) currentType = 'improvement';
-                        else if (sub.includes('sec') || sub.includes('keamanan')) currentType = 'security';
-                        else currentType = 'feature';
-                        return;
-                    }
-
-                    const bulletMatch = line.match(/^[-*+]\s+(?:\[(feature|improvement|fix|security)\]\s*)?(.+)/i);
-                    if (bulletMatch) {
-                        const itemType = bulletMatch[1] ? bulletMatch[1].toLowerCase() : currentType;
-                        const itemText = bulletMatch[2].trim();
-                        if (itemText) newChanges.push({ type: itemType, text: itemText });
-                    } else if (!line.startsWith('#')) {
-                        if (newChanges.length === 0) summaryArr.push(line);
-                    }
-                });
-
-                if (summaryArr.length > 0) this.summary = summaryArr.join('\n');
-                if (newChanges.length > 0) this.changes = newChanges;
-            }
-
-            this.showImportModal = false;
-            this.rawImportText = '';
-        } catch (e) {
-            alert('Gagal memproses data rilis: ' + e.message);
-        }
-    },
-
-    addChange() {
-        this.changes.push({ type: 'feature', text: '' });
-    },
-    removeChange(index) {
-        if (this.changes.length > 1) {
-            this.changes.splice(index, 1);
-        }
-    }
-}">
+<div class="max-w-4xl mx-auto space-y-6" x-data="changelogCreateForm">
 
     <div class="flex items-center justify-between">
         <div>
@@ -306,7 +170,7 @@
                     <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tempel Output dari AI di bawah ini:</label>
                     <textarea x-model="rawImportText" 
                               rows="9" 
-                              :placeholder="importFormat === 'json' ? 'Tempel teks JSON dari ChatGPT/Gemini/Claude di sini...\n\n{\n  &quot;version&quot;: &quot;v2.6.0&quot;,\n  &quot;title&quot;: &quot;Judul Pembaruan&quot;,\n  ...\n}' : 'Tempel teks Markdown dari ChatGPT/Gemini/Claude di sini...\n\n# v2.6.0 - Judul Pembaruan\n**Tanggal**: 2026-08-09\n**Ringkasan**: ...\n\n### Perubahan:\n- [feature] Fitur baru\n- [fix] Perbaikan bug'"
+                              placeholder="Tempel teks JSON atau Markdown dari ChatGPT/Gemini/Claude di sini..."
                               class="w-full bg-zinc-950 border border-white/10 rounded-2xl p-4 text-xs font-mono text-white focus:outline-none focus:border-purple-500"></textarea>
                 </div>
             </div>
@@ -338,4 +202,144 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('changelogCreateForm', () => ({
+        version: @json(old('version', '')),
+        title: @json(old('title', '')),
+        type: @json(old('type', 'minor')),
+        release_date: @json(old('release_date', date('Y-m-d'))),
+        summary: @json(old('summary', '')),
+        changes: [
+            { type: 'feature', text: '' }
+        ],
+        showImportModal: false,
+        importFormat: 'json',
+        rawImportText: '',
+        copiedPrompt: false,
+
+        copyPrompt() {
+            const today = new Date().toISOString().split('T')[0];
+            const jsonPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:\n\n' +
+'{\n' +
+'  "version": "v2.6.0",\n' +
+'  "title": "Judul Pembaruan Singkat",\n' +
+'  "type": "minor",\n' +
+'  "release_date": "' + today + '",\n' +
+'  "summary": "Ringkasan singkat pembaruan...",\n' +
+'  "changes": [\n' +
+'    { "type": "feature", "text": "Deskripsi fitur baru" },\n' +
+'    { "type": "improvement", "text": "Deskripsi peningkatan" },\n' +
+'    { "type": "fix", "text": "Deskripsi perbaikan bug" }\n' +
+'  ]\n' +
+'}';
+
+            const mdPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:\n\n' +
+'# v2.6.0 - Judul Pembaruan Singkat\n' +
+'**Tanggal**: ' + today + '\n' +
+'**Tipe**: minor\n' +
+'**Ringkasan**: Ringkasan singkat pembaruan...\n\n' +
+'### Perubahan:\n' +
+'- [feature] Deskripsi fitur baru\n' +
+'- [improvement] Deskripsi peningkatan\n' +
+'- [fix] Deskripsi perbaikan bug';
+
+            const promptText = this.importFormat === 'json' ? jsonPrompt : mdPrompt;
+            navigator.clipboard.writeText(promptText);
+            this.copiedPrompt = true;
+            setTimeout(() => this.copiedPrompt = false, 2500);
+        },
+
+        parseAndPopulate() {
+            if (!this.rawImportText.trim()) return;
+
+            try {
+                if (this.importFormat === 'json') {
+                    const cleanJson = this.rawImportText.replace(/^```(?:json)?\s*|\s*```$/gi, '').trim();
+                    const parsed = JSON.parse(cleanJson);
+                    const data = Array.isArray(parsed) ? parsed[0] : parsed;
+
+                    if (data.version) this.version = data.version;
+                    if (data.title) this.title = data.title;
+                    if (data.type) this.type = data.type;
+                    if (data.release_date) this.release_date = data.release_date;
+                    if (data.summary) this.summary = data.summary;
+
+                    if (Array.isArray(data.changes) && data.changes.length > 0) {
+                        this.changes = data.changes.map(c => {
+                            if (typeof c === 'string') return { type: 'feature', text: c };
+                            return { type: c.type || 'feature', text: c.text || '' };
+                        });
+                    }
+                } else {
+                    const text = this.rawImportText.trim();
+                    const lines = text.split('\n');
+                    let firstLine = lines.shift() || '';
+
+                    const vMatch = firstLine.match(/^#+\s*(v?\d+\.\d+(?:\.\d+)?)(?:\s*[:-]\s*(.+))?/i);
+                    if (vMatch) {
+                        this.version = vMatch[1];
+                        if (vMatch[2]) this.title = vMatch[2].trim();
+                    }
+
+                    let newChanges = [];
+                    let currentType = 'feature';
+                    let summaryArr = [];
+
+                    lines.forEach(line => {
+                        line = line.trim();
+                        if (!line) return;
+
+                        const dateMatch = line.match(/(?:\*\*|\*)?(?:tanggal|date)(?:\*\*|\*)?\s*:\s*(\d{4}-\d{2}-\d{2})/i);
+                        if (dateMatch) { this.release_date = dateMatch[1]; return; }
+
+                        const typeMatch = line.match(/(?:\*\*|\*)?(?:tipe|type)(?:\*\*|\*)?\s*:\s*(major|minor|patch|security)/i);
+                        if (typeMatch) { this.type = typeMatch[1].toLowerCase(); return; }
+
+                        const sumMatch = line.match(/(?:\*\*|\*)?(?:ringkasan|summary)(?:\*\*|\*)?\s*:\s*(.+)/i);
+                        if (sumMatch) { summaryArr.push(sumMatch[1].trim()); return; }
+
+                        const subMatch = line.match(/^#+\s*(fitur|feature|peningkatan|improvement|perbaikan|fix|bug|keamanan|security)/i);
+                        if (subMatch) {
+                            const sub = subMatch[1].toLowerCase();
+                            if (sub.includes('fix') || sub.includes('perbaikan') || sub.includes('bug')) currentType = 'fix';
+                            else if (sub.includes('improve') || sub.includes('peningkatan')) currentType = 'improvement';
+                            else if (sub.includes('sec') || sub.includes('keamanan')) currentType = 'security';
+                            else currentType = 'feature';
+                            return;
+                        }
+
+                        const bulletMatch = line.match(/^[-*+]\s+(?:\[(feature|improvement|fix|security)\]\s*)?(.+)/i);
+                        if (bulletMatch) {
+                            const itemType = bulletMatch[1] ? bulletMatch[1].toLowerCase() : currentType;
+                            const itemText = bulletMatch[2].trim();
+                            if (itemText) newChanges.push({ type: itemType, text: itemText });
+                        } else if (!line.startsWith('#')) {
+                            if (newChanges.length === 0) summaryArr.push(line);
+                        }
+                    });
+
+                    if (summaryArr.length > 0) this.summary = summaryArr.join('\n');
+                    if (newChanges.length > 0) this.changes = newChanges;
+                }
+
+                this.showImportModal = false;
+                this.rawImportText = '';
+            } catch (e) {
+                alert('Gagal memproses data rilis: ' + e.message);
+            }
+        },
+
+        addChange() {
+            this.changes.push({ type: 'feature', text: '' });
+        },
+        removeChange(index) {
+            if (this.changes.length > 1) {
+                this.changes.splice(index, 1);
+            }
+        }
+    }));
+});
+</script>
 @endsection

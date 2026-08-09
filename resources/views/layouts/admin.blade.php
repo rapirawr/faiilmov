@@ -96,7 +96,7 @@
                         </button>
 
                         <!-- Tree Links -->
-                        <div x-show="openGroups.content" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                        <div x-show="openGroups.content" x-transition class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
                             <a href="{{ route('admin.films.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.index') || request()->routeIs('admin.films.edit') || request()->routeIs('admin.films.create') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>
@@ -142,7 +142,7 @@
                         </button>
 
                         <!-- Tree Links -->
-                        <div x-show="openGroups.moderation" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                        <div x-show="openGroups.moderation" x-transition class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
                             <a href="{{ route('admin.watch_parties.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.watch_parties.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>
@@ -181,7 +181,7 @@
                         </button>
 
                         <!-- Tree Links -->
-                        <div x-show="openGroups.system" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                        <div x-show="openGroups.system" x-transition class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
                             <a href="{{ route('admin.changelogs.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>

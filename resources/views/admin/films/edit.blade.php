@@ -277,7 +277,7 @@
                     </div>
 
                     <!-- Add Episode Inline Form -->
-                    <div x-show="addEpisodeOpen" x-collapse class="p-4 rounded-xl bg-zinc-950 border border-emerald-500/30 space-y-3">
+                    <div x-show="addEpisodeOpen" x-transition class="p-4 rounded-xl bg-zinc-950 border border-emerald-500/30 space-y-3">
                         <h5 class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                             <i data-lucide="film" class="w-3.5 h-3.5"></i>
                             <span>Form Episode Baru (Season {{ $season->season_number }})</span>

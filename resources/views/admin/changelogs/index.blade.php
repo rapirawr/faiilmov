@@ -4,45 +4,7 @@
 @section('page_title', 'Manajemen Changelog & Catatan Rilis')
 
 @section('content')
-<div class="space-y-6" x-data="{
-    showImportModal: false,
-    importFormat: 'json',
-    rawImportText: '',
-    copiedPrompt: false,
-
-    copyPrompt() {
-        const jsonPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:
-
-{
-  \"version\": \"v2.6.0\",
-  \"title\": \"Judul Pembaruan Singkat\",
-  \"type\": \"minor\",
-  \"release_date\": \"${new Date().toISOString().split('T')[0]}\",
-  \"summary\": \"Ringkasan singkat pembaruan...\",
-  \"changes\": [
-    { \"type\": \"feature\", \"text\": \"Deskripsi fitur baru\" },
-    { \"type\": \"improvement\", \"text\": \"Deskripsi peningkatan\" },
-    { \"type\": \"fix\", \"text\": \"Deskripsi perbaikan bug\" }
-  ]
-}`;
-        const mdPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:
-
-# v2.6.0 - Judul Pembaruan Singkat
-**Tanggal**: ${new Date().toISOString().split('T')[0]}
-**Tipe**: minor
-**Ringkasan**: Ringkasan singkat pembaruan...
-
-### Perubahan:
-- [feature] Deskripsi fitur baru
-- [improvement] Deskripsi peningkatan
-- [fix] Deskripsi perbaikan bug`;
-
-        const promptText = this.importFormat === 'json' ? jsonPrompt : mdPrompt;
-        navigator.clipboard.writeText(promptText);
-        this.copiedPrompt = true;
-        setTimeout(() => this.copiedPrompt = false, 2500);
-    }
-}">
+<div class="space-y-6" x-data="changelogIndexImporter">
 
     <!-- Top Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -57,7 +19,7 @@
 
         <div class="flex items-center gap-2">
             <!-- AI Import Modal Button -->
-            <button type="button" @click="showImportModal = true" class="px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+            <button type="button" @click="showImportModal = true" class="px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-lg shadow-purple-500/10">
                 <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
                 <span>Import AI (JSON / Markdown)</span>
             </button>
@@ -92,20 +54,19 @@
                 <tbody class="divide-y divide-white/5">
                     @forelse($changelogs as $log)
                         <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-4 py-3.5 font-bold font-mono text-amber-400">
+                            <td class="px-4 py-3.5 font-mono font-bold text-amber-400 text-sm">
                                 {{ $log->version }}
                             </td>
-                            <td class="px-4 py-3.5">
-                                <p class="font-bold text-white text-sm line-clamp-1">{{ $log->title }}</p>
-                                <p class="text-[11px] text-zinc-400 line-clamp-1">{{ $log->summary }}</p>
+                            <td class="px-4 py-3.5 font-semibold text-white max-w-xs truncate">
+                                {{ $log->title }}
                             </td>
                             <td class="px-4 py-3.5">
                                 @if($log->type === 'major')
-                                    <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">Major</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[10px] uppercase border border-purple-500/30">Major</span>
                                 @elseif($log->type === 'minor')
-                                    <span class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[10px] uppercase border border-sky-500/30">Minor</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-extrabold text-[10px] uppercase border border-blue-500/30">Minor</span>
                                 @elseif($log->type === 'security')
-                                    <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[10px] uppercase border border-purple-500/30">Security</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 font-extrabold text-[10px] uppercase border border-red-500/30">Security</span>
                                 @else
                                     <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] uppercase border border-emerald-500/30">Patch</span>
                                 @endif
@@ -209,7 +170,7 @@
                     <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tempel Output dari AI di bawah ini:</label>
                     <textarea x-model="rawImportText" 
                               rows="9" 
-                              :placeholder="importFormat === 'json' ? 'Tempel teks JSON dari ChatGPT/Gemini/Claude di sini...\n\n{\n  &quot;version&quot;: &quot;v2.6.0&quot;,\n  &quot;title&quot;: &quot;Judul Pembaruan&quot;,\n  ...\n}' : 'Tempel teks Markdown dari ChatGPT/Gemini/Claude di sini...\n\n# v2.6.0 - Judul Pembaruan\n**Tanggal**: 2026-08-09\n**Ringkasan**: ...\n\n### Perubahan:\n- [feature] Fitur baru\n- [fix] Perbaikan bug'"
+                              placeholder="Tempel teks JSON atau Markdown dari ChatGPT/Gemini/Claude di sini..."
                               class="w-full bg-zinc-950 border border-white/10 rounded-2xl p-4 text-xs font-mono text-white focus:outline-none focus:border-purple-500"></textarea>
                 </div>
             </div>
@@ -239,4 +200,47 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('changelogIndexImporter', () => ({
+        showImportModal: false,
+        importFormat: 'json',
+        rawImportText: '',
+        copiedPrompt: false,
+
+        copyPrompt() {
+            const today = new Date().toISOString().split('T')[0];
+            const jsonPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:\n\n' +
+'{\n' +
+'  "version": "v2.6.0",\n' +
+'  "title": "Judul Pembaruan Singkat",\n' +
+'  "type": "minor",\n' +
+'  "release_date": "' + today + '",\n' +
+'  "summary": "Ringkasan singkat pembaruan...",\n' +
+'  "changes": [\n' +
+'    { "type": "feature", "text": "Deskripsi fitur baru" },\n' +
+'    { "type": "improvement", "text": "Deskripsi peningkatan" },\n' +
+'    { "type": "fix", "text": "Deskripsi perbaikan bug" }\n' +
+'  ]\n' +
+'}';
+
+            const mdPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:\n\n' +
+'# v2.6.0 - Judul Pembaruan Singkat\n' +
+'**Tanggal**: ' + today + '\n' +
+'**Tipe**: minor\n' +
+'**Ringkasan**: Ringkasan singkat pembaruan...\n\n' +
+'### Perubahan:\n' +
+'- [feature] Deskripsi fitur baru\n' +
+'- [improvement] Deskripsi peningkatan\n' +
+'- [fix] Deskripsi perbaikan bug';
+
+            const promptText = this.importFormat === 'json' ? jsonPrompt : mdPrompt;
+            navigator.clipboard.writeText(promptText);
+            this.copiedPrompt = true;
+            setTimeout(() => this.copiedPrompt = false, 2500);
+        }
+    }));
+});
+</script>
 @endsection
