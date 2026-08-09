@@ -12,7 +12,12 @@ class ChangelogController extends Controller
         $query = Changelog::published();
 
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $type = $request->type;
+            if ($type === 'security' || $type === 'patch') {
+                $query->whereIn('type', ['security', 'patch']);
+            } else {
+                $query->where('type', $type);
+            }
         }
 
         if ($request->filled('search')) {
