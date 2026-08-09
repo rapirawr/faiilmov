@@ -5,8 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'faiilmov | Database Film & Streaming')</title>
-    
+    <!-- Primary Meta Tags -->
+    <title>@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')</title>
+    <meta name="title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
+    <meta name="description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'nonton film, streaming film, film gratis, film sub indo, faiilmov, serial tv, moviebox, anime, streaming bioskop')">
+    <meta name="robots" content="@yield('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
+    <meta name="author" content="faiilmov">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="faiilmov">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
+    <meta property="og:description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="id_ID">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="@yield('twitter_card', 'summary_large_image')">
+    <meta name="twitter:url" content="@yield('canonical', url()->current())">
+    <meta name="twitter:title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
+    <meta name="twitter:description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    @hasSection('schema_org')
+        @yield('schema_org')
+    @else
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "faiilmov",
+          "url": "{{ url('/') }}",
+          "description": "Streaming & nonton film online subtitle Indonesia gratis HD.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ route('browse') }}?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+        </script>
+    @endif
+
     <!-- Favicon & App Icon -->
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">

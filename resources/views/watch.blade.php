@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Memutar: ' . $film->title . ' | faiilmov')
+@section('title', 'Streaming ' . $film->title . ' ' . ($film->subject_type === 'series' && isset($season) ? "Season {$season} Ep {$episode}" : '') . ' Subtitle Indonesia | faiilmov')
+@section('meta_description', 'Putar & nonton streaming film ' . $film->title . ' subtitle Indonesia gratis full HD 1080p tanpa iklan mengganggu di faiilmov.')
+@section('meta_keywords', 'streaming ' . $film->title . ', pemutar film ' . $film->title . ', ' . $film->title . ' sub indo full hd')
+@section('og_type', 'video.other')
+@section('og_image', $film->backdrop_url ?: $film->poster_url)
 
 @section('content')
 @php

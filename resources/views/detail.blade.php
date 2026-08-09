@@ -1,6 +1,35 @@
 @extends('layouts.app')
 
-@section('title', $film->title . ' | faiilmov')
+@section('title', 'Nonton ' . $film->title . ' (' . ($film->release_year ?: date('Y')) . ') Subtitle Indonesia | faiilmov')
+@section('meta_description', 'Nonton film ' . $film->title . ' (' . $film->release_year . ') subtitle Indonesia gratis kualitas HD. ' . \Illuminate\Support\Str::limit(strip_tags($film->synopsis ?: 'Streaming & nonton film ' . $film->title . ' di faiilmov.'), 150))
+@section('meta_keywords', $film->title . ', nonton ' . $film->title . ', streaming ' . $film->title . ' sub indo, ' . ($film->genres ? $film->genres->pluck('name')->implode(', ') : 'film online'))
+@section('og_type', $film->subject_type === 'series' ? 'video.tv_show' : 'video.movie')
+@section('og_image', $film->backdrop_url ?: $film->poster_url)
+
+@section('schema_org')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "{{ $film->subject_type === 'series' ? 'TVSeries' : 'Movie' }}",
+  "name": "{{ addslashes($film->title) }}",
+  "description": "{{ addslashes(strip_tags($film->synopsis ?: 'Nonton film ' . $film->title . ' di faiilmov.')) }}",
+  "image": "{{ $film->backdrop_url ?: $film->poster_url }}",
+  "datePublished": "{{ $film->release_year }}-01-01",
+  "genre": [
+    @foreach($film->genres as $g)
+      "{{ $g->name }}"@if(!$loop->last),@endif
+    @endforeach
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ number_format($film->rating ?: 4.5, 1) }}",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": "{{ max(1, (int)($film->view_count ?: 10)) }}"
+  }
+}
+</script>
+@endsection
 
 @section('content')
 <div x-data="detailPage({{ $userWatchlist ? 'true' : 'false' }})">
