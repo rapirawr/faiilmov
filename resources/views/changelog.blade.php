@@ -76,7 +76,7 @@
     <div class="relative space-y-12 before:absolute before:inset-0 before:left-4 sm:before:left-32 before:w-0.5 before:bg-gradient-to-b before:from-amber-500/40 before:via-white/10 before:to-transparent">
 
         @forelse($changelogs as $log)
-            <div class="relative flex flex-col sm:flex-row items-start gap-6 sm:gap-10 group">
+            <div class="relative flex flex-col sm:flex-row items-start gap-6 sm:gap-10 group" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
                 
                 <!-- Left Date / Version Badge Column (Desktop) -->
                 <div class="sm:w-32 shrink-0 sm:text-right space-y-1 pl-10 sm:pl-0">
@@ -93,16 +93,16 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                 </div>
 
-                <!-- Right Card Container -->
-                <div class="flex-1 glass-card p-6 sm:p-8 rounded-3xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl shadow-xl space-y-5">
+                <!-- Right Card Container (Collapsible FAQ Accordion) -->
+                <div class="flex-1 glass-card p-6 sm:p-8 rounded-3xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl shadow-xl transition-all">
                     
-                    <!-- Header Title & Type Badge -->
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-white/10 pb-4">
-                        <h2 class="font-serif font-bold text-lg sm:text-2xl text-white group-hover:text-amber-300 transition-colors flex-1 min-w-0 leading-tight">
+                    <!-- Header Title & Type Badge (Clickable Accordion Header) -->
+                    <div @click="open = !open" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none group/header">
+                        <h2 class="font-serif font-bold text-lg sm:text-2xl text-white group-hover/header:text-amber-300 transition-colors flex-1 min-w-0 leading-tight">
                             {{ $log->title }}
                         </h2>
 
-                        <div class="shrink-0 whitespace-nowrap">
+                        <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
                             @if($log->type === 'major')
                                 <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[11px] uppercase border border-amber-500/30 whitespace-nowrap inline-block shadow-sm">
                                     🚀 Major Release
@@ -120,43 +120,56 @@
                                     🔧 Patch & Fixes
                                 </span>
                             @endif
+
+                            <!-- Chevron Collapse / Expand Toggle Button -->
+                            <div class="w-8 h-8 rounded-xl bg-white/5 group-hover/header:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 group-hover/header:text-white transition-all shadow-sm">
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300" :class="open ? 'rotate-180 text-amber-400' : ''"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Summary -->
-                    @if($log->summary)
-                        <p class="text-sm text-zinc-300 leading-relaxed font-normal">
-                            {{ $log->summary }}
-                        </p>
-                    @endif
+                    <!-- Collapsible Content Body (Summary & Change List) -->
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="space-y-5 pt-5 border-t border-white/10 mt-5">
+                        
+                        <!-- Summary -->
+                        @if($log->summary)
+                            <p class="text-sm text-zinc-300 leading-relaxed font-normal">
+                                {{ $log->summary }}
+                            </p>
+                        @endif
 
-                    <!-- Detailed Change Items List -->
-                    @if(!empty($log->changes) && is_array($log->changes))
-                        <div class="space-y-2.5 pt-2">
-                            <p class="text-xs uppercase font-bold text-zinc-400 tracking-wider">Rincian Perubahan:</p>
+                        <!-- Detailed Change Items List -->
+                        @if(!empty($log->changes) && is_array($log->changes))
+                            <div class="space-y-2.5 pt-1">
+                                <p class="text-xs uppercase font-bold text-zinc-400 tracking-wider">Rincian Perubahan:</p>
 
-                            <div class="space-y-2">
-                                @foreach($log->changes as $item)
-                                    @php 
-                                        $itemType = strtolower($item['type'] ?? 'feature');
-                                        $itemText = $item['text'] ?? '';
-                                    @endphp
-                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 text-xs text-zinc-300 leading-relaxed">
-                                        @if($itemType === 'feature')
-                                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">FITUR BARU</span>
-                                        @elseif($itemType === 'improvement')
-                                            <span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">PENINGKATAN</span>
-                                        @elseif($itemType === 'fix')
-                                            <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">PERBAIKAN</span>
-                                        @elseif($itemType === 'security')
-                                            <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">KEAMANAN</span>
-                                        @endif
-                                        <span>{{ $itemText }}</span>
-                                    </div>
-                                @endforeach
+                                <div class="space-y-2">
+                                    @foreach($log->changes as $item)
+                                        @php 
+                                            $itemType = strtolower($item['type'] ?? 'feature');
+                                            $itemText = $item['text'] ?? '';
+                                        @endphp
+                                        <div class="flex items-start gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 text-xs text-zinc-300 leading-relaxed">
+                                            @if($itemType === 'feature')
+                                                <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">FITUR BARU</span>
+                                            @elseif($itemType === 'improvement')
+                                                <span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">PENINGKATAN</span>
+                                            @elseif($itemType === 'fix')
+                                                <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">PERBAIKAN</span>
+                                            @elseif($itemType === 'security')
+                                                <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-extrabold text-[9px] uppercase shrink-0 mt-0.5">KEAMANAN</span>
+                                            @endif
+                                            <span>{{ $itemText }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                 </div>
             </div>
