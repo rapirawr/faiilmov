@@ -130,8 +130,21 @@ class MovieBoxController extends Controller
             return response()->json(['error' => 'URL parameter is required.'], 400);
         }
 
-        // Generate clean film/episode filename
-        $titleStr = $rawTitle ? trim($rawTitle) : 'film';
+        // Automatic DB/API lookup if title is missing from URL query
+        if (empty($rawTitle) && $subjectId) {
+            $filmInDb = \App\Models\Film::where('moviebox_subject_id', $subjectId)->first();
+            if ($filmInDb) {
+                $rawTitle = $filmInDb->title;
+            } else {
+                try {
+                    $details = $this->movieBox->getDetails($subjectId);
+                    $rawTitle = $details['title'] ?? $details['name'] ?? null;
+                } catch (\Exception $e) {}
+            }
+        }
+
+        // Fallback title if still empty
+        $titleStr = $rawTitle ? trim($rawTitle) : 'movie';
         if ($season > 0 || $episode > 0) {
             $titleStr .= " S{$season}E{$episode}";
         }
