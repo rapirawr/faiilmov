@@ -122,4 +122,177 @@ class AdminChangelogController extends Controller
 
         return back()->with('success', "Catatan rilis {$changelog->version} berhasil {$actionText}.");
     }
+
+    /**
+     * Import changelog data directly from AI (JSON or Markdown format)
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'format' => 'required|in:json,markdown',
+            'content' => 'required|string',
+            'auto_publish' => 'nullable|boolean',
+        ]);
+
+        $format = $request->input('format');
+        $content = trim($request->input('content'));
+        $autoPublish = $request->boolean('auto_publish', true);
+
+        $parsedItems = [];
+
+        if ($format === 'json') {
+            // Clean markdown block wrappers ```json ... ``` if present
+            $cleanJson = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $content);
+            $decoded = json_decode(trim($cleanJson), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return back()->with('error', 'Format JSON tidak valid: ' . json_last_error_msg());
+            }
+
+            $items = isset($decoded['version']) ? [$decoded] : (is_array($decoded) ? $decoded : []);
+
+            foreach ($items as $item) {
+                if (!empty($item['version']) && !empty($item['title'])) {
+                    $changes = [];
+                    if (isset($item['changes']) && is_array($item['changes'])) {
+                        foreach ($item['changes'] as $c) {
+                            if (is_string($c)) {
+                                $changes[] = ['type' => 'feature', 'text' => $c];
+                            } elseif (is_array($c) && !empty($c['text'])) {
+                                $changes[] = [
+                                    'type' => in_array($c['type'] ?? '', ['feature', 'improvement', 'fix', 'security']) ? $c['type'] : 'feature',
+                                    'text' => $c['text'],
+                                ];
+                            }
+                        }
+                    }
+
+                    $parsedItems[] = [
+                        'version' => $item['version'],
+                        'title' => $item['title'],
+                        'type' => in_array($item['type'] ?? '', ['major', 'minor', 'patch', 'security']) ? $item['type'] : 'minor',
+                        'release_date' => $item['release_date'] ?? date('Y-m-d'),
+                        'summary' => $item['summary'] ?? null,
+                        'changes' => $changes,
+                    ];
+                }
+            }
+        } else {
+            // Markdown format parser
+            $parsedItems = $this->parseMarkdownChangelog($content);
+        }
+
+        if (empty($parsedItems)) {
+            return back()->with('error', 'Tidak ada data catatan rilis changelog valid yang berhasil diekstrak.');
+        }
+
+        $createdCount = 0;
+        foreach ($parsedItems as $item) {
+            $changelog = Changelog::create([
+                'version' => $item['version'],
+                'title' => $item['title'],
+                'type' => $item['type'],
+                'release_date' => $item['release_date'],
+                'summary' => $item['summary'],
+                'changes' => $item['changes'],
+                'is_published' => $autoPublish,
+                'published_at' => $autoPublish ? now() : null,
+                'created_by' => Auth::id(),
+            ]);
+
+            AdminActivityLog::log('imported_changelog', "Import rilis changelog baru dari AI: {$changelog->version} - {$changelog->title}", 'Changelog', $changelog->id);
+            $createdCount++;
+        }
+
+        return redirect()->route('admin.changelogs.index')->with('success', "Berhasil meng-import {$createdCount} catatan rilis changelog.");
+    }
+
+    private function parseMarkdownChangelog(string $markdown): array
+    {
+        // Split by # v or ## v for multi-version markdown releases
+        $sections = preg_split('/(?=^#+\s+v?\d)/m', $markdown);
+        $result = [];
+
+        foreach ($sections as $sec) {
+            $sec = trim($sec);
+            if (empty($sec)) continue;
+
+            $lines = explode("\n", $sec);
+            $firstLine = array_shift($lines);
+
+            $version = 'v1.0.0';
+            $title = 'Catatan Rilis Pembaruan';
+
+            if (preg_match('/^#+\s*(v?\d+\.\d+(?:\.\d+)?)(?:\s*[:-]\s*(.+))?/i', $firstLine, $m)) {
+                $version = $m[1];
+                $title = isset($m[2]) ? trim($m[2]) : "Rilis {$version}";
+            }
+
+            $type = 'minor';
+            $releaseDate = date('Y-m-d');
+            $summaryLines = [];
+            $changes = [];
+
+            $currentChangeType = 'feature';
+
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+
+                if (preg_match('/(?:\*\*|\*)?(?:tanggal|date)(?:\*\*|\*)?\s*:\s*(\d{4}-\d{2}-\d{2})/i', $line, $mDate)) {
+                    $releaseDate = $mDate[1];
+                    continue;
+                }
+                if (preg_match('/(?:\*\*|\*)?(?:tipe|type)(?:\*\*|\*)?\s*:\s*(major|minor|patch|security)/i', $line, $mType)) {
+                    $type = strtolower($mType[1]);
+                    continue;
+                }
+                if (preg_match('/(?:\*\*|\*)?(?:ringkasan|summary)(?:\*\*|\*)?\s*:\s*(.+)/i', $line, $mSum)) {
+                    $summaryLines[] = trim($mSum[1]);
+                    continue;
+                }
+
+                if (preg_match('/^#+\s*(fitur|feature|peningkatan|improvement|perbaikan|fix|bug|keamanan|security)/i', $line, $mSub)) {
+                    $subName = strtolower($mSub[1]);
+                    if (str_contains($subName, 'fix') || str_contains($subName, 'perbaikan') || str_contains($subName, 'bug')) {
+                        $currentChangeType = 'fix';
+                    } elseif (str_contains($subName, 'improve') || str_contains($subName, 'peningkatan')) {
+                        $currentChangeType = 'improvement';
+                    } elseif (str_contains($subName, 'sec') || str_contains($subName, 'keamanan')) {
+                        $currentChangeType = 'security';
+                    } else {
+                        $currentChangeType = 'feature';
+                    }
+                    continue;
+                }
+
+                if (preg_match('/^[-*+]\s+(?:\[(feature|improvement|fix|security)\]\s*)?(.+)/i', $line, $mBullet)) {
+                    $itemType = !empty($mBullet[1]) ? strtolower($mBullet[1]) : $currentChangeType;
+                    $itemText = trim($mBullet[2]);
+
+                    if (!empty($itemText)) {
+                        $changes[] = [
+                            'type' => in_array($itemType, ['feature', 'improvement', 'fix', 'security']) ? $itemType : 'feature',
+                            'text' => $itemText,
+                        ];
+                    }
+                } elseif (!str_starts_with($line, '#')) {
+                    if (count($changes) === 0) {
+                        $summaryLines[] = $line;
+                    }
+                }
+            }
+
+            $result[] = [
+                'version' => $version,
+                'title' => $title,
+                'type' => $type,
+                'release_date' => $releaseDate,
+                'summary' => implode("\n", $summaryLines) ?: null,
+                'changes' => $changes,
+            ];
+        }
+
+        return $result;
+    }
 }

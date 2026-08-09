@@ -5,9 +5,133 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6" x-data="{
+    version: '{{ old('version') }}',
+    title: '{{ old('title') }}',
+    type: '{{ old('type', 'minor') }}',
+    release_date: '{{ old('release_date', date('Y-m-d')) }}',
+    summary: '{{ old('summary') }}',
     changes: [
         { type: 'feature', text: '' }
     ],
+    showImportModal: false,
+    importFormat: 'json',
+    rawImportText: '',
+    copiedPrompt: false,
+
+    copyPrompt() {
+        const jsonPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:
+
+{
+  \"version\": \"v2.6.0\",
+  \"title\": \"Judul Pembaruan Singkat\",
+  \"type\": \"minor\",
+  \"release_date\": \"${new Date().toISOString().split('T')[0]}\",
+  \"summary\": \"Ringkasan singkat pembaruan...\",
+  \"changes\": [
+    { \"type\": \"feature\", \"text\": \"Deskripsi fitur baru\" },
+    { \"type\": \"improvement\", \"text\": \"Deskripsi peningkatan\" },
+    { \"type\": \"fix\", \"text\": \"Deskripsi perbaikan bug\" }
+  ]
+}`;
+        const mdPrompt = `Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:
+
+# v2.6.0 - Judul Pembaruan Singkat
+**Tanggal**: ${new Date().toISOString().split('T')[0]}
+**Tipe**: minor
+**Ringkasan**: Ringkasan singkat pembaruan...
+
+### Perubahan:
+- [feature] Deskripsi fitur baru
+- [improvement] Deskripsi peningkatan
+- [fix] Deskripsi perbaikan bug`;
+
+        const promptText = this.importFormat === 'json' ? jsonPrompt : mdPrompt;
+        navigator.clipboard.writeText(promptText);
+        this.copiedPrompt = true;
+        setTimeout(() => this.copiedPrompt = false, 2500);
+    },
+
+    parseAndPopulate() {
+        if (!this.rawImportText.trim()) return;
+
+        try {
+            if (this.importFormat === 'json') {
+                const cleanJson = this.rawImportText.replace(/^```(?:json)?\s*|\s*```$/gi, '').trim();
+                const parsed = JSON.parse(cleanJson);
+                const data = Array.isArray(parsed) ? parsed[0] : parsed;
+
+                if (data.version) this.version = data.version;
+                if (data.title) this.title = data.title;
+                if (data.type) this.type = data.type;
+                if (data.release_date) this.release_date = data.release_date;
+                if (data.summary) this.summary = data.summary;
+
+                if (Array.isArray(data.changes) && data.changes.length > 0) {
+                    this.changes = data.changes.map(c => {
+                        if (typeof c === 'string') return { type: 'feature', text: c };
+                        return { type: c.type || 'feature', text: c.text || '' };
+                    });
+                }
+            } else {
+                // Markdown Client Parser
+                const text = this.rawImportText.trim();
+                const lines = text.split('\n');
+                let firstLine = lines.shift() || '';
+
+                const vMatch = firstLine.match(/^#+\s*(v?\d+\.\d+(?:\.\d+)?)(?:\s*[:-]\s*(.+))?/i);
+                if (vMatch) {
+                    this.version = vMatch[1];
+                    if (vMatch[2]) this.title = vMatch[2].trim();
+                }
+
+                let newChanges = [];
+                let currentType = 'feature';
+                let summaryArr = [];
+
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    const dateMatch = line.match(/(?:\*\*|\*)?(?:tanggal|date)(?:\*\*|\*)?\s*:\s*(\d{4}-\d{2}-\d{2})/i);
+                    if (dateMatch) { this.release_date = dateMatch[1]; return; }
+
+                    const typeMatch = line.match(/(?:\*\*|\*)?(?:tipe|type)(?:\*\*|\*)?\s*:\s*(major|minor|patch|security)/i);
+                    if (typeMatch) { this.type = typeMatch[1].toLowerCase(); return; }
+
+                    const sumMatch = line.match(/(?:\*\*|\*)?(?:ringkasan|summary)(?:\*\*|\*)?\s*:\s*(.+)/i);
+                    if (sumMatch) { summaryArr.push(sumMatch[1].trim()); return; }
+
+                    const subMatch = line.match(/^#+\s*(fitur|feature|peningkatan|improvement|perbaikan|fix|bug|keamanan|security)/i);
+                    if (subMatch) {
+                        const sub = subMatch[1].toLowerCase();
+                        if (sub.includes('fix') || sub.includes('perbaikan') || sub.includes('bug')) currentType = 'fix';
+                        else if (sub.includes('improve') || sub.includes('peningkatan')) currentType = 'improvement';
+                        else if (sub.includes('sec') || sub.includes('keamanan')) currentType = 'security';
+                        else currentType = 'feature';
+                        return;
+                    }
+
+                    const bulletMatch = line.match(/^[-*+]\s+(?:\[(feature|improvement|fix|security)\]\s*)?(.+)/i);
+                    if (bulletMatch) {
+                        const itemType = bulletMatch[1] ? bulletMatch[1].toLowerCase() : currentType;
+                        const itemText = bulletMatch[2].trim();
+                        if (itemText) newChanges.push({ type: itemType, text: itemText });
+                    } else if (!line.startsWith('#')) {
+                        if (newChanges.length === 0) summaryArr.push(line);
+                    }
+                });
+
+                if (summaryArr.length > 0) this.summary = summaryArr.join('\n');
+                if (newChanges.length > 0) this.changes = newChanges;
+            }
+
+            this.showImportModal = false;
+            this.rawImportText = '';
+        } catch (e) {
+            alert('Gagal memproses data rilis: ' + e.message);
+        }
+    },
+
     addChange() {
         this.changes.push({ type: 'feature', text: '' });
     },
@@ -19,11 +143,23 @@
 }">
 
     <div class="flex items-center justify-between">
-        <h2 class="text-lg font-bold text-white font-['Outfit']">Form Catatan Rilis Baru</h2>
-        <a href="{{ route('admin.changelogs.index') }}" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1">
-            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-            <span>Kembali</span>
-        </a>
+        <div>
+            <h2 class="text-lg font-bold text-white font-['Outfit']">Form Catatan Rilis Baru</h2>
+            <p class="text-xs text-zinc-400">Isi manual atau gunakan fitur AI Import untuk mengisi form secara otomatis.</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- AI Import Modal Trigger Button -->
+            <button type="button" @click="showImportModal = true" class="px-4 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10">
+                <i data-lucide="sparkles" class="w-4 h-4 text-purple-400 animate-pulse"></i>
+                <span>Import data dari AI (JSON / Markdown)</span>
+            </button>
+
+            <a href="{{ route('admin.changelogs.index') }}" class="px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-400 hover:text-white flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Kembali</span>
+            </a>
+        </div>
     </div>
 
     <div class="p-6 rounded-2xl bg-zinc-900/60 border border-white/10 shadow-xl">
@@ -34,16 +170,16 @@
                 <!-- Version -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nomor Versi *</label>
-                    <input type="text" name="version"  required placeholder="Contoh: v2.5.0" 
+                    <input type="text" name="version" x-model="version" required placeholder="Contoh: v2.5.0" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500">
                 </div>
 
                 <!-- Update Type -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tipe Rilis *</label>
-                    <select name="type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                    <select name="type" x-model="type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                         <option value="major">Major Release (🚀 Fitur Utama Baru)</option>
-                        <option value="minor" selected>Minor Update (✨ Fitur Tambahan)</option>
+                        <option value="minor">Minor Update (✨ Fitur Tambahan)</option>
                         <option value="patch">Patch (🔧 Perbaikan Bug)</option>
                         <option value="security">Security Patch (🛡️ Keamanan)</option>
                     </select>
@@ -52,14 +188,14 @@
                 <!-- Title -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Judul Rilis *</label>
-                    <input type="text" name="title" value="{{ old('title') }}" required placeholder="Contoh: Pembaruan Antarmuka & Peningkatan Kecepatan Video" 
+                    <input type="text" name="title" x-model="title" required placeholder="Contoh: Pembaruan Antarmuka & Peningkatan Kecepatan Video" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
                 <!-- Release Date -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tanggal Rilis *</label>
-                    <input type="date" name="release_date" value="{{ old('release_date', date('Y-m-d')) }}" required 
+                    <input type="date" name="release_date" x-model="release_date" required 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
@@ -74,8 +210,8 @@
                 <!-- Summary -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Ringkasan Singkat Rilis</label>
-                    <textarea name="summary" rows="3" placeholder="Jelaskan secara singkat latar belakang pembaruan ini..." 
-                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500">{{ old('summary') }}</textarea>
+                    <textarea name="summary" x-model="summary" rows="3" placeholder="Jelaskan secara singkat latar belakang pembaruan ini..." 
+                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
                 </div>
 
                 <!-- Dynamic Change Items Builder -->
@@ -99,7 +235,7 @@
                                 </select>
                                 <input type="text" :name="`changes[${index}][text]`" x-model="item.text" required placeholder="Deskripsi perubahan yang dilakukan..." 
                                        class="flex-1 bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
-                                <button type="button" @click="removeChange(index)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10">
+                                <button type="button" @click="removeChange(index)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -115,6 +251,90 @@
                 <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer">Simpan Catatan Rilis</button>
             </div>
         </form>
+    </div>
+
+    <!-- AI Import Modal -->
+    <div x-show="showImportModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+         x-transition>
+        <div class="w-full max-w-2xl bg-zinc-900 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-5" @click.away="showImportModal = false">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center border border-purple-500/30">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-white">Import Catatan Rilis dari AI</h3>
+                        <p class="text-xs text-zinc-400">Salin prompt untuk AI atau tempel langsung data rilis JSON / Markdown.</p>
+                    </div>
+                </div>
+                <button type="button" @click="showImportModal = false" class="text-zinc-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Format Chooser & Prompt Copy -->
+            <div class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-zinc-300">Pilih Format Data:</span>
+                        <div class="inline-flex rounded-xl bg-zinc-950 p-1 border border-white/10">
+                            <button type="button" 
+                                    @click="importFormat = 'json'" 
+                                    :class="importFormat === 'json' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1 rounded-lg text-xs transition-colors cursor-pointer">
+                                JSON
+                            </button>
+                            <button type="button" 
+                                    @click="importFormat = 'markdown'" 
+                                    :class="importFormat === 'markdown' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
+                                    class="px-3 py-1 rounded-lg text-xs transition-colors cursor-pointer">
+                                Markdown
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="copyPrompt()" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <i :data-lucide="copiedPrompt ? 'check' : 'copy'" class="w-3.5 h-3.5"></i>
+                        <span x-text="copiedPrompt ? 'Prompt Berhasil Disalin!' : 'Salin Prompt AI (' + importFormat.toUpperCase() + ')'"></span>
+                    </button>
+                </div>
+
+                <!-- Textarea Paste -->
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tempel Output dari AI di bawah ini:</label>
+                    <textarea x-model="rawImportText" 
+                              rows="9" 
+                              :placeholder="importFormat === 'json' ? 'Tempel teks JSON dari ChatGPT/Gemini/Claude di sini...\n\n{\n  &quot;version&quot;: &quot;v2.6.0&quot;,\n  &quot;title&quot;: &quot;Judul Pembaruan&quot;,\n  ...\n}' : 'Tempel teks Markdown dari ChatGPT/Gemini/Claude di sini...\n\n# v2.6.0 - Judul Pembaruan\n**Tanggal**: 2026-08-09\n**Ringkasan**: ...\n\n### Perubahan:\n- [feature] Fitur baru\n- [fix] Perbaikan bug'"
+                              class="w-full bg-zinc-950 border border-white/10 rounded-2xl p-4 text-xs font-mono text-white focus:outline-none focus:border-purple-500"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Action Footer -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
+                <form action="{{ route('admin.changelogs.import') }}" method="POST" class="w-full sm:w-auto flex items-center gap-2">
+                    @csrf
+                    <input type="hidden" name="format" :value="importFormat">
+                    <input type="hidden" name="content" :value="rawImportText">
+                    <input type="hidden" name="auto_publish" value="1">
+                    <button type="submit" :disabled="!rawImportText.trim()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/30 text-xs font-bold disabled:opacity-40 transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                        <i data-lucide="database" class="w-4 h-4 text-purple-400"></i>
+                        <span>Langsung Simpan ke DB</span>
+                    </button>
+                </form>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button type="button" @click="showImportModal = false" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">
+                        Batal
+                    </button>
+                    <button type="button" @click="parseAndPopulate()" :disabled="!rawImportText.trim()" class="px-5 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold shadow-lg shadow-purple-500/20 transition-colors disabled:opacity-40 cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>Isi Form Otomatis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

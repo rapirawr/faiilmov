@@ -200,6 +200,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/activity-log', [AdminActivityLogController::class, 'index'])->name('activity_logs.index');
 
     // Changelog & System Updates Management
+    Route::post('/changelogs/import', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'import'])->name('changelogs.import');
     Route::post('/changelogs/{changelog}/toggle-publish', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'togglePublish'])->name('changelogs.toggle_publish');
     Route::resource('changelogs', \App\Http\Controllers\Admin\AdminChangelogController::class);
 
