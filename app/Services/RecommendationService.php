@@ -93,6 +93,7 @@ class RecommendationService
 
     /**
      * Get films highly relevant to active profile's last watched film
+     * Strictly filters for title/franchise matches, matching actors, or 2+ matching genres
      */
     public function getBecauseYouWatched(?User $user, $profileId = null, int $limit = 12): Collection
     {
@@ -117,41 +118,39 @@ class RecommendationService
         $genreIds = $film->genres->pluck('id')->toArray();
         $actorIds = $film->actors->pluck('id')->toArray();
 
-        // Extract title keywords (e.g. "Spider-Man", "Batman", "Avengers", etc.)
-        $titleWords = array_values(array_filter(
-            explode(' ', preg_replace('/[^\w\s]/u', '', strtolower($film->title))),
-            fn($w) => strlen($w) >= 4 && !in_array($w, ['the', 'from', 'with', 'and', 'part', 'movie', 'series', 'brand', 'new', 'day'])
+        // 1. Extract clean title keywords for franchise/sequel matching
+        $cleanTitle = strtolower(preg_replace('/[^\w\s]/u', '', $film->title));
+        $stopWords = ['the', 'from', 'with', 'and', 'part', 'movie', 'series', 'brand', 'new', 'day', 'vol', 'ii', 'iii'];
+        $titleKeywords = array_values(array_filter(
+            explode(' ', $cleanTitle),
+            fn($w) => strlen($w) >= 3 && !in_array($w, $stopWords)
         ));
 
         $candidates = Film::forActiveProfile()
             ->whereNotIn('id', $watchedIds)
             ->where('subject_type', $film->subject_type)
-            ->where(function ($q) use ($genreIds, $actorIds, $titleWords) {
-                if (!empty($genreIds)) {
-                    $q->whereHas('genres', fn($g) => $g->whereIn('genres.id', $genreIds));
+            ->where(function ($q) use ($genreIds, $actorIds, $titleKeywords) {
+                if (!empty($titleKeywords)) {
+                    foreach ($titleKeywords as $word) {
+                        $q->orWhere('title', 'LIKE', '%' . $word . '%');
+                    }
                 }
                 if (!empty($actorIds)) {
                     $q->orWhereHas('actors', fn($a) => $a->whereIn('actors.id', $actorIds));
                 }
-                foreach ($titleWords as $word) {
-                    $q->orWhere('title', 'LIKE', '%' . $word . '%');
+                if (!empty($genreIds)) {
+                    $q->orWhereHas('genres', fn($g) => $g->whereIn('genres.id', $genreIds));
                 }
             })
             ->with(['genres', 'actors'])
-            ->limit(100)
+            ->limit(150)
             ->get();
 
         if ($candidates->isEmpty()) {
-            return Film::forActiveProfile()
-                ->whereNotIn('id', $watchedIds)
-                ->where('subject_type', $film->subject_type)
-                ->orderByDesc('rating')
-                ->orderByDesc('view_count')
-                ->limit($limit)
-                ->get();
+            return collect();
         }
 
-        // Rank candidates by title, genre, and actor overlap score
+        // Rank candidates strictly
         $scored = [];
         foreach ($candidates as $candidate) {
             $candGenreIds = $candidate->genres->pluck('id')->toArray();
@@ -161,33 +160,35 @@ class RecommendationService
             $genreOverlap = count(array_intersect($genreIds, $candGenreIds));
             $actorOverlap = count(array_intersect($actorIds, $candActorIds));
 
-            $titleOverlap = 0;
-            foreach ($titleWords as $word) {
-                if (str_contains($candTitleLower, $word)) {
-                    $titleOverlap += 10;
+            $titleMatchScore = 0;
+            foreach ($titleKeywords as $kw) {
+                if (str_contains($candTitleLower, $kw)) {
+                    $titleMatchScore += 50; // Massive boost for franchise matches like Spider-Man
                 }
             }
 
-            $totalScore = ($titleOverlap) + ($genreOverlap * 4) + ($actorOverlap * 6) + ($candidate->rating * 0.5);
-            $scored[] = ['film' => $candidate, 'score' => $totalScore];
+            // Strict relevance test: Discard random/unrelated films
+            $isRelevant = ($titleMatchScore > 0) 
+                       || ($actorOverlap >= 1) 
+                       || ($genreOverlap >= 2 && $candidate->rating >= 6.0);
+
+            if ($isRelevant) {
+                $totalScore = $titleMatchScore 
+                            + ($actorOverlap * 30) 
+                            + ($genreOverlap * 10) 
+                            + ($candidate->rating * 2);
+
+                $scored[] = ['film' => $candidate, 'score' => $totalScore];
+            }
+        }
+
+        if (empty($scored)) {
+            return collect();
         }
 
         usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
 
-        $results = collect(array_slice(array_column($scored, 'film'), 0, $limit));
-
-        if ($results->count() < $limit) {
-            $existingIds = array_merge($watchedIds, $results->pluck('id')->toArray());
-            $filler = Film::forActiveProfile()
-                ->whereNotIn('id', $existingIds)
-                ->where('subject_type', $film->subject_type)
-                ->orderByDesc('rating')
-                ->limit($limit - $results->count())
-                ->get();
-            $results = $results->merge($filler);
-        }
-
-        return $results;
+        return collect(array_slice(array_column($scored, 'film'), 0, $limit));
     }
 
     private function getSimilarByEmbedding(array $sourceEmbedding, array $excludeIds, int $limit): Collection
