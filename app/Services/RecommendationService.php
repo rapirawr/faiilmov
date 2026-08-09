@@ -93,7 +93,6 @@ class RecommendationService
 
     /**
      * Get films highly relevant to active profile's last watched film
-     * Strictly requires at least 2 overlapping genres or matching actors + same subject_type
      */
     public function getBecauseYouWatched(?User $user, $profileId = null, int $limit = 12): Collection
     {
@@ -118,18 +117,24 @@ class RecommendationService
         $genreIds = $film->genres->pluck('id')->toArray();
         $actorIds = $film->actors->pluck('id')->toArray();
 
-        if (empty($genreIds)) {
-            return collect();
-        }
+        // Extract title keywords (e.g. "Spider-Man", "Batman", "Avengers", etc.)
+        $titleWords = array_values(array_filter(
+            explode(' ', preg_replace('/[^\w\s]/u', '', strtolower($film->title))),
+            fn($w) => strlen($w) >= 4 && !in_array($w, ['the', 'from', 'with', 'and', 'part', 'movie', 'series', 'brand', 'new', 'day'])
+        ));
 
-        // Query candidates sharing the SAME subject_type and overlapping genres/actors
         $candidates = Film::forActiveProfile()
             ->whereNotIn('id', $watchedIds)
             ->where('subject_type', $film->subject_type)
-            ->where(function ($q) use ($genreIds, $actorIds) {
-                $q->whereHas('genres', fn($g) => $g->whereIn('genres.id', $genreIds));
+            ->where(function ($q) use ($genreIds, $actorIds, $titleWords) {
+                if (!empty($genreIds)) {
+                    $q->whereHas('genres', fn($g) => $g->whereIn('genres.id', $genreIds));
+                }
                 if (!empty($actorIds)) {
                     $q->orWhereHas('actors', fn($a) => $a->whereIn('actors.id', $actorIds));
+                }
+                foreach ($titleWords as $word) {
+                    $q->orWhere('title', 'LIKE', '%' . $word . '%');
                 }
             })
             ->with(['genres', 'actors'])
@@ -137,32 +142,52 @@ class RecommendationService
             ->get();
 
         if ($candidates->isEmpty()) {
-            return collect();
+            return Film::forActiveProfile()
+                ->whereNotIn('id', $watchedIds)
+                ->where('subject_type', $film->subject_type)
+                ->orderByDesc('rating')
+                ->orderByDesc('view_count')
+                ->limit($limit)
+                ->get();
         }
 
-        // Rank candidates strictly by genre & actor overlap score
+        // Rank candidates by title, genre, and actor overlap score
         $scored = [];
         foreach ($candidates as $candidate) {
             $candGenreIds = $candidate->genres->pluck('id')->toArray();
             $candActorIds = $candidate->actors->pluck('id')->toArray();
+            $candTitleLower = strtolower($candidate->title);
 
             $genreOverlap = count(array_intersect($genreIds, $candGenreIds));
             $actorOverlap = count(array_intersect($actorIds, $candActorIds));
 
-            // Strict relevance check: must share at least 2 genres OR at least 1 actor
-            if ($genreOverlap >= 2 || $actorOverlap >= 1) {
-                $totalScore = ($genreOverlap * 4) + ($actorOverlap * 6) + ($candidate->rating * 0.5);
-                $scored[] = ['film' => $candidate, 'score' => $totalScore];
+            $titleOverlap = 0;
+            foreach ($titleWords as $word) {
+                if (str_contains($candTitleLower, $word)) {
+                    $titleOverlap += 10;
+                }
             }
-        }
 
-        if (empty($scored)) {
-            return collect();
+            $totalScore = ($titleOverlap) + ($genreOverlap * 4) + ($actorOverlap * 6) + ($candidate->rating * 0.5);
+            $scored[] = ['film' => $candidate, 'score' => $totalScore];
         }
 
         usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
 
-        return collect(array_slice(array_column($scored, 'film'), 0, $limit));
+        $results = collect(array_slice(array_column($scored, 'film'), 0, $limit));
+
+        if ($results->count() < $limit) {
+            $existingIds = array_merge($watchedIds, $results->pluck('id')->toArray());
+            $filler = Film::forActiveProfile()
+                ->whereNotIn('id', $existingIds)
+                ->where('subject_type', $film->subject_type)
+                ->orderByDesc('rating')
+                ->limit($limit - $results->count())
+                ->get();
+            $results = $results->merge($filler);
+        }
+
+        return $results;
     }
 
     private function getSimilarByEmbedding(array $sourceEmbedding, array $excludeIds, int $limit): Collection
