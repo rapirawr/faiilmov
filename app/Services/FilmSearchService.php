@@ -28,20 +28,21 @@ class FilmSearchService
             return null;
         }
 
-        $aiInterpretation = $this->nvidia->interpretQuery($query);
+        // Fast local database search first (< 5ms)
+        $results = $this->buildQuery($query, $filters, $perPage);
 
-        if ($aiInterpretation) {
-            $results = $this->aiSearch($query, $aiInterpretation, $filters, $perPage);
-            
-            if ($results->total() === 0) {
-                $results = $this->buildQuery($query, $filters, $perPage);
+        // Fallback to AI query interpretation only if 0 local results found
+        if ($results->total() === 0 && !empty(config('services.nvidia.api_key'))) {
+            $aiInterpretation = $this->getAiInterpretation($query);
+            if ($aiInterpretation) {
+                $aiResults = $this->aiSearch($query, $aiInterpretation, $filters, $perPage);
+                if ($aiResults->total() > 0) {
+                    $results = $aiResults;
+                }
             }
-        } else {
-            $results = $this->buildQuery($query, $filters, $perPage);
         }
 
-        $resultCount = $results->total();
-        $this->logSearch($query, $resultCount, $ip);
+        $this->logSearch($query, $results->total(), $ip);
 
         return $results;
     }

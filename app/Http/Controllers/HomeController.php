@@ -27,17 +27,18 @@ class HomeController extends Controller
         $type        = $request->input('type');
         $sort        = $request->input('sort', 'latest');
 
-        // Sync API data into local DB
-        try {
-            if ($searchQuery) {
-                $searchResult = $this->movieBox->search($searchQuery, 1);
-                $apiSubjects  = Film::extractSearchSubjects($searchResult);
-            } else {
-                $feed        = $this->movieBox->getHomepage('0', 1);
-                $apiSubjects = Film::extractHomepageSubjects($feed);
-            }
-            Film::syncFromApiBatch($apiSubjects);
-        } catch (Exception $e) {}
+        // Non-blocking cached API sync (Only fetch when DB is nearly empty)
+        if (Film::count() < 5) {
+            try {
+                $cacheKey = 'home_sync_' . md5($genreSlug . '_' . $type);
+                Cache::remember($cacheKey, 3600, function () {
+                    $feed = $this->movieBox->getHomepage('0', 1);
+                    $apiSubjects = Film::extractHomepageSubjects($feed);
+                    Film::syncFromApiBatch($apiSubjects);
+                    return true;
+                });
+            } catch (Exception $e) {}
+        }
 
         $filters = ['genre' => $genreSlug, 'type' => $type, 'sort' => $sort];
 

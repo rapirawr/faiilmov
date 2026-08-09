@@ -759,6 +759,82 @@
                         <span class="text-zinc-300 font-semibold uppercase text-[10px]">{{ $film->subject_type }}</span>
                     </div>
                 </div>
+
+                <!-- Share Button Component -->
+                <div class="relative" x-data="{ 
+                    shareOpen: false, 
+                    copied: false,
+                    shareUrl: window.location.href,
+                    filmTitle: '{{ addslashes($film->title) }}',
+                    copyLink() {
+                        navigator.clipboard.writeText(this.shareUrl);
+                        this.copied = true;
+                        setTimeout(() => this.copied = false, 2500);
+                    },
+                    doShare(platform) {
+                        let text = encodeURIComponent('Nonton film ' + this.filmTitle + ' gratis di faiilmov!');
+                        let url = encodeURIComponent(this.shareUrl);
+                        let target = '';
+                        if (platform === 'wa') target = 'https://api.whatsapp.com/send?text=' + text + '%20' + url;
+                        if (platform === 'tg') target = 'https://t.me/share/url?url=' + url + '&text=' + text;
+                        if (platform === 'tw') target = 'https://twitter.com/intent/tweet?text=' + text + '&url=' + url;
+                        if (platform === 'fb') target = 'https://www.facebook.com/sharer/sharer.php?u=' + url;
+                        if (target) window.open(target, '_blank', 'width=600,height=400');
+                    }
+                }" @click.outside="shareOpen = false">
+                    
+                    <button type="button" @click="if(navigator.share) { navigator.share({title: filmTitle + ' - faiilmov', text: 'Nonton ' + filmTitle + ' di faiilmov', url: shareUrl}).catch(()=>{}); } else { shareOpen = !shareOpen; }"
+                            @contextmenu.prevent="shareOpen = !shareOpen"
+                            class="px-4 py-2 rounded-2xl glass-card hover:border-amber-400/40 text-white hover:text-amber-300 text-xs font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer border border-white/10 hover:bg-white/10 shadow-sm"
+                            title="Bagikan Film Ini">
+                        <i data-lucide="share-2" class="w-4 h-4 text-amber-400"></i>
+                        <span>Bagikan</span>
+                    </button>
+
+                    <!-- Social Share Dropdown Popover -->
+                    <div x-show="shareOpen" 
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                         class="absolute right-0 top-full mt-3 w-56 p-3 bg-zinc-900/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-2xl z-50 space-y-2"
+                         style="display: none;">
+                        
+                        <p class="text-[10px] uppercase font-bold text-zinc-400 tracking-wider px-2 pt-1">Bagikan Tayangan Ini</p>
+                        
+                        <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            <button type="button" @click="doShare('wa')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-colors cursor-pointer">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                            <button type="button" @click="doShare('tg')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition-colors cursor-pointer">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                <span>Telegram</span>
+                            </button>
+                            <button type="button" @click="doShare('tw')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 transition-colors cursor-pointer">
+                                <i data-lucide="twitter" class="w-3.5 h-3.5"></i>
+                                <span>Twitter / X</span>
+                            </button>
+                            <button type="button" @click="doShare('fb')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-colors cursor-pointer">
+                                <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                                <span>Facebook</span>
+                            </button>
+                        </div>
+
+                        <div class="pt-1 border-t border-white/10">
+                            <button type="button" @click="copyLink()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs transition-colors cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="link" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span x-text="copied ? 'Tautan Tersalin!' : 'Salin Tautan'"></span>
+                                </div>
+                                <i data-lucide="copy" class="w-3 h-3 text-zinc-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Download Options -->

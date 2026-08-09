@@ -26,24 +26,22 @@ class BrowseController extends Controller
         $minRating   = $request->input('min_rating');
         $genres      = Genre::all();
 
-        // Sync API data into local DB
-        if ($searchQuery) {
+        // Non-blocking cached API sync (Only fetch when DB is nearly empty)
+        if (Film::count() < 5) {
             try {
-                $searchResult = $this->movieBox->search($searchQuery, 1);
-                $apiSubjects  = Film::extractSearchSubjects($searchResult);
-                Film::syncFromApiBatch($apiSubjects);
-            } catch (Exception $e) {}
-        } else {
-            try {
-                $tabId = match(true) {
-                    $type === 'movie'         => '1',
-                    $type === 'series'        => '2',
-                    $genreSlug === 'animation'=> '3',
-                    default                   => '0',
-                };
-                $feed        = $this->movieBox->getHomepage($tabId, 1);
-                $apiSubjects = Film::extractHomepageSubjects($feed);
-                Film::syncFromApiBatch($apiSubjects);
+                $cacheKey = 'browse_sync_' . md5($type . '_' . $genreSlug);
+                \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($type, $genreSlug) {
+                    $tabId = match(true) {
+                        $type === 'movie'          => '1',
+                        $type === 'series'         => '2',
+                        $genreSlug === 'animation' => '3',
+                        default                    => '0',
+                    };
+                    $feed        = $this->movieBox->getHomepage($tabId, 1);
+                    $apiSubjects = Film::extractHomepageSubjects($feed);
+                    Film::syncFromApiBatch($apiSubjects);
+                    return true;
+                });
             } catch (Exception $e) {}
         }
 
