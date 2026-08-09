@@ -34,14 +34,23 @@
     </div>
 
     <!-- Actors Table -->
-    <div class="lg:col-span-2 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 class="text-base font-bold text-white font-['Outfit']">Daftar Aktor</h3>
             
-            <form method="GET" action="{{ route('admin.actors.index') }}" class="w-48">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama aktor..." 
-                       class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500">
-            </form>
+            <div class="flex items-center gap-2">
+                <form action="{{ route('admin.actors.sync_api') }}" method="POST" onsubmit="return confirm('Mulai sinkronisasi data Aktor dari MovieBox API di latar belakang?')">
+                    @csrf
+                    <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Sync API Aktor</span>
+                    </button>
+                </form>
+
+                <form method="GET" action="{{ route('admin.actors.index') }}" class="w-48">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama aktor..." 
+                           class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500">
+                </form>
+            </div>
         </div>
 
         <div class="bg-zinc-900/60 border border-white/10 rounded-2xl overflow-hidden shadow-xl">

@@ -71,4 +71,22 @@ class AdminActorController extends Controller
 
         return redirect()->route('admin.actors.index')->with('success', "Aktor '{$name}' berhasil dihapus.");
     }
+
+    public function syncApi(Request $request)
+    {
+        $purgeDummy = $request->boolean('purge_dummy', false);
+
+        \App\Jobs\SyncActorsJob::dispatch(\Illuminate\Support\Facades\Auth::id(), $purgeDummy);
+
+        AdminActivityLog::log('sync_api_actors_triggered', "Memulai job sinkronisasi aktor dari MovieBox API dalam background queue.");
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Proses sinkronisasi data aktor dari API eksternal telah dimulai di latar belakang.'
+            ]);
+        }
+
+        return redirect()->route('admin.actors.index')->with('success', 'Proses sinkronisasi data aktor dari API eksternal telah dimulai di latar belakang.');
+    }
 }

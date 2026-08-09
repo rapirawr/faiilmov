@@ -147,6 +147,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('genres', AdminGenreController::class)->except(['create', 'show', 'edit']);
 
     // Actor Management
+    Route::post('/actors/sync-api', [AdminActorController::class, 'syncApi'])->name('actors.sync_api');
     Route::resource('actors', AdminActorController::class)->except(['create', 'show', 'edit']);
 
     // Review Moderation
