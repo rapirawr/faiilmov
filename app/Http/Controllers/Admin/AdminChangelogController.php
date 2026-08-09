@@ -23,13 +23,40 @@ class AdminChangelogController extends Controller
         }
 
         $changelogs = $query->orderBy('release_date', 'desc')->paginate(15)->withQueryString();
+        $nextVersion = $this->calculateNextVersion();
 
-        return view('admin.changelogs.index', compact('changelogs'));
+        return view('admin.changelogs.index', compact('changelogs', 'nextVersion'));
     }
 
     public function create()
     {
-        return view('admin.changelogs.create');
+        $nextVersion = $this->calculateNextVersion();
+        return view('admin.changelogs.create', compact('nextVersion'));
+    }
+
+    private function calculateNextVersion(): string
+    {
+        $latest = Changelog::orderBy('release_date', 'desc')->orderBy('id', 'desc')->first();
+        if (!$latest || !$latest->version) {
+            return 'v1.0.0';
+        }
+
+        $raw = trim($latest->version);
+        $hasV = str_starts_with(strtolower($raw), 'v');
+        $cleanNum = ltrim($raw, 'vV');
+
+        $parts = explode('.', $cleanNum);
+        if (count($parts) >= 3) {
+            $parts[1] = (int)$parts[1] + 1; // e.g. 1.1.0 -> 1.2.0
+            $parts[2] = 0;
+            return ($hasV ? 'v' : '') . implode('.', array_slice($parts, 0, 3));
+        } elseif (count($parts) === 2) {
+            $parts[1] = (int)$parts[1] + 1; // e.g. 1.1 -> 1.2.0
+            return ($hasV ? 'v' : '') . implode('.', $parts) . '.0';
+        } else {
+            $num = (int)$cleanNum + 1;
+            return ($hasV ? 'v' : '') . $num . '.0.0';
+        }
     }
 
     public function store(Request $request)

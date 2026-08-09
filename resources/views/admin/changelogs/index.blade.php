@@ -211,9 +211,10 @@ document.addEventListener('alpine:init', () => {
 
         copyPrompt() {
             const today = new Date().toISOString().split('T')[0];
+            const targetVersion = @json($nextVersion);
             const jsonPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format JSON persis seperti berikut:\n\n' +
 '{\n' +
-'  "version": "v2.6.0",\n' +
+'  "version": "' + targetVersion + '",\n' +
 '  "title": "Judul Pembaruan Singkat",\n' +
 '  "type": "minor",\n' +
 '  "release_date": "' + today + '",\n' +
@@ -226,7 +227,7 @@ document.addEventListener('alpine:init', () => {
 '}';
 
             const mdPrompt = 'Buatkan catatan rilis (changelog) terbaru untuk aplikasi faiilmov dalam format Markdown persis seperti berikut:\n\n' +
-'# v2.6.0 - Judul Pembaruan Singkat\n' +
+'# ' + targetVersion + ' - Judul Pembaruan Singkat\n' +
 '**Tanggal**: ' + today + '\n' +
 '**Tipe**: minor\n' +
 '**Ringkasan**: Ringkasan singkat pembaruan...\n\n' +
