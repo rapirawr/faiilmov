@@ -339,8 +339,8 @@ class AdminFilmController extends Controller
 
         AdminActivityLog::log('auto_rated_film', "Auto-rate film '{$film->title}' menjadi rating {$rating}.", 'Film', $film->id);
 
-        if (request()->wantsJson()) {
-            return response()->json(['status' => 'ok', 'rating' => $rating]);
+        if (request()->wantsJson() || request()->ajax() || request()->header('Accept') === 'application/json') {
+            return response()->json(['status' => 'ok', 'rating' => $rating, 'title' => $film->title]);
         }
 
         return back()->with('success', "Film '{$film->title}' berhasil di-auto rate menjadi '{$rating}'.");
