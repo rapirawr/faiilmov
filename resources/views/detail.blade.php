@@ -9,8 +9,8 @@
 @section('schema_org')
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "{{ $film->subject_type === 'series' ? 'TVSeries' : 'Movie' }}",
+  "{{ '@' }}context": "https://schema.org",
+  "{{ '@' }}type": "{{ $film->subject_type === 'series' ? 'TVSeries' : 'Movie' }}",
   "name": "{{ addslashes($film->title) }}",
   "description": "{{ addslashes(strip_tags($film->synopsis ?: 'Nonton film ' . $film->title . ' di faiilmov.')) }}",
   "image": "{{ $film->backdrop_url ?: $film->poster_url }}",
@@ -21,7 +21,7 @@
     @endforeach
   ],
   "aggregateRating": {
-    "@type": "AggregateRating",
+    "{{ '@' }}type": "AggregateRating",
     "ratingValue": "{{ number_format($film->rating ?: 4.5, 1) }}",
     "bestRating": "5",
     "worstRating": "1",

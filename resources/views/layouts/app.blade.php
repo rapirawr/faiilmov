@@ -38,13 +38,13 @@
     @else
         <script type="application/ld+json">
         {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
+          "{{ '@' }}context": "https://schema.org",
+          "{{ '@' }}type": "WebSite",
           "name": "faiilmov",
           "url": "{{ url('/') }}",
           "description": "Streaming & nonton film online subtitle Indonesia gratis HD.",
           "potentialAction": {
-            "@type": "SearchAction",
+            "{{ '@' }}type": "SearchAction",
             "target": "{{ route('browse') }}?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
