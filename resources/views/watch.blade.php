@@ -264,36 +264,36 @@
                         <span>2x Speeding Up</span>
                     </div>
 
-                    <!-- Double-Click Rewind (-10s) Ripple Indicator -->
+                    <!-- Double-Click Rewind (-5s) Ripple Indicator -->
                     <div x-show="rippleSide === 'rewind'" 
                          x-transition:enter="transition ease-out duration-200 scale-75 opacity-0"
                          x-transition:enter-end="scale-100 opacity-100"
                          x-transition:leave="transition ease-in duration-300 opacity-0"
                          class="absolute left-12 top-1/2 -translate-y-1/2 z-20 pointer-events-none glass-panel p-5 rounded-full border border-white/20 text-white flex flex-col items-center justify-center gap-1 shadow-2xl">
                         <i data-lucide="rotate-ccw" class="w-8 h-8"></i>
-                        <span class="text-xs font-extrabold">-10 Detik</span>
+                        <span class="text-xs font-extrabold">-5 Detik</span>
                     </div>
 
-                    <!-- Double-Click Forward (+10s) Ripple Indicator -->
+                    <!-- Double-Click Forward (+5s) Ripple Indicator -->
                     <div x-show="rippleSide === 'forward'" 
                          x-transition:enter="transition ease-out duration-200 scale-75 opacity-0"
                          x-transition:enter-end="scale-100 opacity-100"
                          x-transition:leave="transition ease-in duration-300 opacity-0"
                          class="absolute right-12 top-1/2 -translate-y-1/2 z-20 pointer-events-none glass-panel p-5 rounded-full border border-white/20 text-white flex flex-col items-center justify-center gap-1 shadow-2xl">
                         <i data-lucide="rotate-cw" class="w-8 h-8"></i>
-                        <span class="text-xs font-extrabold">+10 Detik</span>
+                        <span class="text-xs font-extrabold">+5 Detik</span>
                     </div>
 
-                    <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
+                    <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -5s, Play/Pause, +5s) -->
                     <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
                          :class="!isMiniPlayer && !isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
 
-                        <!-- Rewind 10s Center Button -->
-                        <button @click.stop="seek(currentTime - 10); triggerRipple('rewind')" 
+                        <!-- Rewind 5s Center Button -->
+                        <button @click.stop="seek(currentTime - 5); triggerRipple('rewind')" 
                                 class="w-11 h-11 sm:w-14 sm:h-14 rounded-full glass-panel flex flex-col items-center justify-center border border-white/20 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer bg-black/40 backdrop-blur-md"
-                                title="-10 Detik">
+                                title="-5 Detik">
                             <i data-lucide="rotate-ccw" class="w-4 h-4 sm:w-6 sm:h-6"></i>
-                            <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">10s</span>
+                            <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">5s</span>
                         </button>
 
                         <!-- Center Play/Pause Button -->
@@ -304,12 +304,12 @@
                             <svg x-show="isPlaying" class="w-6 h-6 sm:w-8 sm:h-8 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
 
-                        <!-- Forward 10s Center Button -->
-                        <button @click.stop="seek(currentTime + 10); triggerRipple('forward')" 
+                        <!-- Forward 5s Center Button -->
+                        <button @click.stop="seek(currentTime + 5); triggerRipple('forward')" 
                                 class="w-11 h-11 sm:w-14 sm:h-14 rounded-full glass-panel flex flex-col items-center justify-center border border-white/20 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer bg-black/40 backdrop-blur-md"
-                                title="+10 Detik">
+                                title="+5 Detik">
                             <i data-lucide="rotate-cw" class="w-4 h-4 sm:w-6 sm:h-6"></i>
-                            <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">10s</span>
+                            <span class="text-[8px] sm:text-[9px] font-extrabold -mt-0.5">5s</span>
                         </button>
                     </div>
 
@@ -574,13 +574,13 @@
                                     <svg x-show="isPlaying" class="w-4 h-4 sm:w-5 sm:h-5 fill-white" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                 </button>
 
-                                 <!-- Skip Rewind 10s (Desktop Only) -->
-                                <button @click.stop="seek(currentTime - 10); triggerRipple('rewind')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="-10 Detik">
+                                 <!-- Skip Rewind 5s (Desktop Only) -->
+                                <button @click.stop="seek(currentTime - 5); triggerRipple('rewind')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="-5 Detik">
                                     <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </button>
 
-                                <!-- Skip Forward 10s (Desktop Only) -->
-                                <button @click.stop="seek(currentTime + 10); triggerRipple('forward')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="+10 Detik">
+                                <!-- Skip Forward 5s (Desktop Only) -->
+                                <button @click.stop="seek(currentTime + 5); triggerRipple('forward')" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-zinc-300 hover:text-white hidden sm:flex items-center justify-center" title="+5 Detik">
                                     <i data-lucide="rotate-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </button>
 
