@@ -337,19 +337,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         @foreach($soundtracks as $idx => $st)
                             <div class="p-3 rounded-2xl glass-card border border-white/10 hover:border-white/30 transition-all flex items-center gap-3 group relative overflow-hidden">
-                                <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 shrink-0 border border-white/10 shadow-md">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 shrink-0 border border-white/10 shadow-md">
                                     <img src="{{ $st['artwork_url'] ?: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150' }}" 
                                          alt="{{ $st['track_name'] }}" 
                                          class="w-full h-full object-cover">
-                                    
-                                    @if($st['preview_audio_url'])
-                                        <button type="button" 
-                                                @click="togglePlay('{{ $st['preview_audio_url'] }}', '{{ addslashes($st['track_name']) }}', '{{ addslashes($st['artist_name']) }}')"
-                                                class="absolute inset-0 bg-black/40 group-hover:bg-black/70 transition-colors flex items-center justify-center cursor-pointer">
-                                            <i :data-lucide="currentAudioUrl === '{{ $st['preview_audio_url'] }}' && isPlaying ? 'pause' : 'play'" 
-                                               class="w-5 h-5 text-white group-hover:scale-110 transition-transform"></i>
-                                        </button>
-                                    @endif
                                 </div>
 
                                 <div class="min-w-0 flex-1">

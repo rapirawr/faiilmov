@@ -123,10 +123,21 @@ class MovieBoxController extends Controller
         $subjectId = $request->query('id');
         $season = (int)$request->query('se', 0);
         $episode = (int)$request->query('ep', 0);
+        $rawTitle = $request->query('title') ?? $request->query('name') ?? $request->query('filename');
+        $isDownload = $request->boolean('download', false);
 
         if (!$targetUrl) {
             return response()->json(['error' => 'URL parameter is required.'], 400);
         }
+
+        // Generate clean film/episode filename
+        $titleStr = $rawTitle ? trim($rawTitle) : 'film';
+        if ($season > 0 || $episode > 0) {
+            $titleStr .= " S{$season}E{$episode}";
+        }
+
+        $cleanFilename = \Illuminate\Support\Str::slug($titleStr) . '.mp4';
+        $dispositionType = $isDownload ? 'attachment' : 'inline';
 
         $requestHeaders = [
             'User-Agent: com.community.oneroom/50020044 (Linux; U; Android 11; en_US; Redmi 2201117TY; Build/RP1A.200720.011; Cronet/135.0.7012.3)',
@@ -164,7 +175,7 @@ class MovieBoxController extends Controller
 
         $finalUrl = $freshUrl ?: $targetUrl;
 
-        return response()->stream(function () use ($finalUrl, $requestHeaders) {
+        return response()->stream(function () use ($finalUrl, $requestHeaders, $dispositionType, $cleanFilename) {
             $ch = curl_init($finalUrl);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -173,6 +184,9 @@ class MovieBoxController extends Controller
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+
+            // Set Content-Disposition header with clean movie filename
+            header("Content-Disposition: {$dispositionType}; filename=\"{$cleanFilename}\"");
 
             // Forward HTTP Status (206 Partial Content) & Content-Range / Content-Length headers to browser
             curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) {
@@ -205,6 +219,7 @@ class MovieBoxController extends Controller
         }, 200, [
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'no-cache',
+            'Content-Disposition' => "{$dispositionType}; filename=\"{$cleanFilename}\"",
         ]);
     }
 

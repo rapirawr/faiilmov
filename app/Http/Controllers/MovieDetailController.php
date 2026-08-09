@@ -210,7 +210,7 @@ class MovieDetailController extends Controller
             }
         }
 
-        $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) : '';
+        $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $film->moviebox_subject_id . '&title=' . urlencode($film->title) . '&se=' . $season . '&ep=' . $episode : '';
         $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $season, $episode) : [];
 
         if (Auth::check()) {
