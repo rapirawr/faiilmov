@@ -286,8 +286,8 @@
 
                     <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
                     <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
-                         :class="!isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-                        
+                         :class="!isMiniPlayer && !isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+
                         <!-- Rewind 10s Center Button -->
                         <button @click.stop="seek(currentTime - 10); triggerRipple('rewind')" 
                                 class="w-11 h-11 sm:w-14 sm:h-14 rounded-full glass-panel flex flex-col items-center justify-center border border-white/20 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer bg-black/40 backdrop-blur-md"
@@ -327,7 +327,7 @@
 
                     <!-- Top Controls Overlay Bar (Title & Quick Settings) -->
                     <div class="absolute inset-x-0 top-0 z-40 p-2.5 sm:p-5 transition-opacity duration-300 flex items-center justify-between gap-2 pointer-events-auto"
-                         :class="showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'">
+                         :class="!isMiniPlayer && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
                         <!-- Film Title & Episode Badge -->
                         <div class="flex items-center gap-2 text-white min-w-0 pr-2">
@@ -540,7 +540,7 @@
 
                     <!-- Bottom Controls Overlay (Scrubber & Primary Playback Actions) -->
                     <div class="absolute inset-x-0 bottom-0 z-30 p-2 sm:p-5 pb-2.5 sm:pb-6 transition-opacity duration-300 flex flex-col justify-end gap-2 sm:gap-3"
-                         :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                         :class="!isMiniPlayer && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
                         <!-- Timeline Scrubber Bar -->
                         <div class="relative w-full h-3 flex items-center cursor-pointer group/scrubber" 

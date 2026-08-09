@@ -232,20 +232,13 @@
                         </div>
 
                         <!-- NON-HOST OVERLAY BADGE -->
-                        <template x-if="!isHost">
+                        <template x-if="!isHost && !isMiniPlayer">
                             <div class="absolute top-4 left-4 z-20 glass-chip px-3 py-1.5 rounded-full text-[11px] font-bold text-zinc-200 flex items-center gap-2 border border-white/20 shadow-lg pointer-events-none">
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
                                 <span>Pemutaran Dikontrol oleh Host</span>
                             </div>
                         </template>
 
-                        <!-- HOST CONTROL OVERLAY BADGE -->
-                        <template x-if="isHost">
-                            <div class="absolute top-4 left-4 z-20 glass-chip px-3 py-1.5 rounded-full text-[11px] font-bold text-emerald-400 flex items-center gap-2 border border-emerald-500/30 shadow-lg pointer-events-none">
-                                <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
-                                <span>Anda adalah Host Room</span>
-                            </div>
-                        </template>
 
                         <!-- Loading & Sync Overlay -->
                         <div x-show="isBuffering" 
@@ -288,7 +281,7 @@
 
                         <!-- Center Video Quick Controls Overlay (YouTube Mobile Style: -10s, Play/Pause, +10s) -->
                         <div class="absolute inset-0 z-25 pointer-events-none flex items-center justify-center gap-6 sm:gap-14 transition-opacity duration-300"
-                             :class="!isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                             :class="!isMiniPlayer && !isBuffering && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                             
                             <!-- Rewind 10s Center Button -->
                             <button @click.stop="if(isHost) { seek(currentTime - 10); triggerRipple('rewind'); }" 
@@ -335,7 +328,7 @@
 
                     <!-- Top Controls Overlay Bar (Title & Quick Settings) -->
                     <div class="absolute inset-x-0 top-0 z-40 p-2.5 sm:p-5 transition-opacity duration-300 flex items-center justify-between gap-2 pointer-events-auto"
-                         :class="showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'">
+                         :class="!isMiniPlayer && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
                         <!-- Room / Film Title Badge -->
                         <div class="flex items-center gap-2 text-white min-w-0 pr-2">
@@ -547,7 +540,7 @@
 
                     <!-- Bottom Video Controls Overlay -->
                     <div class="absolute inset-x-0 bottom-0 z-30 p-2 sm:p-5 pb-2.5 sm:pb-6 transition-opacity duration-300 flex flex-col justify-end gap-2 sm:gap-3"
-                         :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                         :class="!isMiniPlayer && (showControls || !isPlaying) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
                         <!-- Timeline Scrubber Bar -->
                         <div class="relative w-full h-3 flex items-center group/scrubber" 
