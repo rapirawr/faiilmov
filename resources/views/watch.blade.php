@@ -83,34 +83,15 @@
         nextEpisode: @json($nextEpData)
      })'>
     
-    <!-- Top Bar Navigation & Cinema Mode Header -->
+    <!-- Top Bar Navigation Header -->
     <div class="glass-panel border-b border-white/10 py-3.5 px-4 sm:px-8 backdrop-blur-md rounded-none relative z-40">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <a href="{{ route('film.show', $film->slug) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-300 hover:text-white transition-colors glass-card px-4 py-2 rounded-2xl border border-white/10">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Kembali ke Detail Film</span>
             </a>
-
-            <div class="flex items-center gap-3">
-                <button @click="cinemaLights = !cinemaLights" 
-                        :class="cinemaLights ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'glass-card text-zinc-300 border-white/10'"
-                        class="px-4 py-2 rounded-2xl text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer">
-                    <i data-lucide="sun" class="w-3.5 h-3.5"></i>
-                    <span x-text="cinemaLights ? 'Matikan Cinema Mode' : 'Cinema Mode'"></span>
-                </button>
-            </div>
         </div>
     </div>
-
-    <!-- Cinema Lights Backdrop Overlay -->
-    <div x-show="cinemaLights" 
-         x-transition:enter="transition ease-out duration-500"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-20 bg-black/95 pointer-events-none" style="display: none;"></div>
 
     <!-- Resume Watch Prompt Banner -->
     <div x-show="showResumePrompt" 
@@ -336,7 +317,220 @@
                         </div>
                     </div>
 
-                    <!-- Video Controls Overlay -->
+                    <!-- Top Controls Overlay Bar (Title & Quick Settings) -->
+                    <div class="absolute inset-x-0 top-0 z-40 p-2.5 sm:p-5 transition-opacity duration-300 flex items-center justify-between gap-2 pointer-events-auto"
+                         :class="showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'">
+                        
+                        <!-- Film Title & Episode Badge -->
+                        <div class="flex items-center gap-2 text-white min-w-0 pr-2">
+                            <h3 class="text-xs sm:text-sm font-bold truncate drop-shadow-md">
+                                {{ $film->title }}
+                                <template x-if="subjectType === 'series'">
+                                    <span class="text-[10px] sm:text-[11px] font-semibold text-amber-300 ml-1.5 px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/30 shrink-0">
+                                        S<span x-text="currentSeason"></span>:E<span x-text="currentEpisode"></span>
+                                    </span>
+                                </template>
+                            </h3>
+                        </div>
+
+                        <!-- Top Right Settings Group: Subtitle, Quality, Speed, Aspect Ratio -->
+                        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                            
+                            <!-- Subtitle / Caption Selector Dropdown -->
+                            <div class="relative" @click.outside="subtitleDropdownOpen = false">
+                                <button @click.stop="subtitleDropdownOpen = !subtitleDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                        :class="activeSubtitle !== 'off' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
+                                        class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
+                                        title="Subtitle / Teks">
+                                    <i data-lucide="subtitles" class="w-3.5 h-3.5"></i>
+                                    <span>CC</span>
+                                </button>
+
+                                <div x-show="subtitleDropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                     x-transition:enter-end="scale-100 opacity-100"
+                                     class="absolute top-full right-0 mt-2 w-56 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
+                                     style="display: none;">
+                                    <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i data-lucide="subtitles" class="w-3 h-3"></i>
+                                        <span>Subtitle</span>
+                                    </div>
+                                    
+                                    <!-- Off Option -->
+                                    <button @click.stop="setSubtitle('off'); subtitleDropdownOpen = false" 
+                                            :class="activeSubtitle === 'off' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="subtitles" class="w-3.5 h-3.5 opacity-60"></i>
+                                            <span>Matikan Subtitle</span>
+                                        </span>
+                                        <i x-show="activeSubtitle === 'off'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                    </button>
+
+                                    <!-- Empty State (No Subtitles from API) -->
+                                    <template x-if="subtitles.length === 0">
+                                        <div class="px-2.5 py-2 text-[11px] text-zinc-400 italic flex items-center gap-1.5 border-t border-b border-white/5 my-1">
+                                            <i data-lucide="info" class="w-3.5 h-3.5 text-zinc-500 shrink-0"></i>
+                                            <span>Tidak ada subtitle otomatis</span>
+                                        </div>
+                                    </template>
+
+                                    <!-- API Subtitles List -->
+                                    <template x-if="subtitles.length > 0">
+                                        <div class="border-t border-white/5 mt-1 pt-1">
+                                            <div class="text-[9px] font-bold text-zinc-500 px-2 pt-1 pb-1 uppercase tracking-wider">Tersedia</div>
+                                            <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                                <template x-for="sub in subtitles" :key="sub.id || sub.url">
+                                                    <button @click.stop="setSubtitle(sub.url, sub.label, sub.srclang); subtitleDropdownOpen = false" 
+                                                            :class="activeSubtitle === sub.url ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                        <span class="flex items-center gap-2 truncate">
+                                                            <span class="px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-extrabold uppercase tracking-wide shrink-0" 
+                                                                  :class="activeSubtitle === sub.url ? 'bg-zinc-950/20 text-zinc-950' : ''"
+                                                                  x-text="(sub.srclang || 'id').toUpperCase().substring(0,2)"></span>
+                                                            <span class="truncate" x-text="sub.label"></span>
+                                                        </span>
+                                                        <i x-show="activeSubtitle === sub.url" data-lucide="check" class="w-3 h-3 text-zinc-950 shrink-0 ml-1"></i>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Custom Subtitle File Upload -->
+                                    <div class="pt-1.5 mt-1.5 border-t border-white/10">
+                                        <label class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs text-amber-300 hover:bg-white/10 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                            <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                                            <span>Upload (.srt / .vtt)</span>
+                                            <input type="file" accept=".srt,.vtt" @change="handleCustomSubtitleUpload($event); subtitleDropdownOpen = false" class="hidden">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resolution / Quality Selector Dropdown -->
+                            <div class="relative" @click.outside="qualityDropdownOpen = false" x-show="qualities.length > 0">
+                                <button @click.stop="qualityDropdownOpen = !qualityDropdownOpen; speedDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                        class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
+                                    <span x-text="activeQuality"></span>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 text-zinc-400"></i>
+                                </button>
+
+                                <div x-show="qualityDropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                     x-transition:enter-end="scale-100 opacity-100"
+                                     class="absolute top-full right-0 mt-2 w-36 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
+                                     style="display: none;">
+                                    <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kualitas Video</div>
+                                    <template x-for="q in qualities" :key="q.url">
+                                        <button @click.stop="setQuality(q.url, q.quality); qualityDropdownOpen = false" 
+                                                :class="activeQuality === q.quality ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <div>
+                                                <span x-text="q.quality"></span>
+                                                <span class="text-[9px] block text-zinc-400" x-text="q.codec"></span>
+                                            </div>
+                                            <i x-show="activeQuality === q.quality" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Playback Speed Selector Dropdown -->
+                            <div class="relative" @click.outside="speedDropdownOpen = false">
+                                <button @click.stop="speedDropdownOpen = !speedDropdownOpen; qualityDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                        class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
+                                    <span x-text="playbackSpeed + 'x'"></span>
+                                </button>
+
+                                <div x-show="speedDropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                     x-transition:enter-end="scale-100 opacity-100"
+                                     class="absolute top-full right-0 mt-2 w-28 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
+                                     style="display: none;">
+                                    <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kecepatan</div>
+                                    <template x-for="spd in speeds" :key="spd">
+                                        <button @click.stop="setPlaybackSpeed(spd); speedDropdownOpen = false" 
+                                                :class="playbackSpeed === spd ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span x-text="spd + 'x'"></span>
+                                            <i x-show="playbackSpeed === spd" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Display Mode / Aspect Ratio Selector Dropdown -->
+                            <div class="relative" @click.outside="aspectRatioDropdownOpen = false">
+                                <button @click.stop="aspectRatioDropdownOpen = !aspectRatioDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false" 
+                                        :class="aspectRatioMode !== 'contain' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
+                                        class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
+                                        title="Gaya Layar (Fit, Cover, Stretch, Zoom)">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                    <span x-text="aspectRatioMode === 'contain' ? 'Fit' : (aspectRatioMode === 'cover' ? 'Cover' : (aspectRatioMode === 'fill' ? 'Stretch' : 'Zoom'))"></span>
+                                </button>
+
+                                <div x-show="aspectRatioDropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                     x-transition:enter-end="scale-100 opacity-100"
+                                     class="absolute top-full right-0 mt-2 w-44 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
+                                     style="display: none;">
+                                    <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i data-lucide="scan" class="w-3 h-3"></i>
+                                        <span>Gaya Layar (Aspect)</span>
+                                    </div>
+
+                                    <!-- Fit (Default) -->
+                                    <button @click.stop="setAspectRatioMode('contain')" 
+                                            :class="aspectRatioMode === 'contain' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="shrink" class="w-3.5 h-3.5 opacity-70"></i>
+                                            <span>Fit (Proporsional)</span>
+                                        </span>
+                                        <i x-show="aspectRatioMode === 'contain'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                    </button>
+
+                                    <!-- Cover (Crop) -->
+                                    <button @click.stop="setAspectRatioMode('cover')" 
+                                            :class="aspectRatioMode === 'cover' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="maximize-2" class="w-3.5 h-3.5 opacity-70"></i>
+                                            <span>Cover (Potong Tepi)</span>
+                                        </span>
+                                        <i x-show="aspectRatioMode === 'cover'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                    </button>
+
+                                    <!-- Stretch (Fill) -->
+                                    <button @click.stop="setAspectRatioMode('fill')" 
+                                            :class="aspectRatioMode === 'fill' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="scaling" class="w-3.5 h-3.5 opacity-70"></i>
+                                            <span>Stretch (Penuhi Layar)</span>
+                                        </span>
+                                        <i x-show="aspectRatioMode === 'fill'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                    </button>
+
+                                    <!-- Zoom 125% -->
+                                    <button @click.stop="setAspectRatioMode('zoom')" 
+                                            :class="aspectRatioMode === 'zoom' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="zoom-in" class="w-3.5 h-3.5 opacity-70"></i>
+                                            <span>Zoom (125%)</span>
+                                        </span>
+                                        <i x-show="aspectRatioMode === 'zoom'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Controls Overlay (Scrubber & Primary Playback Actions) -->
                     <div class="absolute inset-x-0 bottom-0 z-30 p-2 sm:p-5 pb-2.5 sm:pb-6 transition-opacity duration-300 flex flex-col justify-end gap-2 sm:gap-3"
                          :class="showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                         
@@ -364,8 +558,8 @@
                         <!-- Control Buttons Row -->
                         <div class="flex items-center justify-between gap-1 sm:gap-4 py-0.5 relative z-40">
                             
-                            <!-- Left Controls Group -->
-                            <div class="flex items-center gap-0.5 sm:gap-2.5 shrink-0">
+                            <!-- Left Controls Group: Play/Pause, Next Ep, Volume, Timestamp -->
+                            <div class="flex items-center gap-1 sm:gap-2.5 shrink-0">
                                 <!-- Play / Pause Toggle Button -->
                                 <button @click="togglePlay()" class="p-1.5 sm:p-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer text-white flex items-center justify-center" title="Play/Pause (Space)">
                                     <svg x-show="!isPlaying" class="w-4 h-4 sm:w-5 sm:h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -388,7 +582,7 @@
                                             class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[10px] sm:text-xs font-bold text-white transition-colors cursor-pointer border border-white/15 shadow-sm"
                                             title="Episode Selanjutnya">
                                         <i data-lucide="skip-forward" class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white"></i>
-                                        <span class="hidden sm:inline">Episode Selanjutnya</span>
+                                        <span class="hidden sm:inline">Next</span>
                                     </button>
                                 </template>
 
@@ -418,199 +612,9 @@
                                 </div>
                             </div>
 
-                            <!-- Right Controls Group: Speed, Quality, PiP, Fullscreen -->
+                            <!-- Right Controls Group: Mini Player, PiP, Fullscreen -->
                             <div class="flex items-center gap-1 sm:gap-2 shrink-0">
                                 
-                                <!-- Playback Speed Selector Dropdown -->
-                                <div class="relative" @click.outside="speedDropdownOpen = false">
-                                    <button @click.stop="speedDropdownOpen = !speedDropdownOpen; qualityDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
-                                            class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
-                                        <span x-text="playbackSpeed + 'x'"></span>
-                                    </button>
-
-                                    <div x-show="speedDropdownOpen" 
-                                         x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
-                                         x-transition:enter-end="scale-100 opacity-100"
-                                         class="absolute bottom-full right-0 mb-2 w-28 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
-                                         style="display: none;">
-                                        <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kecepatan</div>
-                                        <template x-for="spd in speeds" :key="spd">
-                                            <button @click.stop="setPlaybackSpeed(spd); speedDropdownOpen = false" 
-                                                    :class="playbackSpeed === spd ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                                <span x-text="spd + 'x'"></span>
-                                                <i x-show="playbackSpeed === spd" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                            </button>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <!-- Resolution / Quality Selector Dropdown -->
-                                <div class="relative" @click.outside="qualityDropdownOpen = false" x-show="qualities.length > 0">
-                                    <button @click.stop="qualityDropdownOpen = !qualityDropdownOpen; speedDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
-                                            class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
-                                        <span x-text="activeQuality"></span>
-                                        <i data-lucide="chevron-up" class="w-3 h-3 text-zinc-400"></i>
-                                    </button>
-
-                                    <div x-show="qualityDropdownOpen" 
-                                         x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
-                                         x-transition:enter-end="scale-100 opacity-100"
-                                         class="absolute bottom-full right-0 mb-2 w-36 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50"
-                                         style="display: none;">
-                                        <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">Kualitas Video</div>
-                                        <template x-for="q in qualities" :key="q.url">
-                                            <button @click.stop="setQuality(q.url, q.quality); qualityDropdownOpen = false" 
-                                                    :class="activeQuality === q.quality ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                                <div>
-                                                    <span x-text="q.quality"></span>
-                                                    <span class="text-[9px] block text-zinc-400" x-text="q.codec"></span>
-                                                </div>
-                                                <i x-show="activeQuality === q.quality" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                            </button>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <!-- Subtitle / Caption Selector Dropdown -->
-                                <div class="relative" @click.outside="subtitleDropdownOpen = false">
-                                    <button @click.stop="subtitleDropdownOpen = !subtitleDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
-                                            :class="activeSubtitle !== 'off' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
-                                            class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
-                                            title="Subtitle / Teks">
-                                        <i data-lucide="subtitles" class="w-3.5 h-3.5"></i>
-                                        <span>CC</span>
-                                    </button>
-
-                                    <div x-show="subtitleDropdownOpen" 
-                                         x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
-                                         x-transition:enter-end="scale-100 opacity-100"
-                                         class="absolute bottom-full right-0 mb-2 w-56 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
-                                         style="display: none;">
-                                        <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
-                                            <i data-lucide="subtitles" class="w-3 h-3"></i>
-                                            <span>Subtitle</span>
-                                        </div>
-                                        
-                                        <!-- Off Option -->
-                                        <button @click.stop="setSubtitle('off'); subtitleDropdownOpen = false" 
-                                                :class="activeSubtitle === 'off' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                            <span class="flex items-center gap-1.5">
-                                                <i data-lucide="subtitles" class="w-3.5 h-3.5 opacity-60"></i>
-                                                <span>Matikan Subtitle</span>
-                                            </span>
-                                            <i x-show="activeSubtitle === 'off'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                        </button>
-
-                                        <!-- Empty State (No Subtitles from API) -->
-                                        <template x-if="subtitles.length === 0">
-                                            <div class="px-2.5 py-2 text-[11px] text-zinc-400 italic flex items-center gap-1.5 border-t border-b border-white/5 my-1">
-                                                <i data-lucide="info" class="w-3.5 h-3.5 text-zinc-500 shrink-0"></i>
-                                                <span>Tidak ada subtitle otomatis</span>
-                                            </div>
-                                        </template>
-
-                                        <!-- API Subtitles List -->
-                                        <template x-if="subtitles.length > 0">
-                                            <div class="border-t border-white/5 mt-1 pt-1">
-                                                <div class="text-[9px] font-bold text-zinc-500 px-2 pt-1 pb-1 uppercase tracking-wider">Tersedia</div>
-                                                <div class="max-h-48 overflow-y-auto space-y-0.5">
-                                                    <template x-for="sub in subtitles" :key="sub.id || sub.url">
-                                                        <button @click.stop="setSubtitle(sub.url, sub.label, sub.srclang); subtitleDropdownOpen = false" 
-                                                                :class="activeSubtitle === sub.url ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                                            <span class="flex items-center gap-2 truncate">
-                                                                <span class="px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-extrabold uppercase tracking-wide shrink-0" 
-                                                                      :class="activeSubtitle === sub.url ? 'bg-zinc-950/20 text-zinc-950' : ''"
-                                                                      x-text="(sub.srclang || 'id').toUpperCase().substring(0,2)"></span>
-                                                                <span class="truncate" x-text="sub.label"></span>
-                                                            </span>
-                                                            <i x-show="activeSubtitle === sub.url" data-lucide="check" class="w-3 h-3 text-zinc-950 shrink-0 ml-1"></i>
-                                                        </button>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- Custom Subtitle File Upload -->
-                                        <div class="pt-1.5 mt-1.5 border-t border-white/10">
-                                            <label class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs text-amber-300 hover:bg-white/10 transition-colors flex items-center gap-1.5 cursor-pointer">
-                                                <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
-                                                <span>Upload (.srt / .vtt)</span>
-                                                <input type="file" accept=".srt,.vtt" @change="handleCustomSubtitleUpload($event); subtitleDropdownOpen = false" class="hidden">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Display Mode / Aspect Ratio Selector Dropdown -->
-                                <div class="relative" @click.outside="aspectRatioDropdownOpen = false">
-                                    <button @click.stop="aspectRatioDropdownOpen = !aspectRatioDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false" 
-                                            :class="aspectRatioMode !== 'contain' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
-                                            class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
-                                            title="Gaya Layar (Fit, Cover, Stretch, Zoom)">
-                                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                                        <span x-text="aspectRatioMode === 'contain' ? 'Fit' : (aspectRatioMode === 'cover' ? 'Cover' : (aspectRatioMode === 'fill' ? 'Stretch' : 'Zoom'))"></span>
-                                    </button>
-
-                                    <div x-show="aspectRatioDropdownOpen" 
-                                         x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
-                                         x-transition:enter-end="scale-100 opacity-100"
-                                         class="absolute bottom-full right-0 mb-2 w-44 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
-                                         style="display: none;">
-                                        <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center gap-1.5">
-                                            <i data-lucide="scan" class="w-3 h-3"></i>
-                                            <span>Gaya Layar (Aspect)</span>
-                                        </div>
-
-                                        <!-- Fit (Default) -->
-                                        <button @click.stop="setAspectRatioMode('contain')" 
-                                                :class="aspectRatioMode === 'contain' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                            <span class="flex items-center gap-1.5">
-                                                <i data-lucide="shrink" class="w-3.5 h-3.5 opacity-70"></i>
-                                                <span>Fit (Proporsional)</span>
-                                            </span>
-                                            <i x-show="aspectRatioMode === 'contain'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                        </button>
-
-                                        <!-- Cover (Crop) -->
-                                        <button @click.stop="setAspectRatioMode('cover')" 
-                                                :class="aspectRatioMode === 'cover' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                            <span class="flex items-center gap-1.5">
-                                                <i data-lucide="maximize-2" class="w-3.5 h-3.5 opacity-70"></i>
-                                                <span>Cover (Potong Tepi)</span>
-                                            </span>
-                                            <i x-show="aspectRatioMode === 'cover'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                        </button>
-
-                                        <!-- Stretch (Fill) -->
-                                        <button @click.stop="setAspectRatioMode('fill')" 
-                                                :class="aspectRatioMode === 'fill' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                            <span class="flex items-center gap-1.5">
-                                                <i data-lucide="scaling" class="w-3.5 h-3.5 opacity-70"></i>
-                                                <span>Stretch (Penuhi Layar)</span>
-                                            </span>
-                                            <i x-show="aspectRatioMode === 'fill'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                        </button>
-
-                                        <!-- Zoom 125% -->
-                                        <button @click.stop="setAspectRatioMode('zoom')" 
-                                                :class="aspectRatioMode === 'zoom' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
-                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
-                                            <span class="flex items-center gap-1.5">
-                                                <i data-lucide="zoom-in" class="w-3.5 h-3.5 opacity-70"></i>
-                                                <span>Zoom (125%)</span>
-                                            </span>
-                                            <i x-show="aspectRatioMode === 'zoom'" data-lucide="check" class="w-3 h-3 text-zinc-950"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
                                 <!-- In-App Mini Player (Picture-in-Page) Toggle -->
                                 <button @click.stop="toggleMiniPlayer()" 
                                         :class="isMiniPlayer ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-zinc-300 hover:text-white'"
@@ -879,7 +883,6 @@
             aspectRatioMode: localStorage.getItem('faii_player_aspect_mode') || 'contain',
             subtitles: config.subtitles || [],
             activeSubtitle: 'off',
-            cinemaLights: false,
             clickTimer: null,
             isMiniPlayer: false,
             isMiniDismissed: false,
@@ -1091,9 +1094,17 @@
                     });
 
                     // Fullscreen change listener
-                    document.addEventListener('fullscreenchange', () => {
-                        this.isFullscreen = !!document.fullscreenElement;
-                    });
+                    const handleFullscreenChange = () => {
+                        this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                        if (this.isFullscreen) {
+                            this.lockLandscape();
+                        } else {
+                            this.unlockOrientation();
+                        }
+                    };
+
+                    document.addEventListener('fullscreenchange', handleFullscreenChange);
+                    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
                     // Subtitle Auto-Fetch & Auto-Enable
                     if (this.subtitles.length === 0) {
@@ -1518,14 +1529,47 @@
                 }
             },
 
+            lockLandscape() {
+                if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+                    window.screen.orientation.lock('landscape').catch(err => {
+                        console.warn('Screen orientation lock landscape error:', err);
+                    });
+                }
+            },
+
+            unlockOrientation() {
+                if (window.screen && window.screen.orientation && typeof window.screen.orientation.unlock === 'function') {
+                    try {
+                        window.screen.orientation.unlock();
+                    } catch (e) {}
+                }
+            },
+
             toggleFullscreen() {
                 if (!this.$refs.playerContainer) return;
-                if (!document.fullscreenElement) {
-                    this.$refs.playerContainer.requestFullscreen().catch(err => {
-                        console.error('Error attempting to enable fullscreen:', err);
-                    });
+                const container = this.$refs.playerContainer;
+                const video = this.$refs.video;
+
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    const req = container.requestFullscreen || container.webkitRequestFullscreen || container.mozRequestFullScreen || container.msRequestFullscreen;
+                    if (req) {
+                        req.call(container).then(() => {
+                            this.lockLandscape();
+                        }).catch(err => {
+                            console.error('Error attempting to enable fullscreen:', err);
+                            if (video && video.webkitEnterFullscreen) {
+                                try { video.webkitEnterFullscreen(); } catch(e) {}
+                            }
+                        });
+                    } else if (video && video.webkitEnterFullscreen) {
+                        try { video.webkitEnterFullscreen(); } catch(e) {}
+                    }
                 } else {
-                    document.exitFullscreen();
+                    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) {
+                        exit.call(document);
+                    }
+                    this.unlockOrientation();
                 }
             },
 

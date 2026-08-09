@@ -25,6 +25,7 @@ class Film extends Model
         'rating',
         'view_count',
         'subject_type',
+        'content_rating',
         'max_resolution',
     ];
 
@@ -59,6 +60,80 @@ class Film extends Model
     public function watchlists()
     {
         return $this->hasMany(Watchlist::class);
+    }
+
+    public function scopeForActiveProfile($query)
+    {
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $activeProfile = \Illuminate\Support\Facades\Auth::user()->activeProfile();
+            if ($activeProfile && $activeProfile->is_child) {
+                return $query->where(function ($q) {
+                    $q->whereIn('content_rating', ['SU', 'G', 'PG'])
+                      ->orWhereNull('content_rating');
+                });
+            }
+        }
+        return $query;
+    }
+
+    /**
+     * Auto determine content rating based on genres, title, and synopsis
+     */
+    public function autoDetermineContentRating(): string
+    {
+        $genreNames = $this->genres()->pluck('name')->map(fn($g) => strtolower($g))->toArray();
+        $text = strtolower(($this->title ?? '') . ' ' . ($this->synopsis ?? ''));
+
+        // 18+ Keywords / Genres
+        $adultKeywords = ['erotic', 'porn', 'nsfw', 'slasher', 'gore', 'psycho', 'brutal', 'massacre', 'serial killer', 'sex'];
+        if (in_array('horror', $genreNames, true) && in_array('crime', $genreNames, true)) {
+            return '18+';
+        }
+        foreach ($adultKeywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return '18+';
+            }
+        }
+
+        // 16+ Keywords / Genres
+        $matureKeywords = ['violence', 'blood', 'mafia', 'murder', 'gangster', 'killer', 'drug', 'revenge', 'terror', 'zombie', 'war'];
+        if (in_array('horror', $genreNames, true) || in_array('crime', $genreNames, true)) {
+            return '16+';
+        }
+        foreach ($matureKeywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return '16+';
+            }
+        }
+
+        // 13+ Keywords / Genres
+        $teenKeywords = ['fight', 'weapon', 'gun', 'alien', 'threat', 'hero', 'superhero', 'monster', 'dark', 'ghost', 'action'];
+        if (in_array('action', $genreNames, true) || in_array('thriller', $genreNames, true) || in_array('sci-fi', $genreNames, true)) {
+            return '13+';
+        }
+        foreach ($teenKeywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return '13+';
+            }
+        }
+
+        // SU / G (Kids & Family & Animation)
+        if (in_array('animation', $genreNames, true) || in_array('family', $genreNames, true) || in_array('children', $genreNames, true)) {
+            return 'SU';
+        }
+        $kidsKeywords = ['cartoon', 'kid', 'toy', 'fairy', 'magic', 'disney', 'princess', 'school', 'barbie'];
+        foreach ($kidsKeywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return 'SU';
+            }
+        }
+
+        // PG (Default for General Adventure / Romance / Comedy)
+        if (in_array('adventure', $genreNames, true) || in_array('comedy', $genreNames, true) || in_array('romance', $genreNames, true)) {
+            return 'PG';
+        }
+
+        return 'PG';
     }
 
     public function seasons()

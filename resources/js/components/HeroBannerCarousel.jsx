@@ -112,11 +112,11 @@ export default function HeroBannerCarousel({ films = [] }) {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="flex items-center gap-4 pt-2 flex-wrap"
+          className="flex items-center gap-2.5 sm:gap-4 pt-2 flex-wrap"
         >
           <a
             href={`/film/${currentFilm.slug}/watch`}
-            className="px-7 py-3.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs sm:text-sm transition-all duration-200 flex items-center gap-2.5 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer"
+            className="px-5 py-2.5 sm:px-7 sm:py-3.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105 cursor-pointer shrink-0"
           >
             <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />
             <span>Tonton Sekarang</span>
@@ -124,7 +124,7 @@ export default function HeroBannerCarousel({ films = [] }) {
 
           <a
             href={`/film/${currentFilm.slug}`}
-            className="px-6 py-3.5 rounded-2xl glass-card hover:bg-white/15 text-white font-semibold text-xs sm:text-sm border border-white/15 transition-all duration-200 flex items-center gap-2 cursor-pointer hover:border-amber-400/40"
+            className="px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-2xl glass-card hover:bg-white/15 text-white font-semibold text-xs sm:text-sm border border-white/15 transition-all duration-200 flex items-center gap-1.5 cursor-pointer hover:border-amber-400/40 shrink-0"
           >
             <Info className="w-4 h-4 text-amber-400" />
             <span>Detail Lengkap</span>
@@ -135,23 +135,17 @@ export default function HeroBannerCarousel({ films = [] }) {
       {/* Navigation Arrows */}
       {films.length > 1 && (
         <>
-          <button
-            onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-2xl glass-chip border border-white/15 text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-            aria-label="Sebelumnya"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+
           <button
             onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-2xl glass-chip border border-white/15 text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-2xl glass-chip border border-white/15 text-white hover:bg-white/20 transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center"
             aria-label="Berikutnya"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           {/* Dots Indicator */}
-          <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
+          <div className="absolute top-4 right-4 sm:top-auto sm:bottom-6 sm:right-6 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 sm:border-none sm:bg-transparent">
             {films.map((_, idx) => (
               <button
                 key={idx}
@@ -159,8 +153,8 @@ export default function HeroBannerCarousel({ films = [] }) {
                   setCurrentIndex(idx);
                   setIsAutoPlaying(false);
                 }}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  currentIndex === idx ? 'w-7 bg-amber-400 shadow-md shadow-amber-400/50' : 'w-2 bg-white/30 hover:bg-white/60'
+                className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  currentIndex === idx ? 'w-5 sm:w-7 bg-amber-400 shadow-md shadow-amber-400/50' : 'w-1.5 sm:w-2 bg-white/40 hover:bg-white/70'
                 }`}
                 aria-label={`Slide ${idx + 1}`}
               />

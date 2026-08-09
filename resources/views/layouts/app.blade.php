@@ -12,52 +12,13 @@
     <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     
-    <!-- Google Fonts: Instrument Sans -->
+    <!-- Google Fonts: Instrument Sans & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS CDN & Alpine.js -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Instrument Sans"', 'sans-serif'],
-                        serif: ['"Instrument Sans"', 'sans-serif'],
-                        display: ['"Instrument Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        amber: {
-                            50: '#faf9f7',
-                            100: '#f4f3ef',
-                            200: '#eae8e2',
-                            300: '#e4e2dd',
-                            400: '#e4e2dd',
-                            500: '#e4e2dd',
-                            600: '#cfcdb8',
-                            700: '#b2b09a',
-                            800: '#8c8a77',
-                            900: '#646255',
-                            950: '#3a3831',
-                        },
-                        dark: {
-                            950: '#09090b',
-                            900: '#121217',
-                            800: '#181820',
-                            700: '#272730',
-                            600: '#3f3f46',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }

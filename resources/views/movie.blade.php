@@ -9,63 +9,14 @@
     <!-- Fonts: Instrument Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS CDN & Alpine.js -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js & Lucide Icons -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        display: ['"Outfit"', 'sans-serif'],
-                    },
-                    colors: {
-                        amber: {
-                            50: '#faf9f7',
-                            100: '#f4f3ef',
-                            200: '#eae8e2',
-                            300: '#e4e2dd',
-                            400: '#e4e2dd',
-                            500: '#e4e2dd',
-                            600: '#cfcdb8',
-                            700: '#b2b09a',
-                            800: '#8c8a77',
-                            900: '#646255',
-                            950: '#3a3831',
-                        },
-                        dark: {
-                            900: '#070A11',
-                            800: '#0F1523',
-                            700: '#182035',
-                            600: '#232D48',
-                        },
-                        accent: {
-                            purple: '#7C3AED',
-                            indigo: '#6366F1',
-                            pink: '#EC4899',
-                            cyan: '#06B6D4',
-                        }
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                    },
-                    keyframes: {
-                        glow: {
-                            '0%': { boxShadow: '0 0 15px rgba(124, 58, 237, 0.3)' },
-                            '100%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.6)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    @viteReactRefresh
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }

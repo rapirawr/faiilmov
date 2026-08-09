@@ -43,77 +43,21 @@
             </div>
         </div>
 
-        <!-- Right Column: Interactive Phone Screen Mockup Preview -->
-        <div class="lg:col-span-5 flex justify-center">
-            <div class="relative w-64 sm:w-72 aspect-[9/19] rounded-[3rem] bg-dark-950 p-3 border-4 border-zinc-800 shadow-2xl shadow-amber-500/10 overflow-hidden group">
-                
-                <!-- Dynamic Glassmorphic Ambient Glow -->
-                <div class="absolute -top-16 -left-16 w-32 h-32 rounded-full bg-amber-500/20 blur-2xl pointer-events-none"></div>
-                <div class="absolute -bottom-16 -right-16 w-32 h-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none"></div>
-
-                <!-- Phone Notch / Dynamic Island -->
-                <div class="absolute top-5 inset-x-0 mx-auto w-24 h-4 bg-zinc-900 rounded-full z-30 flex items-center justify-center gap-1.5 border border-white/5">
-                    <span class="w-2 h-2 rounded-full bg-dark-950"></span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-zinc-700"></span>
+        <!-- Right Column: Dual Phone Screen Mockup Preview (2 Foto HP) -->
+        <div class="lg:col-span-5 flex justify-center items-center">
+            <div class="relative w-full max-w-sm sm:max-w-md flex justify-center items-center py-6 group">
+                <!-- Back Phone Mockup (Phone 2 - Tilted Left) -->
+                <div class="relative w-48 sm:w-60 -mr-16 sm:-mr-24 transform -rotate-12 -translate-y-4 hover:-rotate-6 hover:translate-y-0 transition-all duration-500 z-10 filter brightness-90 contrast-105">
+                    <img src="{{ asset('images/mobile-app-mockup-2.webp') }}" 
+                         alt="faiilmov Mobile App Screenshot 2" 
+                         class="w-full h-auto object-contain drop-shadow-xl opacity-90">
                 </div>
 
-                <!-- Inner Phone Display Screen -->
-                <div class="w-full h-full rounded-[2.2rem] bg-dark-950 overflow-hidden border border-white/10 relative flex flex-col pt-7 px-3.5 pb-4 space-y-3">
-                    
-                    <!-- App Status Bar Header -->
-                    <div class="flex items-center justify-between text-white border-b border-white/10 pb-2">
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded-lg bg-amber-400 text-zinc-950 flex items-center justify-center text-[10px] font-black">f</div>
-                            <span class="font-serif font-bold text-xs">faiilmov</span>
-                        </div>
-                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">v1.0 Beta</span>
-                    </div>
-
-                    <!-- Mini Hero Player Preview Card -->
-                    <div class="relative aspect-video rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shadow">
-                        <div class="absolute inset-0 bg-dark-950/70 z-10"></div>
-                        <div class="absolute inset-0 flex items-center justify-center z-20">
-                            <div class="w-8 h-8 rounded-full bg-amber-400/90 text-zinc-950 flex items-center justify-center shadow-lg">
-                                <i data-lucide="play" class="w-4 h-4 fill-zinc-950 ml-0.5"></i>
-                            </div>
-                        </div>
-                        <div class="absolute bottom-1.5 left-2 z-20 text-[9px] font-bold text-white truncate max-w-[120px]">
-                            Watch Party Active
-                        </div>
-                    </div>
-
-                    <!-- Feature Cards Inside Mockup -->
-                    <div class="space-y-2 flex-1 overflow-hidden">
-                        <div class="p-2 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
-                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
-                            <span class="text-[10px] text-zinc-300 font-medium truncate">Native Flutter 60fps</span>
-                        </div>
-                        <div class="p-2 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
-                            <i data-lucide="popcorn" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-                            <span class="text-[10px] text-zinc-300 font-medium truncate">Nobar Sync & Live Chat</span>
-                        </div>
-                        <div class="p-2 rounded-xl bg-white/5 border border-white/5 flex items-center gap-2">
-                            <i data-lucide="sliders" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
-                            <span class="text-[10px] text-zinc-300 font-medium truncate">Swipe Gesture Control</span>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Nav Mockup -->
-                    <div class="pt-2 border-t border-white/10 grid grid-cols-4 gap-1 text-center">
-                        <div class="text-amber-400 flex flex-col items-center">
-                            <i data-lucide="house" class="w-3.5 h-3.5"></i>
-                        </div>
-                        <div class="text-zinc-500 flex flex-col items-center">
-                            <i data-lucide="compass" class="w-3.5 h-3.5"></i>
-                        </div>
-                        <div class="text-zinc-500 flex flex-col items-center">
-                            <i data-lucide="users" class="w-3.5 h-3.5"></i>
-                        </div>
-                        <div class="text-zinc-500 flex flex-col items-center">
-                            <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                        </div>
-                    </div>
-
+                <!-- Front Phone Mockup (Phone 1 - Tilted Right) -->
+                <div class="relative w-52 sm:w-64 z-20 transform rotate-6 translate-y-2 hover:rotate-0 hover:translate-y-0 transition-all duration-500">
+                    <img src="{{ asset('images/mobile-app-mockup.webp') }}" 
+                         alt="faiilmov Mobile App Screenshot 1" 
+                         class="w-full h-auto object-contain drop-shadow-2xl">
                 </div>
 
             </div>
@@ -122,7 +66,7 @@
     </div>
 
     <!-- Section 2: Planned Key Mobile Features -->
-    <div class="space-y-8 border-t border-white/10 pt-12">
+    {{-- <div class="space-y-8 border-t border-white/10 pt-12">
         <div class="text-center max-w-xl mx-auto space-y-2">
             <span class="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Fitur Utama Versi Mobile</span>
             <h2 class="font-serif font-bold text-2xl sm:text-3xl text-white">Kenapa Harus Punya App Mobile faiilmov?</h2>
@@ -163,7 +107,7 @@
             </div>
 
         </div>
-    </div>
+    </div> --}}
 
 
 

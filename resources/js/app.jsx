@@ -1,8 +1,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import Alpine from 'alpinejs';
 import FilmCard from './components/FilmCard';
 import HeroBannerCarousel from './components/HeroBannerCarousel';
 import EpisodeSelector from './components/EpisodeSelector';
+
+if (!window.Alpine) {
+  window.Alpine = Alpine;
+  Alpine.start();
+}
 
 function safeJsonParse(rawString, fallback = null) {
   if (!rawString) return fallback;

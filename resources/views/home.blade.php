@@ -134,30 +134,65 @@
 
                 <div class="relative group">
                     <div x-ref="watchContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
-                        @foreach($continueWatching as $film)
-                            @if($film)
-                                <div class="w-36 sm:w-44 shrink-0 group/card">
-                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-amber-500/30 group-hover/card:border-amber-500/50 transition-all duration-300 shadow-lg">
-                                        <img src="{{ $film->thumbnail_url }}" 
-                                             alt="{{ $film->title }}"
-                                             loading="lazy"
-                                             decoding="async"
-                                             width="200"
-                                             height="300"
-                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                        @foreach($continueWatching as $history)
+                            @if($history && $history->film)
+                                @php
+                                    $film = $history->film;
+                                    $durMin = $film->subject_type === 'series' ? 45 : ($film->duration_minutes ?: 120);
+                                    $totalSec = max(1, $durMin * 60);
+                                    $progPercent = min(100, max(5, round(($history->progress_seconds / $totalSec) * 100)));
+                                    $watchUrl = route('film.watch', $film->slug) . ($film->subject_type === 'series' ? "?season={$history->season_number}&episode={$history->episode_number}" : '');
+                                    
+                                    $age = $film->content_rating ? strtoupper($film->content_rating) : '13+';
+                                    if (in_array($age, ['R', 'NC-17'])) $age = '18+';
+                                    if (in_array($age, ['PG', 'G'])) $age = 'SU';
+                                    $ageBadgeClass = match($age) {
+                                        '18+' => 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+                                        '16+' => 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+                                        '13+' => 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+                                        'SU'  => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                                        default => 'bg-zinc-800 text-zinc-300 border-white/20',
+                                    };
+                                @endphp
+
+                                <div class="w-64 sm:w-72 shrink-0 group/cw">
+                                    <a href="{{ $watchUrl }}" class="relative aspect-[16/9] block rounded-2xl overflow-hidden bg-zinc-900 mb-2 border border-white/10 group-hover/cw:border-amber-400/40 transition-all duration-300 shadow-xl group-hover/cw:shadow-amber-500/10">
+                                        <img src="{{ $film->backdrop_url ?: $film->thumbnail_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover group-hover/cw:scale-105 transition-transform duration-400">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent opacity-80 group-hover/cw:opacity-60 transition-opacity"></div>
                                         
-
-                                        @if($film->max_resolution)
-                                            <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
-                                                {{ $film->max_resolution }}
+                                        <!-- Play Button Overlay -->
+                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cw:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+                                            <div class="px-4 py-2 rounded-full bg-amber-500 text-zinc-950 shadow-xl scale-95 group-hover/cw:scale-110 transition-transform flex items-center gap-1.5 font-extrabold text-xs">
+                                                <i data-lucide="play" class="w-4 h-4 fill-zinc-950 ml-0.5"></i>
+                                                <span>Lanjut Nonton</span>
                                             </div>
-                                        @endif
+                                        </div>
+
+                                        <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
+                                            <span class="px-1.5 py-0.5 rounded-md border text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow {{ $ageBadgeClass }}">
+                                                {{ $age }}
+                                            </span>
+                                            @if($film->subject_type === 'series')
+                                                <span class="px-2 py-0.5 rounded-md bg-amber-500 text-zinc-950 text-[9.5px] font-extrabold uppercase shadow">
+                                                    S{{ $history->season_number }} E{{ $history->episode_number }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <!-- Progress Bar (Wide Netflix Style) -->
+                                        <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 overflow-hidden">
+                                            <div class="h-full bg-amber-400 rounded-r-full shadow-lg" style="width: {{ $progPercent }}%"></div>
+                                        </div>
                                     </a>
 
-                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-white group-hover/card:text-amber-400 transition-colors truncate block w-full" title="{{ $film->title }}">
-                                        {{ $film->title }}
-                                    </a>
-                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                    <div class="px-0.5">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <a href="{{ $watchUrl }}" class="font-serif font-bold text-xs sm:text-sm text-white group-hover/cw:text-amber-300 transition-colors truncate block" title="{{ $film->title }}">
+                                                {{ $film->title }}
+                                            </a>
+                                            <span class="text-amber-400 font-extrabold text-[11px] shrink-0">{{ $progPercent }}%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             @endif
                         @endforeach
@@ -187,21 +222,8 @@
                     <div x-ref="becauseContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($becauseYouWatched['recommendations'] as $film)
                             @if($film)
-                                <div class="w-36 sm:w-44 shrink-0 group/card">
-                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
-                                        <img src="{{ $film->thumbnail_url }}" 
-                                             alt="{{ $film->title }}"
-                                             loading="lazy"
-                                             decoding="async"
-                                             width="200"
-                                             height="300"
-                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-                                    </a>
-
-                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
-                                        {{ $film->title }}
-                                    </a>
-                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                <div class="w-36 sm:w-44 shrink-0">
+                                    <x-film-card :film="$film" />
                                 </div>
                             @endif
                         @endforeach
@@ -228,29 +250,8 @@
                     <div x-ref="comingContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($comingSoon as $film)
                             @if($film)
-                                <div class="w-36 sm:w-44 shrink-0 group/card">
-                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
-                                        <img src="{{ $film->thumbnail_url }}" 
-                                             alt="{{ $film->title }}"
-                                             loading="lazy"
-                                             decoding="async"
-                                             width="200"
-                                             height="300"
-                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-                                        
-                                        <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-200 rounded-xl flex items-center gap-1 shadow-md">
-                                            <i data-lucide="eye" class="w-3 h-3 text-sky-400"></i>
-                                            <span>{{ number_format($film->rating, 1) }}</span>
-                                        </div>
-                                        <div class="absolute bottom-2 left-2 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg text-amber-300 tracking-wider shadow backdrop-blur-sm">
-                                            Segera
-                                        </div>
-                                    </a>
-
-                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
-                                        {{ $film->title }}
-                                    </a>
-                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                <div class="w-36 sm:w-44 shrink-0">
+                                    <x-film-card :film="$film" />
                                 </div>
                             @endif
                         @endforeach
@@ -281,31 +282,8 @@
                     <div x-ref="seriesContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($popularSeries as $film)
                             @if($film)
-                                <div class="w-36 sm:w-44 shrink-0 group/card">
-                                    <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
-                                        <img src="{{ $film->thumbnail_url }}" 
-                                             alt="{{ $film->title }}"
-                                             loading="lazy"
-                                             decoding="async"
-                                             width="200"
-                                             height="300"
-                                             class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-                                        
-                                        <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-amber-400 rounded-xl flex items-center gap-1 shadow-md">
-                                            <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
-                                            <span>HD</span>
-                                        </div>
-                                        @if($film->max_resolution)
-                                            <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
-                                                {{ $film->max_resolution }}
-                                            </div>
-                                        @endif
-                                    </a>
-
-                                    <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
-                                        {{ $film->title }}
-                                    </a>
-                                    <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
+                                <div class="w-36 sm:w-44 shrink-0">
+                                    <x-film-card :film="$film" />
                                 </div>
                             @endif
                         @endforeach
@@ -337,37 +315,9 @@
                     <div x-ref="moviesContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($trendingMovies as $film)
                             @if($film)
-                            <div class="w-36 sm:w-44 shrink-0 group/card">
-                                <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-2xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover/card:border-white/30 transition-all duration-300 shadow-md">
-                                    <img src="{{ $film->thumbnail_url }}" 
-                                         alt="{{ $film->title }}"
-                                         loading="lazy"
-                                         decoding="async"
-                                         width="200"
-                                         height="300"
-                                         class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-                                    
-                                    <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-200 rounded-xl flex items-center gap-1 shadow-md">
-                                        @if($film->view_count > 0)
-                                            <i data-lucide="eye" class="w-3 h-3 text-sky-400"></i>
-                                            <span>{{ number_format($film->view_count) }}</span>
-                                        @else
-                                            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                            <span>{{ number_format($film->rating, 1) }}</span>
-                                        @endif
-                                    </div>
-                                    @if($film->max_resolution)
-                                        <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
-                                            {{ $film->max_resolution }}
-                                        </div>
-                                    @endif
-                                </a>
-
-                                <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-zinc-200 group-hover/card:text-white transition-colors truncate block w-full" title="{{ $film->title }}">
-                                    {{ $film->title }}
-                                </a>
-                                <span class="text-[11px] text-zinc-500 block mt-0.5">{{ $film->release_year }}</span>
-                            </div>
+                                <div class="w-36 sm:w-44 shrink-0">
+                                    <x-film-card :film="$film" />
+                                </div>
                             @endif
                         @endforeach
                     </div>

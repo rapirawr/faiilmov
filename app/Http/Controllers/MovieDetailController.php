@@ -42,6 +42,10 @@ class MovieDetailController extends Controller
             }
         }
 
+        if (!$this->isAllowedForActiveProfile($film)) {
+            return redirect()->route('home')->with('error', 'Profil Anak tidak dapat mengakses film atau series dengan batasan usia ini.');
+        }
+
         if (empty($film->synopsis) && $film->moviebox_subject_id) {
             try {
                 $apiDetail = $this->movieBox->getDetails($film->moviebox_subject_id);
@@ -111,6 +115,10 @@ class MovieDetailController extends Controller
             }
         }
 
+        if (!$this->isAllowedForActiveProfile($film)) {
+            return redirect()->route('home')->with('error', 'Profil Anak tidak dapat mengakses film atau series dengan batasan usia ini.');
+        }
+
         $season = (int)($request->query('season') ?? $request->query('se') ?? 0);
         $episode = (int)($request->query('episode') ?? $request->query('ep') ?? 0);
         $resParam = $request->query('resolution');
@@ -122,7 +130,10 @@ class MovieDetailController extends Controller
             // Default to last watched or season 1 episode 1
             if ($season === 0 || $episode === 0) {
                 if (Auth::check()) {
-                    $history = WatchHistory::where('user_id', Auth::id())->where('film_id', $film->id)->first();
+                    $history = WatchHistory::where('user_id', Auth::id())
+                        ->where('profile_id', session('active_profile_id'))
+                        ->where('film_id', $film->id)
+                        ->first();
                     if ($history) {
                         $season = $history->season_number;
                         $episode = $history->episode_number;
@@ -137,7 +148,7 @@ class MovieDetailController extends Controller
             // Record watch history for logged in user
             if (Auth::check()) {
                 WatchHistory::updateOrCreate(
-                    ['user_id' => Auth::id(), 'film_id' => $film->id],
+                    ['user_id' => Auth::id(), 'profile_id' => session('active_profile_id'), 'film_id' => $film->id],
                     ['season_number' => $season, 'episode_number' => $episode]
                 );
             }
@@ -268,6 +279,7 @@ class MovieDetailController extends Controller
         if (Auth::check()) {
             \DB::transaction(function () use ($request) {
                 $history = \App\Models\WatchHistory::where('user_id', Auth::id())
+                    ->where('profile_id', session('active_profile_id'))
                     ->where('film_id', $request->film_id)
                     ->lockForUpdate()
                     ->first();
@@ -290,6 +302,7 @@ class MovieDetailController extends Controller
                 } else {
                     \App\Models\WatchHistory::create([
                         'user_id'          => Auth::id(),
+                        'profile_id'       => session('active_profile_id'),
                         'film_id'          => $request->film_id,
                         'season_number'    => $request->season_number,
                         'episode_number'   => $request->episode_number,
@@ -362,5 +375,42 @@ class MovieDetailController extends Controller
         } catch (Exception $e) {
             // Fail gracefully if API season info fails
         }
+    }
+
+    protected function isAllowedForActiveProfile(?Film $film): bool
+    {
+        if (!$film) {
+            return true;
+        }
+
+        if (!Auth::check()) {
+            return true;
+        }
+
+        $user = Auth::user();
+        $activeProfile = method_exists($user, 'activeProfile') ? $user->activeProfile() : null;
+        if (!$activeProfile) {
+            return true;
+        }
+
+        // Child Profile restrictions
+        if ($activeProfile->is_child) {
+            $allowedRatings = ['SU', 'G', 'PG', null];
+            if (!in_array($film->content_rating, $allowedRatings, true)) {
+                return false;
+            }
+        }
+
+        // Max rating restrictions
+        if ($activeProfile->max_content_rating) {
+            $ratingOrder = ['SU' => 1, 'G' => 1, 'PG' => 2, '13+' => 3, '16+' => 4, '18+' => 5];
+            $filmRatingVal = $ratingOrder[$film->content_rating ?? 'SU'] ?? 1;
+            $maxRatingVal = $ratingOrder[$activeProfile->max_content_rating] ?? 5;
+            if ($filmRatingVal > $maxRatingVal) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

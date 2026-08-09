@@ -26,29 +26,39 @@
 
         <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left z-10">
             <div class="w-20 h-20 shrink-0 rounded-3xl bg-gradient-to-tr from-amber-400 to-amber-200 text-zinc-950 flex items-center justify-center text-2xl font-serif font-black shadow-xl ring-4 ring-white/10 overflow-hidden">
-                @if($user->avatar)
+                @if($activeProfile && $activeProfile->avatar)
+                    <img src="{{ $activeProfile->avatar }}" alt="{{ $activeProfile->name }}" class="w-full h-full object-cover">
+                @elseif(!$activeProfile && $user->avatar)
                     <img src="{{ $user->avatar }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                 @else
-                    {{ strtoupper(substr($user->name, 0, 2)) }}
+                    {{ strtoupper(substr($activeProfile ? $activeProfile->name : $user->name, 0, 2)) }}
                 @endif
             </div>
             <div>
                 <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                    <h1 class="font-serif font-bold text-2xl sm:text-3xl text-white tracking-tight">{{ $user->name }}</h1>
-                    @if($user->is_admin)
-                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold uppercase">Admin</span>
+                    <h1 class="font-serif font-bold text-2xl sm:text-3xl text-white tracking-tight">
+                        {{ $activeProfile ? $activeProfile->name : $user->name }}
+                    </h1>
+                    @if($activeProfile && $activeProfile->is_child)
+                        <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-extrabold uppercase">Profil Anak</span>
+                    @elseif($activeProfile)
+                        <span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/20 text-[10px] font-extrabold uppercase">Sub Profil</span>
+                    @elseif($user->is_admin)
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold uppercase">Akun Utama • Admin</span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold uppercase">Akun Utama</span>
                     @endif
                 </div>
                 <p class="text-zinc-400 text-xs sm:text-sm mt-1 flex items-center justify-center sm:justify-start gap-1.5">
                     <i data-lucide="mail" class="w-3.5 h-3.5 text-zinc-500"></i>
                     <span>{{ $user->email }}</span>
-                    @if($user->phone)
+                    @if(!$activeProfile && $user->phone)
                         <span class="text-zinc-600">•</span>
                         <i data-lucide="phone" class="w-3.5 h-3.5 text-zinc-500"></i>
                         <span>{{ $user->phone }}</span>
                     @endif
                 </p>
-                @if($user->bio)
+                @if(!$activeProfile && $user->bio)
                     <p class="text-amber-300/80 text-xs italic mt-1.5">"{{ $user->bio }}"</p>
                 @endif
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
@@ -56,6 +66,10 @@
                         <i data-lucide="flame" class="w-3 h-3 text-rose-400"></i>
                         <span>Genre Favorit: {{ $topGenre }}</span>
                     </span>
+                    <a href="{{ route('profiles.index') }}" class="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition-all">
+                        <i data-lucide="users" class="w-3 h-3"></i>
+                        <span>Kelola / Ganti Profil</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -155,7 +169,7 @@
                                 <img src="{{ $item->film->backdrop_url ?: $item->film->poster_url }}" alt="{{ $item->film->title }}" class="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500">
                                 <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent"></div>
                                 
-                                <!-- Category & Ep Badge -->
+                                <!-- Category & Ep & Rating Badge -->
                                 <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
                                     <span class="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
                                         {{ $item->film->subject_type === 'series' ? 'Series' : 'Film' }}
@@ -165,6 +179,10 @@
                                             S{{ $item->season_number }} E{{ $item->episode_number }}
                                         </span>
                                     @endif
+                                    <span class="px-2 py-0.5 rounded-xl bg-dark-950/80 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                                        <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                                        <span>{{ number_format($item->film->rating, 1) }}</span>
+                                    </span>
                                 </div>
 
                                 <!-- Quick Delete Single History -->
@@ -222,6 +240,7 @@
                 'id' => $w->id,
                 'film_id' => $w->film_id,
                 'title' => $w->film ? $w->film->title : '',
+                'rating' => $w->film ? number_format($w->film->rating, 1) : '0.0',
                 'poster_url' => $w->film ? $w->film->poster_url : '',
                 'slug' => $w->film ? $w->film->slug : '',
                 'toggle_url' => route('watchlist.toggle', $w->film_id)
@@ -252,6 +271,10 @@
                             <div>
                                 <div class="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-dark-900">
                                     <img :src="item.poster_url" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <div class="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-dark-950/80 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center gap-1 shadow">
+                                        <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                                        <span x-text="item.rating"></span>
+                                    </div>
                                     <button @click="
                                                 fetch(item.toggle_url, {
                                                     method: 'POST',
@@ -619,21 +642,41 @@
         </div>
 
         <!-- Logout Session Section -->
+        @php
+            $activeProfile = Auth::user()->activeProfile();
+        @endphp
         <div class="mt-8 p-6 rounded-3xl glass-panel border border-white/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h4 class="font-serif font-bold text-base text-white flex items-center gap-2">
                     <i data-lucide="log-out" class="w-5 h-5 text-rose-400"></i>
                     <span>Keluar dari Akun (Logout)</span>
                 </h4>
-                <p class="text-xs text-zinc-400 mt-1">Akhiri sesi login Anda di perangkat ini secara aman.</p>
+                @if($activeProfile)
+                    <p class="text-xs text-amber-400 font-semibold mt-1">
+                        Anda sedang menggunakan profil sub-akun ({{ $activeProfile->name }}). Silakan beralih ke Akun Utama terlebih dahulu untuk dapat Keluar.
+                    </p>
+                @else
+                    <p class="text-xs text-zinc-400 mt-1">Akhiri sesi login Anda di perangkat ini secara aman.</p>
+                @endif
             </div>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="px-6 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                    <span>Keluar Sekarang</span>
-                </button>
-            </form>
+
+            @if($activeProfile)
+                <form action="{{ route('profiles.switch-main') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="px-6 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Beralih ke Akun Utama</span>
+                    </button>
+                </form>
+            @else
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="px-6 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Keluar Sekarang</span>
+                    </button>
+                </form>
+            @endif
         </div>
 
         <!-- Danger Zone -->

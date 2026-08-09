@@ -26,6 +26,9 @@ Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name(
 Route::get('/download', [\App\Http\Controllers\DownloadAppController::class, 'index'])->name('download.app');
 Route::get('/mobile-app', function() { return redirect()->route('download.app'); });
 Route::post('/download/notify-me', [\App\Http\Controllers\DownloadAppController::class, 'notifyMe'])->name('download.notify-me');
+Route::get('/privacy-policy', function() { return view('privacy-policy'); })->name('privacy-policy');
+Route::get('/syarat-ketentuan', function() { return view('terms-of-service'); })->name('terms-of-service');
+Route::get('/changelog', [\App\Http\Controllers\ChangelogController::class, 'index'])->name('changelog');
 
 // Search Routes - ADD RATE LIMITING
 Route::middleware('throttle:search')->group(function () {
@@ -97,11 +100,13 @@ Route::middleware('auth')->group(function () {
     // Profiles (Multi-Profile)
     Route::get('/profiles', [ProfileSwitchController::class, 'index'])->name('profiles.index');
     Route::post('/profiles', [ProfileSwitchController::class, 'store'])->name('profiles.store');
+    Route::post('/profiles/switch-main', [ProfileSwitchController::class, 'switchMain'])->name('profiles.switch-main');
     Route::post('/profiles/{profile}/switch', [ProfileSwitchController::class, 'switch'])->name('profiles.switch');
     Route::delete('/profiles/{profile}', [ProfileSwitchController::class, 'destroy'])->name('profiles.destroy');
     
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
@@ -125,7 +130,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/films/empty-trash', [AdminFilmController::class, 'emptyTrash'])->name('films.empty_trash');
     Route::delete('/films/{id}/force-delete', [AdminFilmController::class, 'forceDelete'])->name('films.force_delete');
     Route::post('/films/{id}/restore', [AdminFilmController::class, 'restore'])->name('films.restore');
+    Route::get('/films-content-rating', [AdminFilmController::class, 'contentRatingEditor'])->name('films.content_rating');
+    Route::post('/films-content-rating', [AdminFilmController::class, 'updateContentRatings'])->name('films.update_content_ratings');
+    Route::post('/films/auto-rate-all', [AdminFilmController::class, 'autoRateAll'])->name('films.auto_rate_all');
+    Route::post('/films/{film}/auto-rate', [AdminFilmController::class, 'autoRate'])->name('films.auto_rate');
     Route::resource('films', AdminFilmController::class);
+
+    // Season & Episode Management
+    Route::post('/films/{film}/seasons', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'storeSeason'])->name('seasons.store');
+    Route::delete('/seasons/{season}', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'destroySeason'])->name('seasons.destroy');
+    Route::post('/seasons/{season}/episodes', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'storeEpisode'])->name('episodes.store');
+    Route::put('/episodes/{episode}', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'updateEpisode'])->name('episodes.update');
+    Route::delete('/episodes/{episode}', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'destroyEpisode'])->name('episodes.destroy');
 
     // Genre Management
     Route::resource('genres', AdminGenreController::class)->except(['create', 'show', 'edit']);
@@ -143,9 +159,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
+    Route::post('/profiles/{profile}/reset-pin', [AdminUserController::class, 'resetPin'])->name('profiles.reset_pin');
+
+    // Watch Party Management
+    Route::get('/watch-parties', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'index'])->name('watch_parties.index');
+    Route::get('/watch-parties/{watchParty}', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'show'])->name('watch_parties.show');
+    Route::post('/watch-parties/{watchParty}/force-close', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'forceClose'])->name('watch_parties.force_close');
+    Route::post('/watch-parties/{watchParty}/message', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'sendMessage'])->name('watch_parties.send_message');
 
     // Activity Log
     Route::get('/activity-log', [AdminActivityLogController::class, 'index'])->name('activity_logs.index');
+
+    // Changelog & System Updates Management
+    Route::post('/changelogs/{changelog}/toggle-publish', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'togglePublish'])->name('changelogs.toggle_publish');
+    Route::resource('changelogs', \App\Http\Controllers\Admin\AdminChangelogController::class);
 
     // Site Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');

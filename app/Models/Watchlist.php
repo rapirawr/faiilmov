@@ -9,11 +9,16 @@ class Watchlist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'film_id', 'status'];
+    protected $fillable = ['user_id', 'profile_id', 'film_id', 'status'];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function profile()
+    {
+        return $this->belongsTo(Profile::class);
     }
 
     public function film()

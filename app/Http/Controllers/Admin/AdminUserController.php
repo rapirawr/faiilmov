@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Profile;
 use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +13,7 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::withCount(['reviews', 'watchlists']);
+        $query = User::withCount(['reviews', 'watchlists', 'profiles']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -40,6 +41,7 @@ class AdminUserController extends Controller
     public function show(User $user)
     {
         $user->load([
+            'profiles',
             'reviews.film',
             'watchlists.film',
             'watchHistories.film',
@@ -96,5 +98,17 @@ class AdminUserController extends Controller
         AdminActivityLog::log('unbanned_user', "Membuka supen/unban user '{$user->name}' ({$user->email})", 'User', $user->id);
 
         return redirect()->back()->with('success', "Status ban user '{$user->name}' berhasil dicabut.");
+    }
+
+    public function resetPin(Profile $profile)
+    {
+        $profile->update([
+            'parental_pin' => null,
+            'max_content_rating' => null,
+        ]);
+
+        AdminActivityLog::log('reset_parental_pin', "Mereset PIN Parental Control untuk profil '{$profile->name}' milik User #{$profile->user_id}", 'Profile', $profile->id);
+
+        return redirect()->back()->with('success', "PIN Parental Control untuk profil '{$profile->name}' berhasil di-reset.");
     }
 }

@@ -15,7 +15,10 @@ class WatchlistController extends Controller
         $status = $request->input('status', 'plan_to_watch');
 
         return DB::transaction(function () use ($request, $film, $status) {
+            $activeProfileId = session('active_profile_id');
+
             $existing = Watchlist::where('user_id', Auth::id())
+                ->where('profile_id', $activeProfileId)
                 ->where('film_id', $film->id)
                 ->lockForUpdate()
                 ->first();
@@ -35,6 +38,7 @@ class WatchlistController extends Controller
             } else {
                 Watchlist::create([
                     'user_id' => Auth::id(),
+                    'profile_id' => $activeProfileId,
                     'film_id' => $film->id,
                     'status'  => $status,
                 ]);

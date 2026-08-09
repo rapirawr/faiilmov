@@ -1,33 +1,52 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, Play, Bookmark, Film as FilmIcon, Tv } from 'lucide-react';
+import { Play, Film as FilmIcon, Tv } from 'lucide-react';
 
-export default function FilmCard({ film, isWatchlisted = false, csrfToken = '' }) {
-  const [watchlisted, setWatchlisted] = React.useState(isWatchlisted);
+function formatDuration(minutes, type) {
+  if (!minutes || minutes <= 0) {
+    return type === 'series' ? 'TV Series' : '1h 30m';
+  }
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hrs > 0 && mins > 0) return `${hrs}h ${mins}m`;
+  if (hrs > 0) return `${hrs}h`;
+  return `${mins}m`;
+}
+
+function formatAgeRating(rating) {
+  if (!rating) return '13+';
+  const upper = String(rating).toUpperCase();
+  if (upper === 'R' || upper === 'NC-17' || upper === '18+') return '18+';
+  if (upper === 'PG-13' || upper === '13+') return '13+';
+  if (upper === 'PG' || upper === 'G' || upper === 'SU') return 'SU';
+  return rating;
+}
+
+function getAgeBadgeStyle(rating) {
+  const upper = String(rating || '').toUpperCase();
+  if (upper === '18+' || upper === 'R' || upper === 'NC-17') {
+    return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+  }
+  if (upper === '16+') {
+    return 'bg-orange-500/20 text-orange-300 border-orange-500/40';
+  }
+  if (upper === '13+' || upper === 'PG-13') {
+    return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+  }
+  if (upper === 'SU' || upper === 'G' || upper === 'PG') {
+    return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+  }
+  return 'bg-zinc-800 text-zinc-300 border-white/20';
+}
+
+export default function FilmCard({ film }) {
   const [isHovered, setIsHovered] = React.useState(false);
-
-  const toggleWatchlist = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const res = await fetch(`/film/${film.id}/watchlist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || ''
-        }
-      });
-      if (res.ok) {
-        setWatchlisted(!watchlisted);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const showUrl = `/film/${film.slug}`;
   const watchUrl = `/film/${film.slug}/watch`;
+
+  const formattedAge = formatAgeRating(film.content_rating);
+  const formattedDur = formatDuration(film.duration_minutes, film.subject_type);
 
   return (
     <motion.div
@@ -52,26 +71,15 @@ export default function FilmCard({ film, isWatchlisted = false, csrfToken = '' }
         {/* Ambient Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
-          <span className="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-extrabold uppercase text-amber-300 border border-amber-500/30 backdrop-blur-md shadow-md flex items-center gap-1">
-            {film.subject_type === 'series' ? <Tv className="w-3 h-3 text-amber-400" /> : <FilmIcon className="w-3 h-3 text-amber-400" />}
-            <span>{film.max_resolution || '1080P'}</span>
-          </span>
-
-          <button
-            onClick={toggleWatchlist}
-            type="button"
-            className={`pointer-events-auto p-2 rounded-xl transition-all duration-200 backdrop-blur-md cursor-pointer ${
-              watchlisted
-                ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/30'
-                : 'glass-chip text-zinc-300 hover:text-white hover:bg-white/20'
-            }`}
-            title={watchlisted ? 'Hapus dari Watchlist' : 'Tambah ke Watchlist'}
-          >
-            <Bookmark className={`w-3.5 h-3.5 ${watchlisted ? 'fill-zinc-950' : ''}`} />
-          </button>
-        </div>
+        {/* Resolution Badge */}
+        {film.max_resolution && (
+          <div className="absolute top-3 left-3 z-10 pointer-events-none">
+            <span className="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-extrabold uppercase text-amber-300 border border-amber-500/30 backdrop-blur-md shadow-md flex items-center gap-1">
+              {film.subject_type === 'series' ? <Tv className="w-3 h-3 text-amber-400" /> : <FilmIcon className="w-3 h-3 text-amber-400" />}
+              <span>{film.max_resolution}</span>
+            </span>
+          </div>
+        )}
 
         {/* Hover Quick Play Overlay */}
         <motion.div
@@ -90,26 +98,29 @@ export default function FilmCard({ film, isWatchlisted = false, csrfToken = '' }
       </div>
 
       {/* Card Info Details */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-2 bg-gradient-to-b from-zinc-900/60 to-zinc-950">
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-1.5 bg-gradient-to-b from-zinc-900/60 to-zinc-950">
         <div>
-          <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-400 mb-1">
-            <span className="font-semibold text-zinc-400">{film.release_year}</span>
-            <span className="flex items-center gap-1 font-bold text-amber-400">
-              <Star className="w-3 h-3 fill-amber-400" />
-              <span>{film.rating ? Number(film.rating).toFixed(1) : '0.0'}</span>
-            </span>
-          </div>
-
-          <a href={showUrl} className="block group-hover:text-amber-300 transition-colors">
+          <a href={showUrl} className="block group-hover:text-amber-300 transition-colors mb-1">
             <h3 className="font-serif font-bold text-sm text-white line-clamp-1 leading-snug">
               {film.title}
             </h3>
           </a>
+          
+          {/* Metadata Row with Colored Age Rating Badge */}
+          <div className="flex items-center gap-1.5 text-[10.5px] text-zinc-400 font-medium flex-wrap">
+            <span className={`px-1.5 py-0.5 rounded-md border text-[9.5px] font-extrabold uppercase tracking-wider ${getAgeBadgeStyle(formattedAge)}`}>
+              {formattedAge}
+            </span>
+            <span className="text-zinc-500">•</span>
+            <span>{formattedDur}</span>
+            <span className="text-zinc-500">•</span>
+            <span>{film.release_year || '2024'}</span>
+          </div>
         </div>
 
         {/* Genres Pill List */}
         {film.genres && film.genres.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-hidden">
+          <div className="flex items-center gap-1.5 overflow-hidden mt-1">
             {film.genres.slice(0, 2).map((g) => (
               <span key={g.id || g.slug || g.name} className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[9.5px] font-semibold text-zinc-400 truncate">
                 {g.name}

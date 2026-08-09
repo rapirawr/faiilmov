@@ -62,7 +62,7 @@ class BrowseController extends Controller
             $noResults = $films && $films->total() === 0;
         } else {
             // Standard filter browse
-            $query = Film::with('genres');
+            $query = Film::forActiveProfile()->with('genres');
 
             if ($genreSlug) {
                 $query->whereHas('genres', fn($q) => $q->where('slug', $genreSlug));
@@ -85,7 +85,7 @@ class BrowseController extends Controller
         }
 
         $suggestedFilms = $noResults
-            ? Film::with('genres')->orderByDesc('rating')->limit(6)->get()
+            ? Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(6)->get()
             : collect();
 
         return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation'));

@@ -96,4 +96,13 @@ class User extends Authenticatable
     {
         return $this->notifications()->where('is_read', false);
     }
+
+    public function activeProfile()
+    {
+        $profileId = session('active_profile_id');
+        if ($profileId) {
+            return $this->profiles()->find($profileId);
+        }
+        return null;
+    }
 }

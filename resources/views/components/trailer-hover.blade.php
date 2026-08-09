@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $film->title }} - faiilmov</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @viteReactRefresh
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
 <body class="bg-dark-950 text-white">
     <div id="app">

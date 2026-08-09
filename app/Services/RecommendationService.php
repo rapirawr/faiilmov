@@ -14,23 +14,23 @@ class RecommendationService
     ) {}
 
     /**
-     * Personalized recommendations based on user's watch history
-     * Uses collaborative + content-based filtering
+     * Personalized recommendations based on user's watch history for active profile
      */
-    public function getPersonalizedForUser(?User $user, int $limit = 12): Collection
+    public function getPersonalizedForUser(?User $user, $profileId = null, int $limit = 12): Collection
     {
         if (!$user) {
             return collect();
         }
 
         $history = WatchHistory::where('user_id', $user->id)
+            ->where('profile_id', $profileId)
             ->with('film.genres')
             ->orderByDesc('updated_at')
             ->limit(20)
             ->get();
 
         if ($history->isEmpty()) {
-            return Film::orderByDesc('rating')->limit($limit)->get();
+            return Film::forActiveProfile()->orderByDesc('rating')->limit($limit)->get();
         }
 
         $watchedIds = $history->pluck('film_id')->toArray();
@@ -53,13 +53,15 @@ class RecommendationService
         $topGenreIds = array_slice(array_keys($genreScores), 0, 3);
 
         if (empty($topGenreIds)) {
-            return Film::whereNotIn('id', $watchedIds)
+            return Film::forActiveProfile()
+                ->whereNotIn('id', $watchedIds)
                 ->orderByDesc('rating')
                 ->limit($limit)
                 ->get();
         }
 
-        $recommendations = Film::whereNotIn('id', $watchedIds)
+        $recommendations = Film::forActiveProfile()
+            ->whereNotIn('id', $watchedIds)
             ->whereHas('genres', fn($q) => $q->whereIn('genres.id', $topGenreIds))
             ->orderByDesc('rating')
             ->orderByDesc('view_count')
@@ -77,7 +79,8 @@ class RecommendationService
         }
 
         if ($recommendations->count() < $limit) {
-            $filler = Film::whereNotIn('id', $watchedIds)
+            $filler = Film::forActiveProfile()
+                ->whereNotIn('id', $watchedIds)
                 ->whereNotIn('id', $recommendations->pluck('id')->toArray())
                 ->orderByDesc('rating')
                 ->limit($limit - $recommendations->count())
@@ -89,13 +92,14 @@ class RecommendationService
     }
 
     /**
-     * Get films similar to user's last watched film
+     * Get films similar to active profile's last watched film
      */
-    public function getBecauseYouWatched(?User $user, int $limit = 12): Collection
+    public function getBecauseYouWatched(?User $user, $profileId = null, int $limit = 12): Collection
     {
         if (!$user) return collect();
 
         $lastWatched = WatchHistory::where('user_id', $user->id)
+            ->where('profile_id', $profileId)
             ->with('film')
             ->orderByDesc('updated_at')
             ->first();
@@ -106,6 +110,7 @@ class RecommendationService
 
         $film = $lastWatched->film;
         $watchedIds = WatchHistory::where('user_id', $user->id)
+            ->where('profile_id', $profileId)
             ->pluck('film_id')
             ->toArray();
 
@@ -118,7 +123,8 @@ class RecommendationService
         if ($similar->isEmpty()) {
             $genreIds = $film->genres->pluck('id')->toArray();
             if (!empty($genreIds)) {
-                $similar = Film::whereNotIn('id', $watchedIds)
+                $similar = Film::forActiveProfile()
+                    ->whereNotIn('id', $watchedIds)
                     ->whereHas('genres', fn($q) => $q->whereIn('genres.id', $genreIds))
                     ->orderByDesc('rating')
                     ->limit($limit)
@@ -131,7 +137,8 @@ class RecommendationService
 
     private function getSimilarByEmbedding(array $sourceEmbedding, array $excludeIds, int $limit): Collection
     {
-        $candidates = Film::whereNotIn('id', $excludeIds)
+        $candidates = Film::forActiveProfile()
+            ->whereNotIn('id', $excludeIds)
             ->whereNotNull('ai_embeddings')
             ->limit(500)
             ->get();
@@ -159,7 +166,8 @@ class RecommendationService
      */
     public function getComingSoon(int $limit = 12): Collection
     {
-        return Film::where(function ($q) {
+        return Film::forActiveProfile()
+            ->where(function ($q) {
                 $q->where('available_from', '>', now())
                   ->orWhere('release_year', '>', date('Y'));
             })

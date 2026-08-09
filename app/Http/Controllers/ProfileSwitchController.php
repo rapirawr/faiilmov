@@ -19,15 +19,23 @@ class ProfileSwitchController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'avatar' => 'nullable|string',
+            'is_child' => 'nullable|boolean',
             'pin' => 'nullable|string|max:4',
         ]);
 
         $profile = Auth::user()->profiles()->create([
             'name' => $request->name,
+            'avatar' => $request->avatar ?? null,
+            'is_child' => $request->boolean('is_child'),
             'pin' => $request->pin ? Hash::make($request->pin) : null,
         ]);
 
-        return response()->json(['status' => 'ok', 'profile' => $profile]);
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok', 'profile' => $profile]);
+        }
+
+        return redirect()->route('profiles.index')->with('success', "Profil {$profile->name} berhasil dibuat.");
     }
 
     public function switch(Profile $profile)
@@ -37,7 +45,23 @@ class ProfileSwitchController extends Controller
         }
 
         session(['active_profile_id' => $profile->id]);
-        return response()->json(['status' => 'ok']);
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return redirect()->route('home')->with('success', "Beralih ke profil {$profile->name}.");
+    }
+
+    public function switchMain(Request $request)
+    {
+        session()->forget('active_profile_id');
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return redirect()->route('home')->with('success', 'Beralih ke Akun Utama.');
     }
 
     public function destroy(Profile $profile)
@@ -45,7 +69,17 @@ class ProfileSwitchController extends Controller
         if ($profile->user_id !== Auth::id()) {
             abort(403);
         }
+
+        if (session('active_profile_id') == $profile->id) {
+            session()->forget('active_profile_id');
+        }
+
         $profile->delete();
-        return response()->json(['status' => 'ok']);
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return redirect()->route('profiles.index')->with('success', 'Profil telah dihapus.');
     }
 }

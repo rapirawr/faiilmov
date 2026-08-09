@@ -17,33 +17,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Tailwind CSS CDN & Config -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        amber: {
-                            50: '#faf9f7',
-                            100: '#f4f3ef',
-                            200: '#eae8e2',
-                            300: '#e4e2dd',
-                            400: '#e4e2dd',
-                            500: '#e4e2dd',
-                            600: '#cfcdb8',
-                            700: '#b2b09a',
-                            800: '#8c8a77',
-                            900: '#646255',
-                            950: '#3a3831',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased min-h-screen selection:bg-white selection:text-black">
@@ -60,7 +34,7 @@
         
         <!-- Sidebar Navigation -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
-               class="fixed inset-y-0 left-0 z-50 w-72 bg-zinc-900/95 border-r border-white/10 backdrop-blur-2xl transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-2xl">
+               class="-translate-x-full lg:translate-x-0 fixed inset-y-0 left-0 z-50 w-72 bg-zinc-900/95 border-r border-white/10 backdrop-blur-2xl transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-2xl">
             
             <div class="flex-1 overflow-y-auto px-4 py-5 space-y-5 scrollbar-thin scrollbar-thumb-zinc-800">
                 
@@ -124,10 +98,17 @@
                         <!-- Tree Links -->
                         <div x-show="openGroups.content" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
                             <a href="{{ route('admin.films.index') }}" 
-                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.index') || request()->routeIs('admin.films.edit') || request()->routeIs('admin.films.create') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>
                                 <i data-lucide="film" class="w-3.5 h-3.5"></i>
                                 <span>Semua Film</span>
+                            </a>
+
+                            <a href="{{ route('admin.films.content_rating') }}" 
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                                <span class="text-zinc-600 font-mono text-[10px]">└</span>
+                                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                                <span>Rating Massal</span>
                             </a>
 
                             <a href="{{ route('admin.genres.index') }}" 
@@ -147,7 +128,7 @@
                     </div>
 
                     <!-- Group 2: Moderasi & User -->
-                    <div x-show="!searchQuery || 'ulasan user pengguna moderasi'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
+                    <div x-show="!searchQuery || 'ulasan user pengguna moderasi watch party nobar'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
                         <button @click="openGroups.moderation = !openGroups.moderation" 
                                 class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors cursor-pointer border border-white/5">
                             <div class="flex items-center gap-2.5">
@@ -155,13 +136,20 @@
                                 <span>Moderasi & User</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">2</span>
+                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">3</span>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform duration-200" :class="openGroups.moderation ? 'rotate-180' : ''"></i>
                             </div>
                         </button>
 
                         <!-- Tree Links -->
                         <div x-show="openGroups.moderation" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                            <a href="{{ route('admin.watch_parties.index') }}" 
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.watch_parties.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                                <span class="text-zinc-600 font-mono text-[10px]">└</span>
+                                <i data-lucide="tv" class="w-3.5 h-3.5"></i>
+                                <span>Watch Parties</span>
+                            </a>
+
                             <a href="{{ route('admin.reviews.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.reviews.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>
@@ -179,7 +167,7 @@
                     </div>
 
                     <!-- Group 3: Sistem & Log -->
-                    <div x-show="!searchQuery || 'settings pengaturan log activity audit'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
+                    <div x-show="!searchQuery || 'settings pengaturan log activity audit changelog rilis release updates'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
                         <button @click="openGroups.system = !openGroups.system" 
                                 class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors cursor-pointer border border-white/5">
                             <div class="flex items-center gap-2.5">
@@ -187,13 +175,20 @@
                                 <span>Sistem & Log</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">2</span>
+                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">3</span>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform duration-200" :class="openGroups.system ? 'rotate-180' : ''"></i>
                             </div>
                         </button>
 
                         <!-- Tree Links -->
                         <div x-show="openGroups.system" x-collapse class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                            <a href="{{ route('admin.changelogs.index') }}" 
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                                <span class="text-zinc-600 font-mono text-[10px]">└</span>
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>Changelog & Updates</span>
+                            </a>
+
                             <a href="{{ route('admin.activity_logs.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.activity_logs.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>

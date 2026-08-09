@@ -46,7 +46,7 @@ class HomeController extends Controller
             $films = $this->filmSearch->search($searchQuery, $filters, 30, $request->ip());
         } else {
             // Standard browse when no query
-            $query = Film::with('genres');
+            $query = Film::forActiveProfile()->with('genres');
 
             if ($genreSlug) {
                 $query->whereHas('genres', fn($q) => $q->where('slug', $genreSlug));
@@ -68,20 +68,20 @@ class HomeController extends Controller
         
         $featuredIds = json_decode(\App\Models\Setting::get('featured_film_ids', '[]'), true) ?: [];
         if (!empty($featuredIds)) {
-            $heroFilms = Film::with('genres')->whereIn('id', array_map('intval', $featuredIds))->get();
+            $heroFilms = Film::forActiveProfile()->with('genres')->whereIn('id', array_map('intval', $featuredIds))->get();
             if ($heroFilms->isEmpty()) {
-                $heroFilms = Film::with('genres')->orderByDesc('rating')->limit(5)->get();
+                $heroFilms = Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(5)->get();
             }
         } else {
-            $heroFilms = Film::with('genres')->orderByDesc('rating')->limit(5)->get();
+            $heroFilms = Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(5)->get();
         }
         
-        $popularSeries = Film::with('genres')->where('subject_type', 'series')->orderByDesc('rating')->limit(12)->get();
+        $popularSeries = Film::forActiveProfile()->with('genres')->where('subject_type', 'series')->orderByDesc('rating')->limit(12)->get();
         if ($popularSeries->isEmpty()) {
-            $popularSeries = Film::with('genres')->orderByDesc('rating')->limit(12)->get();
+            $popularSeries = Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(12)->get();
         }
         
-        $trendingMovies = Film::with('genres')
+        $trendingMovies = Film::forActiveProfile()->with('genres')
             ->where('subject_type', 'movie')
             ->orderByDesc('view_count')
             ->orderByDesc('rating')
@@ -90,7 +90,7 @@ class HomeController extends Controller
             ->get();
             
         if ($trendingMovies->isEmpty()) {
-            $trendingMovies = Film::with('genres')
+            $trendingMovies = Film::forActiveProfile()->with('genres')
                 ->orderByDesc('view_count')
                 ->orderByDesc('rating')
                 ->orderByDesc('id')
@@ -103,21 +103,27 @@ class HomeController extends Controller
         $comingSoon = $this->recommendation->getComingSoon(12);
         
         if (Auth::check()) {
-            $continueWatching = Auth::user()
-                ->watchHistories()
+            $activeProfileId = session('active_profile_id');
+
+            $continueWatching = \App\Models\WatchHistory::where('user_id', Auth::id())
+                ->where('profile_id', $activeProfileId)
                 ->has('film')
-                ->with(['film' => fn($q) => $q->select('id', 'title', 'slug', 'poster_url', 'rating', 'release_year', 'subject_type', 'max_resolution')])
+                ->with(['film' => fn($q) => $q->select('id', 'title', 'slug', 'poster_url', 'rating', 'release_year', 'subject_type', 'max_resolution', 'content_rating', 'duration_minutes')])
                 ->whereNotExists(fn($q) => $q->from('watchlists')->whereColumn('watchlists.film_id', 'watch_histories.film_id')->whereColumn('watchlists.user_id', 'watch_histories.user_id')->where('status', 'completed'))
                 ->orderByDesc('updated_at')
                 ->limit(8)
-                ->get()
-                ->pluck('film')
-                ->filter();
+                ->get();
             
-            $becauseRecommendations = $this->recommendation->getBecauseYouWatched(Auth::user(), 12);
+            $becauseRecommendations = $this->recommendation->getBecauseYouWatched(Auth::user(), $activeProfileId, 12);
             
             if ($becauseRecommendations->isNotEmpty()) {
-                $lastWatchedFilm = Auth::user()->watchHistories()->has('film')->with('film')->orderByDesc('updated_at')->first();
+                $lastWatchedFilm = \App\Models\WatchHistory::where('user_id', Auth::id())
+                    ->where('profile_id', $activeProfileId)
+                    ->has('film')
+                    ->with('film')
+                    ->orderByDesc('updated_at')
+                    ->first();
+
                 if ($lastWatchedFilm && $lastWatchedFilm->film) {
                     $becauseYouWatched = [
                         'source_film' => $lastWatchedFilm->film,

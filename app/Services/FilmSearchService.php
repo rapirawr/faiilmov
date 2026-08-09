@@ -57,7 +57,7 @@ class FilmSearchService
 
     private function aiSearch(string $originalQuery, array $interpretation, array $filters, int $perPage): LengthAwarePaginator
     {
-        $filmQuery = Film::with('genres');
+        $filmQuery = Film::forActiveProfile()->with('genres');
 
         $this->applyAiFilters($filmQuery, $interpretation);
 
@@ -138,7 +138,7 @@ class FilmSearchService
         $normalizedQ = str_replace(['and', 'dan', '&', '-', ' ', ':', '.', "'", '"', '!', '?'], '', strtolower($cleanQ));
         $sqlNormalizeTitle = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(title, 'and', ''), 'dan', ''), '&', ''), '-', ''), ' ', ''), ':', ''), '.', ''), '!', ''), '?', ''))";
 
-        $filmQuery = Film::with('genres')
+        $filmQuery = Film::forActiveProfile()->with('genres')
             ->selectRaw("films.*, 
                 CASE 
                     WHEN LOWER(title) = LOWER(?) THEN 100

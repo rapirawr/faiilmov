@@ -15,8 +15,11 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $activeProfile = $user->activeProfile();
+        $activeProfileId = session('active_profile_id');
 
-        $watchlists = $user->watchlists()
+        $watchlists = Watchlist::where('user_id', $user->id)
+            ->where('profile_id', $activeProfileId)
             ->whereHas('film')
             ->with('film')
             ->latest()
@@ -28,7 +31,8 @@ class ProfileController extends Controller
             ->latest()
             ->get();
 
-        $watchHistories = $user->watchHistories()
+        $watchHistories = WatchHistory::where('user_id', $user->id)
+            ->where('profile_id', $activeProfileId)
             ->whereHas('film')
             ->with(['film.genres', 'film.seasons.episodes'])
             ->latest('updated_at')
@@ -50,7 +54,7 @@ class ProfileController extends Controller
         arsort($genreCounts);
         $topGenre = !empty($genreCounts) ? array_key_first($genreCounts) : 'Beragam';
 
-        return view('profile', compact('user', 'watchlists', 'reviews', 'watchHistories', 'totalHoursWatched', 'topGenre'));
+        return view('profile', compact('user', 'activeProfile', 'watchlists', 'reviews', 'watchHistories', 'totalHoursWatched', 'topGenre'));
     }
 
     public function update(Request $request)
@@ -106,7 +110,10 @@ class ProfileController extends Controller
 
     public function clearWatchlist()
     {
-        Watchlist::where('user_id', Auth::id())->delete();
+        Watchlist::where('user_id', Auth::id())
+            ->where('profile_id', session('active_profile_id'))
+            ->delete();
+
         return redirect()->route('profile')->with('success', 'Watchlist berhasil dikosongkan.');
     }
 
@@ -140,7 +147,9 @@ class ProfileController extends Controller
 
     public function clearHistory()
     {
-        Auth::user()->watchHistories()->delete();
+        WatchHistory::where('user_id', Auth::id())
+            ->where('profile_id', session('active_profile_id'))
+            ->delete();
 
         return redirect()->back()->with('success', 'Seluruh riwayat tontonan berhasil dibersihkan.');
     }

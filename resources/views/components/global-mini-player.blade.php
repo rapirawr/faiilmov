@@ -24,7 +24,6 @@
         <div class="absolute top-0 inset-x-0 z-20 bg-gradient-to-b from-black/90 via-black/60 to-transparent p-2.5 flex items-center justify-between gap-2 pointer-events-auto transition-opacity duration-200"
              :class="showControls || !isPlaying ? 'opacity-100' : 'opacity-0'">
             <div class="flex items-center gap-2 min-w-0">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
                 <span class="text-[11px] font-bold text-white truncate" x-text="filmTitle"></span>
             </div>
             <div class="flex items-center gap-1 shrink-0">

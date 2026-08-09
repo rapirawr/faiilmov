@@ -20,6 +20,11 @@ class AdminActivityLog extends Model
         return $this->belongsTo(User::class, 'admin_id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
+    }
+
     public static function log(string $action, ?string $description = null, ?string $targetType = null, ?int $targetId = null): ?static
     {
         $adminId = Auth::id();

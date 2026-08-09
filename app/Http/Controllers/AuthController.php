@@ -78,6 +78,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        if ($request->session()->has('active_profile_id')) {
+            return redirect()->back()->with('error', 'Gagal Keluar: Anda sedang menggunakan profil sub-akun. Silakan beralih ke Akun Utama terlebih dahulu untuk dapat Keluar (Log Out).');
+        }
+
         $userId = Auth::id();
         $email = Auth::user()?->email;
         

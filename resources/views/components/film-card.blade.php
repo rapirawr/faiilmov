@@ -1,12 +1,35 @@
 @props(['film'])
 
 @php
+    $age = $film->content_rating ? strtoupper($film->content_rating) : '13+';
+    if (in_array($age, ['R', 'NC-17'])) $age = '18+';
+    if (in_array($age, ['PG', 'G'])) $age = 'SU';
+    
+    $ageBadgeClass = match($age) {
+        '18+' => 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        '16+' => 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+        '13+' => 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        'SU'  => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        default => 'bg-zinc-800 text-zinc-300 border-white/20',
+    };
+
+    $dur = '1h 30m';
+    if ($film->duration_minutes > 0) {
+        $h = floor($film->duration_minutes / 60);
+        $m = $film->duration_minutes % 60;
+        $dur = ($h > 0 ? "{$h}h " : '') . ($m > 0 ? "{$m}m" : '');
+    } elseif ($film->subject_type === 'series') {
+        $dur = 'TV Series';
+    }
+
     $filmData = [
         'id' => $film->id,
         'title' => $film->title,
         'slug' => $film->slug,
         'rating' => $film->rating,
         'release_year' => $film->release_year,
+        'duration_minutes' => $film->duration_minutes,
+        'content_rating' => $film->content_rating,
         'subject_type' => $film->subject_type,
         'max_resolution' => $film->max_resolution,
         'thumbnail_url' => $film->thumbnail_url,
@@ -21,7 +44,7 @@
     
     <!-- Blade Fallback -->
     <div class="group/card glass-card rounded-2xl overflow-hidden p-2.5 hover:border-white/30 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between shadow-md h-full">
-        <!-- Poster with Glass Rating Chip & Resolution Badge -->
+        <!-- Poster -->
         <a href="{{ route('film.show', $film->slug) }}" class="relative aspect-[2/3] block rounded-xl overflow-hidden bg-dark-900 mb-2">
             <img src="{{ $film->thumbnail_url }}" 
                  alt="{{ $film->title }}" 
@@ -30,11 +53,6 @@
                  width="320"
                  height="480"
                  class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
-            
-            <div class="absolute top-2 right-2 bg-dark-950/80 border border-white/10 text-amber-400 font-bold px-2.5 py-1 text-xs rounded-xl flex items-center gap-1 shadow-md">
-                <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
-                <span>{{ number_format($film->rating, 1) }}</span>
-            </div>
 
             @if($film->max_resolution)
                 <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">
@@ -46,14 +64,17 @@
         <!-- Card Info -->
         <div class="p-1 flex-1 flex flex-col justify-between">
             <div>
-                <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-white group-hover/card:text-zinc-300 transition-colors truncate block w-full" title="{{ $film->title }}">
+                <a href="{{ route('film.show', $film->slug) }}" class="font-semibold text-xs text-white group-hover/card:text-zinc-300 transition-colors truncate block w-full mb-1" title="{{ $film->title }}">
                     {{ $film->title }}
                 </a>
-                <div class="flex items-center justify-between text-[11px] text-zinc-400 mt-1">
-                    <span>{{ $film->release_year }}</span>
-                    <span class="text-[10px] text-zinc-400 font-semibold truncate max-w-[80px]">
-                        {{ $film->genres->first()?->name ?? strtoupper($film->subject_type) }}
+                <div class="flex items-center gap-1.5 text-[10.5px] text-zinc-400 font-medium flex-wrap">
+                    <span class="px-1.5 py-0.5 rounded-md border text-[9.5px] font-extrabold uppercase tracking-wider {{ $ageBadgeClass }}">
+                        {{ $age }}
                     </span>
+                    <span class="text-zinc-500">•</span>
+                    <span>{{ $dur }}</span>
+                    <span class="text-zinc-500">•</span>
+                    <span>{{ $film->release_year }}</span>
                 </div>
             </div>
         </div>

@@ -1,8 +1,8 @@
 <!-- Top Navigation Header Component -->
-<header class="fixed top-0 left-0 right-0 z-40 h-20 bg-dark-950/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-8 gap-4 pointer-events-none [&>*]:pointer-events-auto shadow-md">
+<header class="fixed top-0 left-0 right-0 z-40 h-20 bg-dark-950/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-2.5 sm:px-8 gap-2 sm:gap-4 pointer-events-none [&>*]:pointer-events-auto shadow-md">
     
     <!-- Left: Circular Toggle & Brand Logo -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 shrink-0 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center border border-white/10 transition-colors shadow-sm lg:hidden">
             <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Center: Compact Capsule Autocomplete Search Bar with Expand/Collapse Animation -->
-    <div class="relative flex-1 max-w-xl mx-2 sm:mx-4 flex justify-center"
+    <div class="relative flex-1 max-w-xl mx-1 sm:mx-4 flex justify-start sm:justify-center min-w-0"
          x-data="{ 
              ...searchAutocomplete(), 
              isExpanded: false, 
@@ -39,7 +39,7 @@
         <form :action="'{{ route('browse') }}'" 
               method="GET" 
               class="relative flex items-center bg-dark-900/90 backdrop-blur-md rounded-full border border-white/10 focus-within:border-white/30 focus-within:bg-dark-950 transition-all duration-300 ease-out shadow-inner overflow-hidden"
-              :class="isExpanded ? 'w-full max-w-[500px]' : 'w-[220px] sm:w-[260px]'"
+              :class="isExpanded ? 'w-full max-w-[500px]' : 'w-[145px] xs:w-[185px] sm:w-[260px]'"
               @submit="selectFocused()">
             <!-- Search Icon (Left) -->
             <i data-lucide="search" class="w-4 h-4 text-zinc-400 shrink-0 ml-3.5 pointer-events-none transition-colors duration-200"></i>
@@ -92,6 +92,7 @@
 
         <!-- Active Search Modal Panel Dropdown -->
         <div x-show="showPanel"
+             x-cloak
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 translate-y-1 scale-98"
              x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -222,24 +223,331 @@
         </div>
     </div>
 
-    <!-- Right Action Buttons: Capsule Pill -->
+    <!-- Right Action Buttons: Capsule Pill & Popovers -->
     <div class="flex items-center gap-2.5">
+
+
         <a href="{{ route('download.app') }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all text-xs font-semibold shadow-sm" title="App Mobile Flutter">
             <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
             <span>App Mobile</span>
         </a>
 
         @auth
-            <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm">
-                <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center font-bold text-xs text-zinc-950 shadow overflow-hidden">
-                    @if(Auth::user()->avatar)
-                        <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
-                    @else
-                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                    @endif
+            @php
+                $activeProfile = Auth::user()->activeProfile();
+                $userProfiles = Auth::user()->profiles;
+            @endphp
+
+            <!-- Notification Bell Dropdown -->
+            <div class="relative"
+                 x-data="{ 
+                     open: false, 
+                     unreadCount: 0, 
+                     items: [], 
+                     loading: false,
+                     init() {
+                         this.fetchRecent();
+                         setInterval(() => this.fetchRecent(), 30000);
+                     },
+                     async fetchRecent() {
+                         try {
+                             let res = await fetch('{{ route('notifications.recent') }}');
+                             if (res.ok) {
+                                 let data = await res.json();
+                                 this.unreadCount = data.unread_count;
+                                 this.items = data.notifications;
+                             }
+                         } catch (e) {}
+                     },
+                     async markAllRead() {
+                         try {
+                             let res = await fetch('{{ route('notifications.read-all') }}', {
+                                 method: 'POST',
+                                 headers: {
+                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                     'Accept': 'application/json'
+                                 }
+                             });
+                             if (res.ok) {
+                                 this.unreadCount = 0;
+                                 this.items.forEach(i => i.is_read = true);
+                             }
+                         } catch(e) {}
+                     },
+                     async handleClick(notif) {
+                         if (!notif.is_read) {
+                             fetch('/notifications/' + notif.id + '/read', {
+                                 method: 'POST',
+                                 headers: {
+                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                     'Accept': 'application/json'
+                                 }
+                             });
+                         }
+                         if (notif.url) {
+                             window.location.href = notif.url;
+                         }
+                     }
+                 }"
+                 @click.outside="open = false">
+                
+                <button @click="open = !open; if(open) fetchRecent()" 
+                        class="relative w-9 h-9 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center border border-white/10 transition-all cursor-pointer">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    
+                    <!-- Unread Badge -->
+                    <span x-show="unreadCount > 0" 
+                          x-cloak
+                          x-text="unreadCount > 9 ? '9+' : unreadCount"
+                          class="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white font-extrabold text-[9px] min-w-[16px] text-center shadow-lg animate-pulse">
+                    </span>
+                </button>
+
+                <!-- Notifications Dropdown Panel -->
+                <div x-show="open" 
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                     class="absolute right-0 top-full mt-3 w-80 sm:w-96 bg-zinc-900/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden z-50">
+                    
+                    <!-- Header -->
+                    <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+                            <span class="font-bold text-xs text-white">Notifikasi</span>
+                            <span x-show="unreadCount > 0" x-text="unreadCount + ' Baru'" class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30"></span>
+                        </div>
+                        <button @click="markAllRead()" class="text-[11px] font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer">
+                            Tandai semua dibaca
+                        </button>
+                    </div>
+
+                    <!-- List -->
+                    <div class="max-h-80 overflow-y-auto divide-y divide-white/5 no-scrollbar">
+                        <template x-if="items.length === 0">
+                            <div class="p-6 text-center text-xs text-zinc-500 space-y-1">
+                                <i data-lucide="bell-off" class="w-8 h-8 mx-auto text-zinc-600 mb-2"></i>
+                                <p class="font-medium text-zinc-400">Tidak ada notifikasi</p>
+                                <p class="text-[10px]">Semua pembaruan film & ulasan akan muncul di sini</p>
+                            </div>
+                        </template>
+
+                        <template x-for="item in items" :key="item.id">
+                            <div @click="handleClick(item)" 
+                                 :class="!item.is_read ? 'bg-amber-500/5 hover:bg-amber-500/10' : 'hover:bg-white/5'"
+                                 class="p-3.5 flex items-start gap-3 transition-colors cursor-pointer group">
+                                <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs mt-0.5"
+                                     :class="{
+                                         'bg-amber-500/20 text-amber-400 border border-amber-500/30': item.type === 'new_film',
+                                         'bg-sky-500/20 text-sky-400 border border-sky-500/30': item.type === 'review_reply',
+                                         'bg-purple-500/20 text-purple-400 border border-purple-500/30': item.type !== 'new_film' && item.type !== 'review_reply'
+                                     }">
+                                    <template x-if="item.type === 'new_film'">
+                                        <i data-lucide="film" class="w-4 h-4"></i>
+                                    </template>
+                                    <template x-if="item.type === 'review_reply'">
+                                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                                    </template>
+                                    <template x-if="item.type !== 'new_film' && item.type !== 'review_reply'">
+                                        <i data-lucide="bell" class="w-4 h-4"></i>
+                                    </template>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-zinc-200 group-hover:text-white line-clamp-2" :class="{ 'font-semibold': !item.is_read }" x-text="item.message"></p>
+                                    <span class="text-[10px] text-zinc-500 mt-1 block" x-text="item.time_ago"></span>
+                                </div>
+                                <div x-show="!item.is_read" class="w-2 h-2 rounded-full bg-amber-400 shrink-0 mt-1.5 shadow-glow"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Footer Link -->
+                    <div class="p-2.5 border-t border-white/10 text-center bg-zinc-950/50">
+                        <a href="{{ route('notifications.index') }}" class="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1">
+                            <span>Lihat Semua Notifikasi</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
                 </div>
-                <span class="text-xs font-semibold text-white hidden lg:inline">{{ Auth::user()->name }}</span>
-            </a>
+            </div>
+
+            <!-- Profile & Multi-Account Switcher Dropdown -->
+            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                <button @click="open = !open" 
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm cursor-pointer group">
+                    
+                    <!-- Avatar Thumbnail -->
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center font-bold text-xs text-black shadow overflow-hidden shrink-0">
+                        @if($activeProfile)
+                            @if($activeProfile->avatar)
+                                <img src="{{ $activeProfile->avatar }}" class="w-full h-full object-cover">
+                            @else
+                                {{ strtoupper(substr($activeProfile->name, 0, 2)) }}
+                            @endif
+                        @elseif(Auth::user()->avatar)
+                            <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
+                        @else
+                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                        @endif
+                    </div>
+
+                    <!-- Active Profile Name & Badge -->
+                    <div class="flex items-center gap-1.5 text-left hidden lg:flex">
+                        <span class="text-xs font-bold text-white max-w-[100px] truncate">
+                            {{ $activeProfile ? $activeProfile->name : Auth::user()->name }}
+                        </span>
+                        @if($activeProfile && $activeProfile->is_child)
+                            <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Anak</span>
+                        @elseif($activeProfile)
+                            <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-zinc-700 text-zinc-300">Profil</span>
+                        @else
+                            <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Utama</span>
+                        @endif
+                    </div>
+
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                </button>
+
+                <!-- Profile Dropdown Menu -->
+                <div x-show="open" 
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                     class="absolute right-0 top-full mt-3 w-64 bg-zinc-900/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden z-50">
+                    
+                    <!-- Current Selected Profile Header -->
+                    <div class="px-4 py-3 border-b border-white/10 bg-white/5">
+                        <p class="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-1">Profil Aktif</p>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-amber-500 text-black flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
+                                @if($activeProfile && $activeProfile->avatar)
+                                    <img src="{{ $activeProfile->avatar }}" class="w-full h-full object-cover">
+                                @elseif(!$activeProfile && Auth::user()->avatar)
+                                    <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ strtoupper(substr($activeProfile ? $activeProfile->name : Auth::user()->name, 0, 2)) }}
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-bold text-white truncate">{{ $activeProfile ? $activeProfile->name : Auth::user()->name }}</p>
+                                <p class="text-[10px] text-zinc-400 truncate">{{ Auth::user()->email }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profiles List (Sub Accounts) -->
+                    <div class="p-2 space-y-1 border-b border-white/10">
+                        <p class="text-[10px] uppercase font-bold text-zinc-500 px-2 pt-1 pb-1 tracking-wider">Ganti Profil</p>
+                        
+                        <!-- Main Account Option -->
+                        <form action="{{ route('profiles.switch-main') }}" method="POST">
+                            @csrf
+                            <button type="submit" 
+                                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ !$activeProfile ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                        @if(Auth::user()->avatar)
+                                            <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
+                                        @else
+                                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                                        @endif
+                                    </div>
+                                    <span class="text-xs font-semibold truncate">{{ Auth::user()->name }} (Utama)</span>
+                                </div>
+                                @if(!$activeProfile)
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                @endif
+                            </button>
+                        </form>
+
+                        <!-- Sub Profiles Options -->
+                        @foreach($userProfiles as $p)
+                            <form action="{{ route('profiles.switch', $p->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" 
+                                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ $activeProfile && $activeProfile->id == $p->id ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/20 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                            @if($p->avatar)
+                                                <img src="{{ $p->avatar }}" class="w-full h-full object-cover">
+                                            @else
+                                                {{ strtoupper(substr($p->name, 0, 2)) }}
+                                            @endif
+                                        </div>
+                                        <span class="text-xs font-medium truncate">{{ $p->name }}</span>
+                                        @if($p->is_child)
+                                            <span class="text-[8px] font-extrabold uppercase px-1 rounded bg-purple-500/20 text-purple-300">Anak</span>
+                                        @endif
+                                    </div>
+                                    @if($activeProfile && $activeProfile->id == $p->id)
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                    @endif
+                                </button>
+                            </form>
+                        @endforeach
+
+                        <a href="{{ route('profiles.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition-colors">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            <span>Kelola & Pilih Profil...</span>
+                        </a>
+                    </div>
+
+                    <!-- Actions List -->
+                    <div class="p-2 space-y-0.5">
+                        <a href="{{ route('profile') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <i data-lucide="user-cog" class="w-4 h-4 text-zinc-400"></i>
+                            <span>Pengaturan Pengguna</span>
+                        </a>
+
+                        <a href="{{ route('notifications.index') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
+                            <i data-lucide="bell" class="w-4 h-4 text-zinc-400"></i>
+                            <span>Halaman Notifikasi</span>
+                        </a>
+
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-amber-300 hover:bg-amber-500/10 transition-colors font-semibold">
+                                <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
+                               <span>Admin Panel</span>
+                            </a>
+                        @endif
+                    </div>
+
+                    <!-- Logout -->
+                    <div class="p-2 border-t border-white/10 bg-zinc-950/40">
+                        @if($activeProfile)
+                            <form action="{{ route('profiles.switch-main') }}" method="POST">
+                                @csrf
+                                <button type="submit" 
+                                        title="Beralih ke Akun Utama terlebih dahulu sebelum dapat Keluar"
+                                        class="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                                        <span>Beralih ke Utama utk Logout</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    <span>Keluar (Log Out)</span>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
+                </div>
+            </div>
         @else
             <a href="{{ route('login') }}" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 hover:text-white transition-all text-xs font-semibold border border-white/10 shadow-sm">
                 <i data-lucide="user" class="w-3.5 h-3.5 text-zinc-400"></i>

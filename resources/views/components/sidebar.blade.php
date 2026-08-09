@@ -1,5 +1,5 @@
 <!-- Left Sidebar Navigation Component -->
-<aside class="fixed top-0 lg:top-20 left-0 bottom-0 z-50 lg:z-30 w-64 bg-dark-950/95 backdrop-blur-xl border-r border-white/10 p-5 flex flex-col justify-between overflow-y-auto space-y-6 transition-transform duration-300 lg:translate-x-0"
+<aside class="-translate-x-full lg:translate-x-0 fixed top-0 lg:top-20 left-0 bottom-0 z-50 lg:z-30 w-64 bg-dark-950/95 backdrop-blur-xl border-r border-white/10 p-5 flex flex-col justify-between overflow-y-auto space-y-6 transition-transform duration-300"
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
     
     <div class="space-y-6">
@@ -48,6 +48,11 @@
             <a href="{{ route('browse', ['sort' => 'rating_desc']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isMostWatched ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                 <i data-lucide="flame" class="w-5 h-5 {{ $isMostWatched ? 'text-amber-400' : 'text-zinc-400' }}"></i>
                 <span>Most Watched</span>
+            </a>
+
+            <a href="{{ route('changelog') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ request()->routeIs('changelog') ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+                <span>Changelog</span>
             </a>
 
             <!-- Gabung Room Nonton Bareng Modal Trigger -->
@@ -129,6 +134,7 @@
 
 <!-- Overlay Backdrop for Mobile Sidebar -->
 <div x-show="sidebarOpen" 
+     x-cloak
      @click="sidebarOpen = false" 
      class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" 
      style="display: none;"></div>

@@ -4,44 +4,145 @@
 @section('page_title', 'Manajemen Film')
 
 @section('content')
-<div x-data="{ 
-        selected: JSON.parse(sessionStorage.getItem('admin_selected_film_ids') || '[]'), 
-        allChecked: false,
-        trashModalOpen: false,
-        init() {
-            this.$watch('selected', (val) => {
-                sessionStorage.setItem('admin_selected_film_ids', JSON.stringify(val));
-                this.updateAllChecked();
-            });
-            this.updateAllChecked();
-        },
-        updateAllChecked() {
-            const pageIds = [{{ implode(',', $films->pluck('id')->toArray()) }}];
-            if (pageIds.length === 0) {
-                this.allChecked = false;
-                return;
-            }
-            this.allChecked = pageIds.every(id => this.selected.includes(id) || this.selected.includes(String(id)));
-        },
-        toggleAll() {
-            const pageIds = [{{ implode(',', $films->pluck('id')->toArray()) }}];
-            if (this.allChecked) {
-                pageIds.forEach(id => {
-                    if (!this.selected.includes(id) && !this.selected.includes(String(id))) {
-                        this.selected.push(id);
-                    }
-                });
+<div x-data="{ trashModalOpen: false }" class="space-y-6 relative">
+
+<script>
+(function() {
+    const PAGE_IDS = [{{ $films->pluck('id')->implode(',') }}];
+    let selectedIds = new Set();
+
+    function updateUI() {
+        const count = selectedIds.size;
+
+        // Update floating toolbar
+        const toolbar = document.getElementById('bulk-toolbar');
+        const countEl = document.getElementById('bulk-count');
+        if (toolbar) toolbar.style.display = count > 0 ? 'flex' : 'none';
+        if (countEl) countEl.textContent = count;
+
+        // Update header checkbox state
+        const headerChk = document.getElementById('chk-all');
+        if (headerChk) {
+            if (PAGE_IDS.length > 0 && PAGE_IDS.every(id => selectedIds.has(id))) {
+                headerChk.indeterminate = false;
+                headerChk.checked = true;
+            } else if (count > 0) {
+                headerChk.indeterminate = true;
+                headerChk.checked = false;
             } else {
-                this.selected = this.selected.filter(id => !pageIds.includes(Number(id)) && !pageIds.includes(String(id)));
+                headerChk.indeterminate = false;
+                headerChk.checked = false;
             }
-        },
-        clearSelection() {
-            this.selected = [];
-            sessionStorage.removeItem('admin_selected_film_ids');
-            this.allChecked = false;
         }
-     }" class="space-y-6 relative">
+
+        // Update visual state of custom checkboxes
+        document.querySelectorAll('.film-chk-visual').forEach(el => {
+            const id = parseInt(el.dataset.id);
+            const isChecked = selectedIds.has(id);
+            el.classList.toggle('bg-white', isChecked);
+            el.classList.toggle('border-white', isChecked);
+            el.classList.toggle('bg-zinc-950', !isChecked);
+            el.classList.toggle('border-white/20', !isChecked);
+            const svg = el.querySelector('svg');
+            if (svg) svg.style.display = isChecked ? 'block' : 'none';
+            // Highlight row
+            const row = el.closest('tr');
+            if (row) row.classList.toggle('bg-white/5', isChecked);
+        });
+
+        // Update visual for header checkbox
+        const headerVisual = document.getElementById('chk-all-visual');
+        const allChecked = PAGE_IDS.length > 0 && PAGE_IDS.every(id => selectedIds.has(id));
+        if (headerVisual) {
+            headerVisual.classList.toggle('bg-white', allChecked);
+            headerVisual.classList.toggle('border-white', allChecked);
+            headerVisual.classList.toggle('bg-zinc-950', !allChecked);
+            headerVisual.classList.toggle('border-white/20', !allChecked);
+            const svg = headerVisual.querySelector('svg');
+            if (svg) svg.style.display = allChecked ? 'block' : 'none';
+        }
+
+        // Update hidden inputs for bulk form
+        const bulkForm = document.getElementById('bulk-delete-form');
+        if (bulkForm) {
+            bulkForm.querySelectorAll('input[name="ids[]"]').forEach(i => i.remove());
+            selectedIds.forEach(id => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'ids[]';
+                inp.value = id;
+                bulkForm.appendChild(inp);
+            });
+        }
+    }
+
+    function clearAll() {
+        selectedIds.clear();
+        updateUI();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Force clean state — ignore any browser-cached checkbox states
+        selectedIds.clear();
+
+        // Header "select all" click
+        const headerChk = document.getElementById('chk-all');
+        if (headerChk) {
+            headerChk.checked = false;
+            headerChk.addEventListener('change', function () {
+                if (this.checked) {
+                    PAGE_IDS.forEach(id => selectedIds.add(id));
+                } else {
+                    PAGE_IDS.forEach(id => selectedIds.delete(id));
+                }
+                updateUI();
+            });
+        }
+
+        // Individual film checkboxes
+        document.querySelectorAll('.film-chk').forEach(chk => {
+            chk.checked = false; // force clear browser cache state
+            chk.addEventListener('change', function () {
+                const id = parseInt(this.value);
+                if (this.checked) selectedIds.add(id);
+                else selectedIds.delete(id);
+                updateUI();
+            });
+        });
+
+        // Clear selection button
+        const clearBtn = document.getElementById('bulk-clear');
+        if (clearBtn) clearBtn.addEventListener('click', clearAll);
+
+        updateUI();
+    });
+})();
+</script>
     
+    <!-- Live Stats Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+        <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/10 flex items-center justify-between">
+            <span class="text-zinc-400 font-semibold">Total Film:</span>
+            <span class="font-extrabold text-white text-sm font-mono">{{ number_format($stats['total'] ?? 0) }}</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/10 flex items-center justify-between">
+            <span class="text-zinc-400 font-semibold">Movie:</span>
+            <span class="font-extrabold text-blue-400 text-sm font-mono">{{ number_format($stats['movies'] ?? 0) }}</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/10 flex items-center justify-between">
+            <span class="text-zinc-400 font-semibold">Series:</span>
+            <span class="font-extrabold text-purple-400 text-sm font-mono">{{ number_format($stats['series'] ?? 0) }}</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/10 flex items-center justify-between">
+            <span class="text-zinc-400 font-semibold">Unrated:</span>
+            <span class="font-extrabold text-amber-400 text-sm font-mono">{{ number_format($stats['unrated'] ?? 0) }}</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/10 flex items-center justify-between col-span-2 sm:col-span-1">
+            <span class="text-zinc-400 font-semibold">Di Sampah:</span>
+            <span class="font-extrabold text-red-400 text-sm font-mono">{{ number_format($stats['trash'] ?? 0) }}</span>
+        </div>
+    </div>
+
     <!-- Top Action Bar -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         
@@ -57,6 +158,15 @@
                 <option value="">Semua Tipe</option>
                 <option value="movie" {{ request('type') === 'movie' ? 'selected' : '' }}>Movie</option>
                 <option value="series" {{ request('type') === 'series' ? 'selected' : '' }}>Series</option>
+            </select>
+
+            <select name="content_rating" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                <option value="">Semua Usia</option>
+                <option value="SU" {{ request('content_rating') === 'SU' ? 'selected' : '' }}>SU (Semua Umur)</option>
+                <option value="13+" {{ request('content_rating') === '13+' ? 'selected' : '' }}>13+</option>
+                <option value="16+" {{ request('content_rating') === '16+' ? 'selected' : '' }}>16+</option>
+                <option value="18+" {{ request('content_rating') === '18+' ? 'selected' : '' }}>18+</option>
+                <option value="UNRATED" {{ request('content_rating') === 'UNRATED' ? 'selected' : '' }}>Unrated (Kosong)</option>
             </select>
 
             <select name="genre" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
@@ -75,6 +185,19 @@
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-3">
+            <form action="{{ route('admin.films.auto_rate_all') }}" method="POST" onsubmit="return confirm('Jalankan Auto-Rate otomatis berbasis genre & sinopsis untuk film yang belum memiliki rating?')">
+                @csrf
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-all cursor-pointer" title="Auto Deteksi Usia Berdasarkan Genre & Sinopsis">
+                    <i data-lucide="wand-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Auto-Rate Massal</span>
+                </button>
+            </form>
+
+            <a href="{{ route('admin.films.content_rating') }}" class="px-3.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-bold text-xs flex items-center gap-2 border border-purple-500/20 transition-all">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                <span>Rating Massal</span>
+            </a>
+
             <!-- Trash Modal Trigger Button -->
             <button type="button" @click="trashModalOpen = true" class="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs flex items-center gap-2 border border-red-500/20 transition-all cursor-pointer">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -105,38 +228,31 @@
                     <tr>
                         <th class="px-4 py-3.5 w-12 text-center">
                             <label class="relative inline-flex items-center justify-center cursor-pointer select-none">
-                                <input type="checkbox" x-model="allChecked" @change="toggleAll()" class="sr-only">
-                                <div class="w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center shadow-sm"
-                                     :class="allChecked 
-                                             ? 'bg-white border-white text-black font-extrabold shadow-white/20' 
-                                             : 'bg-zinc-950 border-white/20 text-transparent hover:border-white/50'">
-                                    <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20">
+                                <input type="checkbox" id="chk-all" autocomplete="off" class="sr-only">
+                                <div id="chk-all-visual" class="w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center shadow-sm bg-zinc-950 border-white/20 hover:border-white/50">
+                                    <svg style="display:none" class="w-3 h-3 fill-current text-black" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
                             </label>
                         </th>
                         <th class="px-4 py-3.5">Film</th>
-                        <th class="px-4 py-3.5">Tipe</th>
+                        <th class="px-4 py-3.5">Tipe & Usia</th>
                         <th class="px-4 py-3.5">Genre</th>
                         <th class="px-4 py-3.5">Rating</th>
                         <th class="px-4 py-3.5">Views</th>
-                        <th class="px-4 py-3.5">Status</th>
+                        <th class="px-4 py-3.5">Kualitas</th>
                         <th class="px-4 py-3.5 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
                     @forelse($films as $film)
-                        <tr class="hover:bg-white/5 transition-colors"
-                            :class="selected.includes({{ $film->id }}) || selected.includes('{{ $film->id }}') ? 'bg-white/5' : ''">
+                        <tr class="hover:bg-white/5 transition-colors">
                             <td class="px-4 py-3.5 text-center">
                                 <label class="relative inline-flex items-center justify-center cursor-pointer select-none">
-                                    <input type="checkbox" value="{{ $film->id }}" x-model="selected" class="sr-only">
-                                    <div class="w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center shadow-sm"
-                                         :class="selected.includes({{ $film->id }}) || selected.includes('{{ $film->id }}')
-                                                 ? 'bg-white border-white text-black font-extrabold shadow-white/20 scale-105' 
-                                                 : 'bg-zinc-950 border-white/20 text-transparent hover:border-white/50'">
-                                        <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20">
+                                    <input type="checkbox" value="{{ $film->id }}" autocomplete="off" class="film-chk sr-only">
+                                    <div class="film-chk-visual w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center shadow-sm bg-zinc-950 border-white/20 hover:border-white/50" data-id="{{ $film->id }}">
+                                        <svg style="display:none" class="w-3 h-3 fill-current text-black" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
@@ -149,10 +265,22 @@
                                     <p class="text-[11px] text-zinc-400">{{ $film->release_year }} • {{ $film->duration_minutes }} mnt</p>
                                 </div>
                             </td>
-                            <td class="px-4 py-3.5">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $film->subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30' }}">
-                                    {{ $film->subject_type }}
-                                </span>
+                            <td class="px-4 py-3.5 space-y-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $film->subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30' }}">
+                                        {{ $film->subject_type }}
+                                    </span>
+
+                                    @if($film->content_rating)
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase {{ in_array($film->content_rating, ['SU','G','PG']) ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30' }}">
+                                            {{ $film->content_rating }}
+                                        </span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold text-zinc-500 bg-white/5 border border-white/10">
+                                            UNRATED
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-4 py-3.5">
                                 <div class="flex flex-wrap gap-1 max-w-[200px]">
@@ -171,7 +299,9 @@
                                 {{ number_format($film->view_count) }}
                             </td>
                             <td class="px-4 py-3.5">
-                                <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">Aktif</span>
+                                <span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold font-mono">
+                                    {{ $film->max_resolution ?: '1080P' }}
+                                </span>
                             </td>
                             <td class="px-4 py-3.5 text-right">
                                 <div class="flex items-center justify-end gap-2">
@@ -207,24 +337,21 @@
     </div>
 
     <!-- Floating Bulk Action Toolbar -->
-    <div x-show="selected.length > 0" x-transition 
+    <div id="bulk-toolbar" style="display:none"
          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-white/20 rounded-full px-6 py-3 shadow-2xl backdrop-blur-xl flex items-center gap-4">
-        <span class="text-xs font-bold text-white"><span x-text="selected.length" class="text-amber-400 font-extrabold"></span> Film Terpilih</span>
+        <span class="text-xs font-bold text-white"><span id="bulk-count" class="text-amber-400 font-extrabold">0</span> Film Terpilih</span>
         
         <div class="h-4 w-[1px] bg-white/20"></div>
 
-        <form action="{{ route('admin.films.bulk_delete') }}" method="POST" @submit="sessionStorage.removeItem('admin_selected_film_ids')" onsubmit="return confirm('Yakin ingin memindahkan semua film terpilih ke tempat sampah?')">
+        <form id="bulk-delete-form" action="{{ route('admin.films.bulk_delete') }}" method="POST" onsubmit="return confirm('Yakin ingin memindahkan semua film terpilih ke tempat sampah?')">
             @csrf
-            <template x-for="id in selected" :key="id">
-                <input type="hidden" name="ids[]" :value="id">
-            </template>
             <button type="submit" class="px-3.5 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold text-xs border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 <span>Hapus ke Sampah</span>
             </button>
         </form>
 
-        <button type="button" @click="clearSelection()" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-semibold text-xs transition-colors cursor-pointer">
+        <button id="bulk-clear" type="button" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-semibold text-xs transition-colors cursor-pointer">
             Batal
         </button>
     </div>

@@ -1,11 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Outfit:wght@400;600;700;800&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', sans-serif;
+    --font-serif: 'Outfit', sans-serif;
 
     --color-amber-50: #faf9f7;
     --color-amber-100: #f4f3ef;
@@ -18,4 +19,18 @@
     --color-amber-800: #8c8a77;
     --color-amber-900: #646255;
     --color-amber-950: #3a3831;
+
+    --color-dark-950: #09090b;
+    --color-dark-900: #121217;
+    --color-dark-800: #181820;
+    --color-dark-700: #272730;
+    --color-dark-600: #3f3f46;
+}
+
+body {
+    font-family: 'Instrument Sans', sans-serif;
+}
+
+[x-cloak] {
+    display: none !important;
 }
