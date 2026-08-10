@@ -12,10 +12,7 @@
         <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
             <a href="{{ route('home') }}" class="hover:text-white transition-colors whitespace-nowrap">Home</a>
             <a href="{{ route('browse') }}" class="hover:text-white transition-colors whitespace-nowrap">Katalog Film</a>
-            <a href="{{ route('changelog') }}" class="hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap">
-                <i data-lucide="history" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span>Changelog</span>
-            </a>
+            <a href="{{ route('changelog') }}" class="hover:text-white transition-colors whitespace-nowrap">Changelog</a>
             <a href="{{ route('privacy-policy') }}" class="hover:text-white transition-colors whitespace-nowrap">Kebijakan Privasi</a>
             <a href="{{ route('terms-of-service') }}" class="hover:text-white transition-colors whitespace-nowrap">Syarat & Ketentuan</a>
             <a href="{{ route('download.app') }}" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition-colors whitespace-nowrap px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
