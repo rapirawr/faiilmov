@@ -4,4 +4,4 @@ Disallow: /watch-party/
 Disallow: /api/
 Allow: /
 
-Sitemap: http://127.0.0.1:8000/sitemap.xml
+Sitemap: http://faiilmov.my.id/sitemap.xml
