@@ -167,7 +167,7 @@
                     </div>
 
                     <!-- Group 3: Sistem & Log -->
-                    <div x-show="!searchQuery || 'settings pengaturan log activity audit changelog rilis release updates'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
+                    <div x-show="!searchQuery || 'settings pengaturan log activity audit changelog rilis release updates api tester postman docs'.includes(searchQuery.toLowerCase())" class="space-y-1.5">
                         <button @click="openGroups.system = !openGroups.system" 
                                 class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors cursor-pointer border border-white/5">
                             <div class="flex items-center gap-2.5">
@@ -175,13 +175,20 @@
                                 <span>Sistem & Log</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">3</span>
+                                <span class="px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-extrabold border border-white/10">4</span>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform duration-200" :class="openGroups.system ? 'rotate-180' : ''"></i>
                             </div>
                         </button>
 
                         <!-- Tree Links -->
                         <div x-show="openGroups.system" x-transition class="pl-5 border-l-2 border-zinc-800 ml-4 space-y-1 pt-1">
+                            <a href="{{ route('admin.api_tester.index') }}" 
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                                <span class="text-zinc-600 font-mono text-[10px]">└</span>
+                                <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                <span>API Tester & Docs</span>
+                            </a>
+
                             <a href="{{ route('admin.changelogs.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>

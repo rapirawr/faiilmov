@@ -207,6 +207,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Site Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+
+    // API Tester & Postman Suite
+    Route::get('/api-tester', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'index'])->name('api_tester.index');
+    Route::get('/api-tester/export-postman', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'exportPostman'])->name('api_tester.export_postman');
 });
 
 // MovieBox API Proxy Routes (For Stream Player & Modal) - ADD RATE LIMITING

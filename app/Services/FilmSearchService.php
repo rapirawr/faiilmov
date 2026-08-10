@@ -497,7 +497,7 @@ class FilmSearchService
 
     public function sanitize(string $query): string
     {
-        $query = preg_replace('/[+\-><\(\)~*"@]+/', ' ', $query);
+        $query = preg_replace('/[+\-><\(\)~*"@\'";\\\\#]+/', ' ', $query);
         $query = preg_replace('/\s+/', ' ', $query);
         return trim(strip_tags($query));
     }

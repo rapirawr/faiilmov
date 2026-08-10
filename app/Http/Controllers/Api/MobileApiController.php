@@ -4,13 +4,29 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Actor;
+use App\Models\AdminActivityLog;
+use App\Models\AppLaunchNotification;
+use App\Models\Changelog;
+use App\Models\Episode;
 use App\Models\Film;
 use App\Models\Genre;
-use App\Models\User;
-use App\Models\Watchlist;
-use App\Models\WatchHistory;
+use App\Models\Notification;
+use App\Models\Profile;
 use App\Models\Review;
+use App\Models\ReviewReport;
+use App\Models\SearchLog;
+use App\Models\Season;
+use App\Models\Setting;
+use App\Models\User;
+use App\Models\WatchHistory;
+use App\Models\WatchParty;
+use App\Models\WatchPartyMessage;
+use App\Models\WatchPartyParticipant;
+use App\Models\WatchPartyReaction;
+use App\Models\Watchlist;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -636,6 +652,642 @@ class MobileApiController extends Controller
             'name' => 'Demo User',
             'email' => 'support@faiilmov.my.id',
             'password' => Hash::make('password123'),
+        ]);
+    }
+
+    // ==========================================
+    // SEASONS & EPISODES ENDPOINTS
+    // ==========================================
+
+    public function getMovieSeasons($id)
+    {
+        $film = Film::with(['seasons.episodes'])->findOrFail($id);
+
+        $seasons = $film->seasons->map(function ($season) {
+            return [
+                'id' => $season->id,
+                'film_id' => $season->film_id,
+                'season_number' => $season->season_number,
+                'title' => $season->title ?? ('Season ' . $season->season_number),
+                'poster_url' => $season->poster_url ?? $season->film->poster_url ?? '',
+                'release_year' => $season->release_year,
+                'episodes_count' => $season->episodes->count(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $seasons,
+        ]);
+    }
+
+    public function getSeasonDetail($id)
+    {
+        $season = Season::with(['film', 'episodes'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $season->id,
+                'film_id' => $season->film_id,
+                'film_title' => $season->film->title ?? '',
+                'season_number' => $season->season_number,
+                'title' => $season->title,
+                'poster_url' => $season->poster_url,
+                'release_year' => $season->release_year,
+                'episodes' => $season->episodes->map(function ($ep) {
+                    return [
+                        'id' => $ep->id,
+                        'season_id' => $ep->season_id,
+                        'episode_number' => $ep->episode_number,
+                        'title' => $ep->title,
+                        'synopsis' => $ep->synopsis,
+                        'duration_minutes' => $ep->duration_minutes,
+                        'thumbnail_url' => $ep->thumbnail_url,
+                        'video_source' => $ep->video_source,
+                    ];
+                }),
+            ],
+        ]);
+    }
+
+    public function getSeasonEpisodes($id)
+    {
+        $season = Season::with('episodes')->findOrFail($id);
+
+        $episodes = $season->episodes->map(function ($ep) {
+            return [
+                'id' => $ep->id,
+                'season_id' => $ep->season_id,
+                'episode_number' => $ep->episode_number,
+                'title' => $ep->title,
+                'synopsis' => $ep->synopsis,
+                'duration_minutes' => $ep->duration_minutes,
+                'thumbnail_url' => $ep->thumbnail_url,
+                'video_source' => $ep->video_source,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $episodes,
+        ]);
+    }
+
+    public function getEpisodeDetail($id)
+    {
+        $episode = Episode::with(['season.film'])->findOrFail($id);
+        $next = $episode->getNextEpisode();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $episode->id,
+                'season_id' => $episode->season_id,
+                'season_number' => $episode->season->season_number ?? 1,
+                'film_id' => $episode->season->film_id ?? null,
+                'film_title' => $episode->season->film->title ?? '',
+                'episode_number' => $episode->episode_number,
+                'title' => $episode->title,
+                'synopsis' => $episode->synopsis,
+                'duration_minutes' => $episode->duration_minutes,
+                'thumbnail_url' => $episode->thumbnail_url,
+                'video_source' => $episode->video_source,
+                'next_episode_id' => $next ? $next->id : null,
+            ],
+        ]);
+    }
+
+    // ==========================================
+    // GENRES & ACTORS ENDPOINTS
+    // ==========================================
+
+    public function getGenreDetail($id)
+    {
+        $genre = is_numeric($id) ? Genre::findOrFail($id) : Genre::where('slug', $id)->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => $genre,
+        ]);
+    }
+
+    public function getGenreMovies($id, Request $request)
+    {
+        $genre = is_numeric($id) ? Genre::findOrFail($id) : Genre::where('slug', $id)->firstOrFail();
+
+        $limit = (int)$request->query('limit', 20);
+        $films = $genre->films()->with('genres')->latest()->limit($limit)->get();
+
+        return response()->json([
+            'success' => true,
+            'genre' => $genre->name,
+            'data' => $films->map(fn($f) => $this->formatFilm($f)),
+        ]);
+    }
+
+    public function getActors(Request $request)
+    {
+        $query = Actor::query();
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $limit = (int)$request->query('limit', 30);
+        $actors = $query->paginate($limit);
+
+        return response()->json([
+            'success' => true,
+            'data' => $actors->items(),
+            'meta' => [
+                'current_page' => $actors->currentPage(),
+                'last_page' => $actors->lastPage(),
+                'total' => $actors->total(),
+            ],
+        ]);
+    }
+
+    public function getActorDetail($id)
+    {
+        $actor = Actor::with(['films.genres'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $actor->id,
+                'name' => $actor->name,
+                'slug' => $actor->slug,
+                'photo_url' => $actor->photo_url,
+                'films' => $actor->films->map(function ($film) {
+                    $formatted = $this->formatFilm($film);
+                    $formatted['character_name'] = $film->pivot->character_name ?? null;
+                    return $formatted;
+                }),
+            ],
+        ]);
+    }
+
+    public function getActorMovies($id, Request $request)
+    {
+        $actor = Actor::with('films.genres')->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'actor' => $actor->name,
+            'data' => $actor->films->map(fn($f) => $this->formatFilm($f)),
+        ]);
+    }
+
+    // ==========================================
+    // PROFILES ENDPOINTS
+    // ==========================================
+
+    public function getProfiles(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $profiles = Profile::where('user_id', $user->id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $profiles,
+        ]);
+    }
+
+    public function createProfile(Request $request)
+    {
+        $user = $this->resolveUser($request);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'avatar' => 'nullable|string|max:1000',
+            'is_child' => 'nullable|boolean',
+            'pin' => 'nullable|string|max:10',
+        ]);
+
+        $profile = Profile::create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'avatar' => $request->avatar ?? 'default',
+            'is_child' => $request->is_child ?? false,
+            'pin' => $request->pin,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil dibuat',
+            'data' => $profile,
+        ], 201);
+    }
+
+    public function getProfileDetail($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $profile = Profile::where('user_id', $user->id)->where('id', $id)->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => $profile,
+        ]);
+    }
+
+    public function updateProfileDetail($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $profile = Profile::where('user_id', $user->id)->where('id', $id)->firstOrFail();
+
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'avatar' => 'sometimes|string|max:1000',
+            'is_child' => 'sometimes|boolean',
+            'pin' => 'nullable|string|max:10',
+        ]);
+
+        $profile->update($request->only(['name', 'avatar', 'is_child', 'pin']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui',
+            'data' => $profile,
+        ]);
+    }
+
+    public function deleteProfileDetail($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+        Profile::where('user_id', $user->id)->where('id', $id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil dihapus',
+        ]);
+    }
+
+    // ==========================================
+    // NOTIFICATIONS ENDPOINTS
+    // ==========================================
+
+    public function getNotifications(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $notifications = Notification::where('user_id', $user->id)
+            ->latest()
+            ->paginate((int)$request->query('limit', 20));
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications->items(),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'total' => $notifications->total(),
+            ],
+        ]);
+    }
+
+    public function markNotificationAsRead($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $notification = Notification::where('user_id', $user->id)->where('id', $id)->firstOrFail();
+        $notification->update(['is_read' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifikasi ditandai dibaca',
+        ]);
+    }
+
+    public function markAllNotificationsAsRead(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        Notification::where('user_id', $user->id)->update(['is_read' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Semua notifikasi ditandai dibaca',
+        ]);
+    }
+
+    public function deleteNotification($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+        Notification::where('user_id', $user->id)->where('id', $id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifikasi dihapus',
+        ]);
+    }
+
+    // ==========================================
+    // APP LAUNCH, SETTINGS & CHANGELOGS ENDPOINTS
+    // ==========================================
+
+    public function getAppLaunchNotifications()
+    {
+        $emails = AppLaunchNotification::latest()->limit(50)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $emails,
+        ]);
+    }
+
+    public function subscribeAppLaunch(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:app_launch_notifications,email',
+        ]);
+
+        $sub = AppLaunchNotification::create(['email' => $request->email]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email berhasil diajukan untuk notifikasi peluncuran app',
+            'data' => $sub,
+        ], 201);
+    }
+
+    public function getSettings()
+    {
+        $settings = Setting::all()->pluck('value', 'key');
+
+        return response()->json([
+            'success' => true,
+            'data' => $settings,
+        ]);
+    }
+
+    public function getChangelogs()
+    {
+        $changelogs = Changelog::published()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $changelogs,
+        ]);
+    }
+
+    public function getLatestChangelog()
+    {
+        $latest = Changelog::published()->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => $latest,
+        ]);
+    }
+
+    public function getPopularSearches()
+    {
+        $popular = SearchLog::select('query', DB::raw('count(*) as count'))
+            ->groupBy('query')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $popular,
+        ]);
+    }
+
+    // ==========================================
+    // ADMIN & MODERATION ENDPOINTS
+    // ==========================================
+
+    public function getUsers(Request $request)
+    {
+        $limit = (int)$request->query('limit', 20);
+        $users = User::select('id', 'name', 'email', 'avatar', 'is_admin', 'created_at')
+            ->latest()
+            ->paginate($limit);
+
+        return response()->json([
+            'success' => true,
+            'data' => $users->items(),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'total' => $users->total(),
+            ],
+        ]);
+    }
+
+    public function reportReview($id, Request $request)
+    {
+        $user = $this->resolveUser($request);
+
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $report = ReviewReport::create([
+            'review_id' => $id,
+            'user_id' => $user->id,
+            'reason' => $request->reason,
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan ulasan berhasil dikirim',
+            'data' => $report,
+        ], 201);
+    }
+
+    public function getReviewReports(Request $request)
+    {
+        $reports = ReviewReport::with(['review', 'user'])->latest()->paginate((int)$request->query('limit', 20));
+
+        return response()->json([
+            'success' => true,
+            'data' => $reports->items(),
+            'meta' => [
+                'current_page' => $reports->currentPage(),
+                'last_page' => $reports->lastPage(),
+                'total' => $reports->total(),
+            ],
+        ]);
+    }
+
+    public function getAdminActivityLogs(Request $request)
+    {
+        $logs = AdminActivityLog::with('admin')->latest()->paginate((int)$request->query('limit', 20));
+
+        return response()->json([
+            'success' => true,
+            'data' => $logs->items(),
+            'meta' => [
+                'current_page' => $logs->currentPage(),
+                'last_page' => $logs->lastPage(),
+                'total' => $logs->total(),
+            ],
+        ]);
+    }
+
+    // ==========================================
+    // WATCH PARTY API ENDPOINTS
+    // ==========================================
+
+    public function createWatchPartyApi(Request $request)
+    {
+        $request->validate([
+            'film_id' => 'required|exists:films,id',
+            'season_number' => 'nullable|integer',
+            'episode_number' => 'nullable|integer',
+            'guest_name' => 'nullable|string|max:50',
+        ]);
+
+        $user = $this->resolveUser($request);
+        $guestName = $request->guest_name ?: ($user->name ?? 'Host');
+
+        $watchParty = WatchParty::create([
+            'film_id' => $request->film_id,
+            'season_number' => $request->input('season_number', 1),
+            'episode_number' => $request->input('episode_number', 1),
+            'host_user_id' => $user->id,
+            'host_guest_name' => $guestName,
+            'status' => 'waiting',
+            'current_position_seconds' => 0,
+            'is_playing' => false,
+            'is_locked' => false,
+        ]);
+
+        WatchPartyParticipant::create([
+            'watch_party_id' => $watchParty->id,
+            'user_id' => $user->id,
+            'guest_name' => $guestName,
+            'session_id' => Str::random(32),
+            'is_host' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Room Nonton Bareng berhasil dibuat',
+            'data' => [
+                'room_code' => $watchParty->room_code,
+                'film_id' => $watchParty->film_id,
+                'status' => $watchParty->status,
+            ],
+        ], 201);
+    }
+
+    public function getWatchPartyApi($roomCode)
+    {
+        $watchParty = WatchParty::with(['film', 'participants.user'])
+            ->where('room_code', strtoupper($roomCode))
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'room_code' => $watchParty->room_code,
+                'film_title' => $watchParty->film->title ?? '',
+                'poster_url' => $watchParty->film->poster_url ?? '',
+                'status' => $watchParty->status,
+                'is_playing' => (bool)$watchParty->is_playing,
+                'current_position_seconds' => $watchParty->current_position_seconds,
+                'participants' => $watchParty->participants->map(fn($p) => [
+                    'id' => $p->id,
+                    'name' => $p->guest_name,
+                    'is_host' => (bool)$p->is_host,
+                ]),
+            ],
+        ]);
+    }
+
+    public function joinWatchPartyApi($roomCode, Request $request)
+    {
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = $this->resolveUser($request);
+
+        $guestName = $request->guest_name ?: ($user->name ?? 'Guest');
+
+        $participant = WatchPartyParticipant::firstOrCreate(
+            ['watch_party_id' => $watchParty->id, 'user_id' => $user->id],
+            [
+                'guest_name' => $guestName,
+                'session_id' => Str::random(32),
+                'is_host' => false,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil bergabung ke Room',
+            'data' => $participant,
+        ]);
+    }
+
+    public function sendWatchPartyMessageApi($roomCode, Request $request)
+    {
+        $request->validate(['message' => 'required|string|max:500']);
+
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = $this->resolveUser($request);
+
+        $msg = WatchPartyMessage::create([
+            'watch_party_id' => $watchParty->id,
+            'user_id' => $user->id,
+            'sender_name' => $user->name,
+            'message' => $request->message,
+            'is_system' => false,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $msg,
+        ], 201);
+    }
+
+    public function getWatchPartyMessagesApi($roomCode)
+    {
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+
+        $messages = WatchPartyMessage::where('watch_party_id', $watchParty->id)
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $messages,
+        ]);
+    }
+
+    public function sendWatchPartyReactionApi($roomCode, Request $request)
+    {
+        $request->validate(['emoji' => 'required|string|max:10']);
+
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = $this->resolveUser($request);
+
+        $reaction = WatchPartyReaction::create([
+            'watch_party_id' => $watchParty->id,
+            'user_id' => $user->id,
+            'emoji' => $request->emoji,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $reaction,
+        ], 201);
+    }
+
+    public function leaveWatchPartyApi($roomCode, Request $request)
+    {
+        $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
+        $user = $this->resolveUser($request);
+
+        WatchPartyParticipant::where('watch_party_id', $watchParty->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil keluar dari Room',
         ]);
     }
 }
