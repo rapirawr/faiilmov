@@ -217,7 +217,7 @@
                         </div>
                         <div class="min-w-0">
                             <p class="font-bold text-white text-xs truncate">{{ Auth::user()->name ?? 'Administrator' }}</p>
-                            <p class="text-[10px] text-zinc-400 truncate">{{ Auth::user()->email ?? 'admin@faiilmov.com' }}</p>
+                            <p class="text-[10px] text-zinc-400 truncate">{{ Auth::user()->email ?? 'support@faiilmov.my.id' }}</p>
                         </div>
                     </div>
                     

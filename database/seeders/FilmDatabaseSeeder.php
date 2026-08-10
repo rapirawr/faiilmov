@@ -132,7 +132,7 @@ class FilmDatabaseSeeder extends Seeder
 
         // 4. Create Demo User & Reviews
         $demoUser = User::firstOrCreate([
-            'email' => 'user@cinestream.com',
+            'email' => 'support@faiilmov.my.id',
         ], [
             'name' => 'Demo User',
             'password' => bcrypt('password123'),

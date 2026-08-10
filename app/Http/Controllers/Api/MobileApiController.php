@@ -637,7 +637,7 @@ class MobileApiController extends Controller
 
         return User::first() ?? User::create([
             'name' => 'Demo User',
-            'email' => 'user@cinestream.com',
+            'email' => 'support@faiilmov.my.id',
             'password' => Hash::make('password123'),
         ]);
     }

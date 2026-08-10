@@ -156,8 +156,8 @@
                 <p class="text-[11px] text-zinc-300 leading-relaxed">
                     Tim Data Protection Officer (DPO) kami siap membantu menjawab pertanyaan Anda terkait pengelolaan data akun.
                 </p>
-                <a href="mailto:privacy@faiillery.my.id" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors">
-                    <span>privacy@faiillery.my.id</span>
+                <a href="mailto:support@faiilmov.my.id" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors">
+                    <span>support@faiilmov.my.id</span>
                     <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
                 </a>
             </div>
@@ -415,11 +415,11 @@
                     <div class="p-4 rounded-2xl bg-dark-950 border border-white/10 space-y-2 text-xs font-mono">
                         <div class="flex items-center gap-2 text-zinc-300">
                             <i data-lucide="mail" class="w-4 h-4 text-amber-400"></i>
-                            <span>Email Legal & DPO: <a href="mailto:privacy@faiillery.my.id" class="text-amber-400 underline font-bold">privacy@faiillery.my.id</a></span>
+                            <span>Email Legal & DPO: <a href="mailto:support@faiilmov.my.id" class="text-amber-400 underline font-bold">support@faiilmov.my.id</a></span>
                         </div>
                         <div class="flex items-center gap-2 text-zinc-300">
                             <i data-lucide="headphones" class="w-4 h-4 text-sky-400"></i>
-                            <span>Layanan Pengguna: <a href="mailto:support@faiillery.my.id" class="text-sky-400 underline font-bold">support@faiillery.my.id</a></span>
+                            <span>Layanan Pengguna: <a href="mailto:support@faiilmov.my.id" class="text-sky-400 underline font-bold">support@faiilmov.my.id</a></span>
                         </div>
                     </div>
                 </div>

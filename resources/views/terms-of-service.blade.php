@@ -439,11 +439,11 @@
                     <div class="p-4 rounded-2xl bg-dark-950 border border-white/10 space-y-2 text-xs font-mono">
                         <div class="flex items-center gap-2 text-zinc-300">
                             <i data-lucide="mail" class="w-4 h-4 text-sky-400"></i>
-                            <span>Email Legal & TOS: <a href="mailto:legal@faiillery.my.id" class="text-sky-400 underline font-bold">legal@faiillery.my.id</a></span>
+                            <span>Email Legal & TOS: <a href="mailto:support@faiilmov.my.id" class="text-sky-400 underline font-bold">support@faiilmov.my.id</a></span>
                         </div>
                         <div class="flex items-center gap-2 text-zinc-300">
                             <i data-lucide="headphones" class="w-4 h-4 text-amber-400"></i>
-                            <span>Layanan Pengguna: <a href="mailto:support@faiillery.my.id" class="text-amber-400 underline font-bold">support@faiillery.my.id</a></span>
+                            <span>Layanan Pengguna: <a href="mailto:support@faiilmov.my.id" class="text-amber-400 underline font-bold">support@faiilmov.my.id</a></span>
                         </div>
                     </div>
                 </div>
