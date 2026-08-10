@@ -23,6 +23,22 @@ class AdminActorController extends Controller
         return view('admin.actors.index', compact('actors'));
     }
 
+    public function searchApi(Request $request)
+    {
+        $q = trim($request->input('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $actors = Actor::where('name', 'like', "%{$q}%")
+            ->select(['id', 'name', 'photo_url'])
+            ->orderBy('name')
+            ->limit(15)
+            ->get();
+
+        return response()->json($actors);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

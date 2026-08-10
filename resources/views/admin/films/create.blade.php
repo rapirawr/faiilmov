@@ -147,37 +147,145 @@
                     </div>
                 </div>
 
-                <!-- Actors / Cast -->
-                <div class="md:col-span-2 space-y-2" x-data="{ actorSearch: '' }">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">Pemeran Utama (Cast)</label>
-                        <!-- Search Box Input -->
-                        <div class="flex items-center gap-2 px-3 rounded-xl border border-white/10 bg-zinc-900 focus-within:border-amber-500 transition-all min-w-[220px]">
-                            <i data-lucide="search" class="w-3.5 h-3.5 shrink-0 text-zinc-500"></i>
-                            <input type="text" 
-                                   x-model="actorSearch" 
-                                   placeholder="Cari nama aktor..." 
-                                   class="w-full min-w-0 bg-transparent py-1.5 text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
+<script>
+if (typeof window.castPicker !== 'function') {
+    window.castPicker = function(initialCast = []) {
+        return {
+            cast: initialCast,
+            searchQuery: '',
+            searchResults: [],
+            isSearching: false,
+            
+            async doSearch() {
+                const q = this.searchQuery.trim();
+                if (q.length < 2) {
+                    this.searchResults = [];
+                    return;
+                }
+
+                this.isSearching = true;
+                try {
+                    const res = await fetch('/admin/actors/search-api?q=' + encodeURIComponent(q));
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.searchResults = data;
+                    }
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    this.isSearching = false;
+                }
+            },
+
+            addActor(actor) {
+                if (this.cast.some(a => a.id === actor.id)) {
+                    return;
+                }
+                this.cast.push({
+                    id: actor.id,
+                    name: actor.name,
+                    photo_url: actor.photo_url || '',
+                    role_type: 'regular',
+                    character_name: ''
+                });
+                this.searchQuery = '';
+                this.searchResults = [];
+            },
+
+            removeActor(id) {
+                this.cast = this.cast.filter(a => a.id !== id);
+            }
+        };
+    };
+}
+</script>
+
+                <!-- Actors / Cast Management -->
+                <div class="md:col-span-2 space-y-3" x-data="castPicker([])">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                            Pemeran Film (<span x-text="cast.length"></span> Aktor)
+                        </label>
+
+                        <!-- Live Search Input -->
+                        <div class="relative min-w-[280px]">
+                            <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/10 bg-zinc-900 focus-within:border-amber-500 transition-all">
+                                <i data-lucide="search" class="w-4 h-4 shrink-0 text-zinc-400"></i>
+                                <input type="text" 
+                                       x-model="searchQuery" 
+                                       @input.debounce.300ms="doSearch()"
+                                       placeholder="Cari & tambah aktor baru..." 
+                                       class="w-full min-w-0 bg-transparent text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
+                                <div x-show="isSearching" class="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shrink-0"></div>
+                            </div>
+
+                            <!-- Search Results Dropdown -->
+                            <div x-show="searchResults.length > 0" 
+                                 x-cloak
+                                 @click.outside="searchResults = []"
+                                 class="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto p-1 space-y-1">
+                                <template x-for="actor in searchResults" :key="actor.id">
+                                    <button type="button" 
+                                            @click="addActor(actor)"
+                                            class="w-full text-left p-2 rounded-xl hover:bg-white/10 flex items-center justify-between transition-colors cursor-pointer group">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <img :src="actor.photo_url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'" 
+                                                 :alt="actor.name"
+                                                 class="w-7 h-7 rounded-full object-cover bg-zinc-800 shrink-0">
+                                            <span class="text-xs font-bold text-white group-hover:text-amber-300 transition-colors truncate" x-text="actor.name"></span>
+                                        </div>
+                                        <span x-text="cast.some(a => a.id === actor.id) ? 'Sudah Ada' : '+ Tambah'" 
+                                              :class="cast.some(a => a.id === actor.id) ? 'text-zinc-500 bg-white/5' : 'text-amber-400 bg-amber-500/10 border border-amber-500/20'"
+                                              class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg shrink-0"></span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-zinc-950 border border-white/10 max-h-64 overflow-y-auto">
-                        @foreach($actors as $actor)
-                            <div x-show="!actorSearch || '{{ strtolower(addslashes($actor->name)) }}'.includes(actorSearch.toLowerCase())"
-                                 class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/60 border border-white/5 hover:border-white/20 transition-colors">
-                                <input type="checkbox" name="actors[]" value="{{ $actor->id }}" id="actor-{{ $actor->id }}" 
-                                       class="rounded border-white/20 bg-zinc-900 text-amber-500 focus:ring-amber-500">
-                                <label for="actor-{{ $actor->id }}" class="text-xs font-bold text-white flex-1 cursor-pointer truncate">
-                                    {{ $actor->name }}
-                                </label>
-                                <select name="actor_roles[{{ $actor->id }}]" class="bg-zinc-950 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-amber-400 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+                    <!-- Selected Cast List Cards -->
+                    <div class="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-3 min-h-[6rem]">
+                        <template x-for="(item, idx) in cast" :key="item.id">
+                            <div class="flex items-center gap-3 p-2.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-white/20 transition-all">
+                                <!-- Hidden Input for Form Submission -->
+                                <input type="hidden" name="actors[]" :value="item.id">
+                                
+                                <img :src="item.photo_url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'" 
+                                     :alt="item.name" 
+                                     class="w-9 h-9 rounded-full object-cover bg-zinc-800 shrink-0 border border-white/10 shadow-xs">
+
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs font-bold text-white truncate" x-text="item.name"></h4>
+                                </div>
+
+                                <!-- Role Selector -->
+                                <select :name="'actor_roles[' + item.id + ']'" 
+                                        x-model="item.role_type"
+                                        class="bg-zinc-950 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-amber-400 focus:outline-none focus:border-amber-500 font-bold cursor-pointer shrink-0">
                                     <option value="main">⭐ Utama</option>
-                                    <option value="regular" selected>Pemeran</option>
+                                    <option value="regular">Pemeran</option>
                                 </select>
-                                <input type="text" name="actor_characters[{{ $actor->id }}]" placeholder="Nama Karakter..." 
-                                       class="w-28 bg-zinc-950 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500">
+
+                                <!-- Character Name Input -->
+                                <input type="text" 
+                                       :name="'actor_characters[' + item.id + ']'" 
+                                       x-model="item.character_name"
+                                       placeholder="Nama Karakter..." 
+                                       class="w-36 bg-zinc-950 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 shrink-0">
+
+                                <!-- Remove Button -->
+                                <button type="button" 
+                                        @click="removeActor(item.id)" 
+                                        title="Hapus Aktor dari Film"
+                                        class="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer shrink-0">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
                             </div>
-                        @endforeach
+                        </template>
+
+                        <div x-show="cast.length === 0" class="text-center py-6 text-xs text-zinc-500">
+                            Belum ada aktor yang ditambahkan untuk film ini. Gunakan kolom pencarian di atas untuk menambahkan pemeran.
+                        </div>
                     </div>
                 </div>
             </div>

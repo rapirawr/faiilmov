@@ -70,8 +70,7 @@ class AdminFilmController extends Controller
     public function create()
     {
         $genres = Genre::orderBy('name')->get();
-        $actors = Actor::orderBy('name')->get();
-        return view('admin.films.create', compact('genres', 'actors'));
+        return view('admin.films.create', compact('genres'));
     }
 
     public function store(Request $request)
@@ -146,8 +145,7 @@ class AdminFilmController extends Controller
     {
         $film->load(['genres', 'actors', 'seasons.episodes']);
         $genres = Genre::orderBy('name')->get();
-        $actors = Actor::orderBy('name')->get();
-        return view('admin.films.edit', compact('film', 'genres', 'actors'));
+        return view('admin.films.edit', compact('film', 'genres'));
     }
 
     public function update(Request $request, Film $film)
