@@ -54,7 +54,6 @@
                    @keydown.arrow-up.prevent="navigateUp()"
                    @keydown.enter.prevent="selectFocused()"
                    @focus="expandSearch()"
-                   @blur="collapseSearch()"
                    placeholder="Cari film..."
                    autocomplete="off"
                    class="min-w-0 flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 px-2 py-2 outline-none">
@@ -138,7 +137,7 @@
                             </span>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <template x-for="pFilm in popularFilms" :key="pFilm.id">
-                                    <a :href="pFilm.url" @click="saveHistoryTerm(pFilm.title); closePanel()" class="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
+                                    <a :href="pFilm.url" @click="saveHistoryTerm(pFilm.title); window.location.href = pFilm.url" class="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
                                         <img :src="pFilm.poster" :alt="pFilm.title" class="w-9 h-12 object-cover rounded-xl shrink-0 bg-dark-800">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-xs font-semibold text-white truncate group-hover:text-amber-300 transition-colors" x-text="pFilm.title"></p>
@@ -174,7 +173,7 @@
                         <div class="space-y-1">
                             <template x-for="(item, index) in suggestions" :key="item.id">
                                 <a :href="item.url"
-                                   @click="saveHistoryTerm(query); closePanel()"
+                                   @click="saveHistoryTerm(query); window.location.href = item.url"
                                    @mouseenter="focusedIndex = index"
                                    :class="focusedIndex === index ? 'bg-white/10' : 'hover:bg-white/5'"
                                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-colors cursor-pointer group">
@@ -213,7 +212,7 @@
             <!-- Footer: See all results link -->
             <div x-show="query.trim().length > 0" class="border-t border-white/10 px-4 py-2.5 bg-dark-900/50">
                 <a :href="'{{ route('browse') }}?q=' + encodeURIComponent(query)"
-                   @click="saveHistoryTerm(query); closePanel()"
+                   @click="saveHistoryTerm(query); window.location.href = '{{ route('browse') }}?q=' + encodeURIComponent(query)"
                    class="text-[11px] text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5">
                     <i data-lucide="search" class="w-3 h-3"></i>
                     <span>Lihat semua hasil untuk "<span class="text-white font-semibold" x-text="query"></span>"</span>
