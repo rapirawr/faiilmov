@@ -99,16 +99,4 @@ class AdminUserController extends Controller
 
         return redirect()->back()->with('success', "Status ban user '{$user->name}' berhasil dicabut.");
     }
-
-    public function resetPin(Profile $profile)
-    {
-        $profile->update([
-            'parental_pin' => null,
-            'max_content_rating' => null,
-        ]);
-
-        AdminActivityLog::log('reset_parental_pin', "Mereset PIN Parental Control untuk profil '{$profile->name}' milik User #{$profile->user_id}", 'Profile', $profile->id);
-
-        return redirect()->back()->with('success', "PIN Parental Control untuk profil '{$profile->name}' berhasil di-reset.");
-    }
 }

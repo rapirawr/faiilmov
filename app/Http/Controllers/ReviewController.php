@@ -11,6 +11,16 @@ class ReviewController extends Controller
 {
     public function store(Request $request, Film $film)
     {
+        if (session()->has('active_profile_id')) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Fitur ulasan hanya dapat digunakan oleh Akun Utama.'
+                ], 403);
+            }
+            return back()->with('error', 'Fitur ulasan hanya dapat digunakan oleh Akun Utama.');
+        }
+
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
@@ -36,6 +46,10 @@ class ReviewController extends Controller
     {
         if ($review->user_id !== Auth::id()) {
             abort(403);
+        }
+
+        if (session()->has('active_profile_id')) {
+            return back()->with('error', 'Hanya Akun Utama yang dapat mengelola ulasan.');
         }
 
         $film = $review->film;

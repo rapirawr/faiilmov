@@ -308,41 +308,58 @@
 
     <!-- Tab 3: Reviews History -->
     <div x-show="tab === 'reviews'" style="display: none;">
-        @if($reviews->count() > 0)
-            <div class="space-y-4 max-w-3xl">
-                @foreach($reviews as $rev)
-                    @if(!$rev->film)
-                        @continue
-                    @endif
-                    <div class="glass-panel p-6 rounded-3xl border border-white/10 flex items-start gap-4 hover:border-white/20 transition-all shadow-md">
-                        <img src="{{ $rev->film->poster_url }}" alt="{{ $rev->film->title }}" class="w-14 h-20 object-cover rounded-2xl shrink-0 bg-dark-900">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between mb-2">
-                                <a href="{{ route('film.show', $rev->film->slug) }}" class="font-serif font-bold text-base text-white hover:text-zinc-300 transition-colors truncate">{{ $rev->film->title }}</a>
-                                <div class="flex items-center gap-1 text-amber-400 font-bold text-xs glass-chip px-2.5 py-1 rounded-xl">
-                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
-                                    <span>{{ $rev->rating }} / 5</span>
-                                </div>
-                            </div>
-                            <p class="text-xs text-zinc-300 leading-relaxed mb-3">{{ $rev->comment }}</p>
-                            <div class="flex items-center justify-between text-[11px] text-zinc-500">
-                                <span>{{ $rev->created_at->format('d M Y, H:i') }}</span>
-                                <form action="{{ route('review.destroy', $rev->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer transition-colors">Hapus Ulasan</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+        @if($activeProfile)
+            <div class="glass-panel p-8 rounded-3xl text-center space-y-4 max-w-lg mx-auto border border-amber-500/20 bg-amber-500/5 my-6">
+                <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 mx-auto flex items-center justify-center">
+                    <i data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">Ulasan Dikelola Oleh Akun Utama</h3>
+                <p class="text-xs text-zinc-400">Sub-Profil (<strong class="text-white">{{ $activeProfile->name }}</strong>) tidak memiliki daftar ulasan terpisah. Semua ulasan dan rating tersimpan secara terpusat pada Akun Utama.</p>
+                <form action="{{ route('profiles.switch-main') }}" method="POST" class="pt-2">
+                    @csrf
+                    <button type="submit" class="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-colors shadow-lg cursor-pointer">
+                        Beralih ke Akun Utama
+                    </button>
+                </form>
             </div>
         @else
-            <div class="text-center py-16 glass-panel rounded-3xl border border-white/10">
-                <i data-lucide="message-square" class="w-12 h-12 text-zinc-600 mx-auto mb-3"></i>
-                <h3 class="font-serif font-bold text-lg text-white mb-1">Belum Ada Ulasan</h3>
-                <p class="text-xs text-zinc-400">Ulasan yang Anda tulis pada halaman detail film akan muncul di sini.</p>
-            </div>
+            @if($reviews->count() > 0)
+                <div class="space-y-4 max-w-3xl">
+                    @foreach($reviews as $rev)
+                        @if(!$rev->film)
+                            @continue
+                        @endif
+                        <div class="glass-panel p-6 rounded-3xl border border-white/10 flex items-start gap-4 hover:border-white/20 transition-all shadow-md">
+                            <img src="{{ $rev->film->poster_url }}" alt="{{ $rev->film->title }}" class="w-14 h-20 object-cover rounded-2xl shrink-0 bg-dark-900">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <a href="{{ route('film.show', $rev->film->slug) }}" class="font-serif font-bold text-base text-white hover:text-zinc-300 transition-colors truncate">{{ $rev->film->title }}</a>
+                                    <div class="flex items-center gap-1 text-amber-400 font-bold text-xs glass-chip px-2.5 py-1 rounded-xl">
+                                        <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                        <span>{{ $rev->rating }} / 5</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-zinc-300 leading-relaxed mb-3">{{ $rev->comment }}</p>
+                                <div class="flex items-center justify-between text-[11px] text-zinc-500">
+                                    <span>{{ $rev->created_at->format('d M Y, H:i') }}</span>
+                                    <form action="{{ route('review.destroy', $rev->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer transition-colors">Hapus Ulasan</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-16 space-y-4">
+                    <div class="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-zinc-500">
+                        <i data-lucide="message-square-off" class="w-8 h-8"></i>
+                    </div>
+                    <p class="text-xs text-zinc-400 font-medium">Anda belum pernah memberikan ulasan untuk film apa pun.</p>
+                </div>
+            @endif
         @endif
     </div>
 

@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profiles', [ProfileSwitchController::class, 'store'])->name('profiles.store');
     Route::post('/profiles/switch-main', [ProfileSwitchController::class, 'switchMain'])->name('profiles.switch-main');
     Route::post('/profiles/{profile}/switch', [ProfileSwitchController::class, 'switch'])->name('profiles.switch');
+    Route::put('/profiles/{profile}/pin', [ProfileSwitchController::class, 'updatePin'])->name('profiles.update-pin');
     Route::delete('/profiles/{profile}', [ProfileSwitchController::class, 'destroy'])->name('profiles.destroy');
     
     // Notifications
@@ -188,7 +189,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
-    Route::post('/profiles/{profile}/reset-pin', [AdminUserController::class, 'resetPin'])->name('profiles.reset_pin');
 
     // Watch Party Management
     Route::get('/watch-parties', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'index'])->name('watch_parties.index');

@@ -35,4 +35,27 @@ class Profile extends Model
     {
         return $this->hasMany(Watchlist::class);
     }
+
+    /**
+     * Get resolved avatar URL attribute
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $val = trim($this->avatar ?? '');
+
+        if (!empty($val) && (str_starts_with($val, 'http://') || str_starts_with($val, 'https://') || str_starts_with($val, 'data:image/'))) {
+            return $val;
+        }
+
+        if (!empty($val) && str_starts_with($val, 'storage/')) {
+            return asset($val);
+        }
+
+        if (!empty($val) && str_starts_with($val, 'avatars/')) {
+            return asset('storage/' . $val);
+        }
+
+        $seed = urlencode($this->name ?: 'Profile');
+        return "https://api.dicebear.com/7.x/avataaars/svg?seed={$seed}";
+    }
 }

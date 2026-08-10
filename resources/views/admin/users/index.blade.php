@@ -43,9 +43,7 @@
                     @forelse($users as $user)
                         <tr class="hover:bg-white/5 transition-colors">
                             <td class="px-4 py-3.5 flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </div>
+                                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-white/10 shrink-0 bg-zinc-800" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
                                 <div>
                                     <p class="font-bold text-white text-sm line-clamp-1">{{ $user->name }}</p>
                                     <p class="text-[11px] text-zinc-400">{{ $user->email }}</p>

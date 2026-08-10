@@ -38,15 +38,28 @@ class ProfileSwitchController extends Controller
         return redirect()->route('profiles.index')->with('success', "Profil {$profile->name} berhasil dibuat.");
     }
 
-    public function switch(Profile $profile)
+    public function switch(Profile $profile, Request $request)
     {
         if ($profile->user_id !== Auth::id()) {
             abort(403);
         }
 
+        if (!empty($profile->pin)) {
+            $inputPin = $request->input('pin');
+            if (!$inputPin || !Hash::check($inputPin, $profile->pin)) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'PIN profil salah.'
+                    ], 422);
+                }
+                return redirect()->route('profiles.index')->with('error', "PIN untuk profil '{$profile->name}' salah.");
+            }
+        }
+
         session(['active_profile_id' => $profile->id]);
 
-        if (request()->wantsJson()) {
+        if ($request->wantsJson()) {
             return response()->json(['status' => 'ok']);
         }
 
@@ -62,6 +75,32 @@ class ProfileSwitchController extends Controller
         }
 
         return redirect()->route('home')->with('success', 'Beralih ke Akun Utama.');
+    }
+
+    public function updatePin(Request $request, Profile $profile)
+    {
+        if ($profile->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'pin' => 'nullable|string|max:4',
+        ]);
+
+        $pin = trim($request->input('pin') ?? '');
+        $profile->update([
+            'pin' => !empty($pin) ? Hash::make($pin) : null,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'ok',
+                'message' => !empty($pin) ? "PIN untuk profil '{$profile->name}' berhasil diperbarui." : "PIN untuk profil '{$profile->name}' telah dihapus."
+            ]);
+        }
+
+        $msg = !empty($pin) ? "PIN untuk profil '{$profile->name}' berhasil diperbarui." : "PIN untuk profil '{$profile->name}' telah dihapus.";
+        return redirect()->route('profiles.index')->with('success', $msg);
     }
 
     public function destroy(Profile $profile)

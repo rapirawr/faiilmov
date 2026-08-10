@@ -11,6 +11,21 @@ class Actor extends Model
 
     protected $fillable = ['name', 'slug', 'photo_url'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Actor $actor) {
+            if (empty($actor->slug)) {
+                $actor->slug = \Illuminate\Support\Str::slug($actor->name ?: 'actor-' . rand(100, 999));
+            }
+        });
+
+        static::updating(function (Actor $actor) {
+            if (empty($actor->slug) && !empty($actor->name)) {
+                $actor->slug = \Illuminate\Support\Str::slug($actor->name);
+            }
+        });
+    }
+
     public function films()
     {
         return $this->belongsToMany(Film::class, 'film_actor')->withPivot('character_name');

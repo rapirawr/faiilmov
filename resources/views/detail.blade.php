@@ -425,31 +425,46 @@
 
                 <!-- Submit Review Form -->
                 @auth
-                    <form action="{{ route('review.store', $film->id) }}" method="POST" class="glass-card p-5 rounded-2xl mb-8 border border-white/10">
-                        @csrf
-                        <h4 class="text-xs font-bold text-white mb-3">Tulis Ulasan Anda</h4>
-                        
-                        <div class="mb-4">
-                            <label class="block text-[11px] text-zinc-400 mb-2">Beri Rating (1 - 5 Bintang)</label>
-                            <div class="flex items-center gap-2" x-data="{ star: {{ $userReview->rating ?? 5 }} }">
-                                <input type="hidden" name="rating" :value="star">
-                                <template x-for="i in 5">
-                                    <button type="button" @click="star = i" class="p-1 text-amber-400">
-                                        <i data-lucide="star" :class="i <= star ? 'fill-amber-400 text-amber-400' : 'text-zinc-600'" class="w-5 h-5"></i>
-                                    </button>
-                                </template>
+                    @if(Auth::user()->activeProfile())
+                        <div class="glass-card p-4 rounded-2xl mb-8 border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 text-amber-300 text-xs text-left">
+                                <i data-lucide="info" class="w-4 h-4 shrink-0 text-amber-400"></i>
+                                <span>Anda sedang menggunakan Sub-Profil (<strong class="text-white">{{ Auth::user()->activeProfile()->name }}</strong>). Fitur ulasan & rating khusus untuk <strong>Akun Utama</strong>.</span>
                             </div>
+                            <form action="{{ route('profiles.switch-main') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shrink-0 transition-colors shadow-md cursor-pointer">
+                                    Beralih ke Akun Utama
+                                </button>
+                            </form>
                         </div>
+                    @else
+                        <form action="{{ route('review.store', $film->id) }}" method="POST" class="glass-card p-5 rounded-2xl mb-8 border border-white/10">
+                            @csrf
+                            <h4 class="text-xs font-bold text-white mb-3">Tulis Ulasan Anda</h4>
+                            
+                            <div class="mb-4">
+                                <label class="block text-[11px] text-zinc-400 mb-2">Beri Rating (1 - 5 Bintang)</label>
+                                <div class="flex items-center gap-2" x-data="{ star: {{ $userReview->rating ?? 5 }} }">
+                                    <input type="hidden" name="rating" :value="star">
+                                    <template x-for="i in 5">
+                                        <button type="button" @click="star = i" class="p-1 text-amber-400">
+                                            <i data-lucide="star" :class="i <= star ? 'fill-amber-400 text-amber-400' : 'text-zinc-600'" class="w-5 h-5"></i>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
 
-                        <div class="mb-4">
-                            <textarea name="comment" rows="3" placeholder="Bagaimana pendapat Anda tentang film ini?" 
-                                      class="w-full bg-dark-950/60 text-xs text-white p-3 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">{{ $userReview->comment ?? '' }}</textarea>
-                        </div>
+                            <div class="mb-4">
+                                <textarea name="comment" rows="3" placeholder="Bagaimana pendapat Anda tentang film ini?" 
+                                          class="w-full bg-dark-950/60 text-xs text-white p-3 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">{{ $userReview->comment ?? '' }}</textarea>
+                            </div>
 
-                        <button type="submit" class="px-5 py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors shadow-md">
-                            {{ $userReview ? 'Perbarui Ulasan' : 'Kirim Ulasan' }}
-                        </button>
-                    </form>
+                            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors shadow-md">
+                                {{ $userReview ? 'Perbarui Ulasan' : 'Kirim Ulasan' }}
+                            </button>
+                        </form>
+                    @endif
                 @else
                     <div class="glass-card p-4 rounded-2xl text-center mb-8 border border-white/10">
                         <p class="text-xs text-zinc-400 mb-2">Ingin memberi ulasan & bintang untuk film ini?</p>

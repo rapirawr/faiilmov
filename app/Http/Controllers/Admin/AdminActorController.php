@@ -32,6 +32,7 @@ class AdminActorController extends Controller
 
         $actor = Actor::create([
             'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']),
             'photo_url' => $validated['photo_url'] ?? null,
         ]);
 

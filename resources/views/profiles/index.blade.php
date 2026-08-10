@@ -12,18 +12,64 @@ function profilesPicker() {
     return {
         manageMode: false,
         showAddModal: false,
+        showPinModal: false,
+        showEditPinModal: false,
+        targetProfileId: null,
+        targetProfileName: '',
+        editPinProfileId: null,
+        editPinProfileName: '',
+        editPinValue: '',
+        enteredPin: '',
+        pinError: '',
         newProfileName: '',
         newProfileIsChild: false,
         newProfilePin: '',
         selectedAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Main',
         avatarPresets: [
-            'https://api.dicebear.com/7.x/bottts/svg?seed=Movie1',
+             'https://api.dicebear.com/7.x/bottts/svg?seed=Movie1',
             'https://api.dicebear.com/7.x/bottts/svg?seed=Chill',
             'https://api.dicebear.com/7.x/bottts/svg?seed=Kiddo',
             'https://api.dicebear.com/7.x/bottts/svg?seed=Panda',
             'https://api.dicebear.com/7.x/bottts/svg?seed=Cyber',
             'https://api.dicebear.com/7.x/bottts/svg?seed=Gamer'
-        ]
+        ],
+
+        openEditPin(id, name) {
+            this.editPinProfileId = id;
+            this.editPinProfileName = name;
+            this.editPinValue = '';
+            this.showEditPinModal = true;
+        },
+
+        selectProfile(id, name, hasPin) {
+            if (this.manageMode) return;
+            if (hasPin) {
+                this.targetProfileId = id;
+                this.targetProfileName = name;
+                this.enteredPin = '';
+                this.pinError = '';
+                this.showPinModal = true;
+            } else {
+                document.getElementById('form-profile-' + id).submit();
+            }
+        },
+
+        submitPin() {
+            if (!this.enteredPin || this.enteredPin.length < 4) {
+                this.pinError = 'Masukkan 4 digit PIN';
+                return;
+            }
+            const form = document.getElementById('form-profile-' + this.targetProfileId);
+            let input = form.querySelector('input[name="pin"]');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'pin';
+                form.appendChild(input);
+            }
+            input.value = this.enteredPin;
+            form.submit();
+        }
     };
 }
 </script>
@@ -88,7 +134,7 @@ function profilesPicker() {
                         @csrf
                     </form>
 
-                    <div @click="if(!manageMode) document.getElementById('form-profile-{{ $profile->id }}').submit()" 
+                    <div @click="selectProfile({{ $profile->id }}, '{{ addslashes($profile->name) }}', {{ !empty($profile->pin) ? 'true' : 'false' }})" 
                          class="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-zinc-800 p-1 border border-white/10 transition-all duration-300 transform group-hover:scale-105 group-hover:border-amber-400/50 group-hover:shadow-2xl group-hover:shadow-amber-500/10 relative cursor-pointer {{ $activeProfile && $activeProfile->id == $profile->id ? 'ring-4 ring-amber-400 scale-105 shadow-xl shadow-amber-500/30' : '' }}">
                         
                         <div class="w-full h-full rounded-[22px] bg-dark-900 flex items-center justify-center overflow-hidden pointer-events-none">
@@ -101,6 +147,13 @@ function profilesPicker() {
                             @endif
                         </div>
 
+                        <!-- Lock Badge if profile has PIN -->
+                        @if(!empty($profile->pin))
+                            <div class="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/70 border border-white/20 text-amber-400 flex items-center justify-center pointer-events-none shadow-md" title="Profil Dilindungi PIN">
+                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            </div>
+                        @endif
+
                         <!-- Active Indicator Badge -->
                         @if($activeProfile && $activeProfile->id == $profile->id)
                             <div class="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[9px] font-extrabold shadow-lg flex items-center gap-1 pointer-events-none">
@@ -109,16 +162,26 @@ function profilesPicker() {
                             </div>
                         @endif
 
-                        <!-- Manage Mode Delete Button -->
+                        <!-- Manage Mode Action Buttons (Edit PIN & Delete) -->
                         <div x-show="manageMode" 
                              x-cloak
                              @click.stop
-                             class="absolute inset-0 bg-black/70 rounded-3xl backdrop-blur-xs flex items-center justify-center z-10 transition-opacity">
-                            <form action="{{ route('profiles.destroy', $profile->id) }}" method="POST" onsubmit="return confirm('Hapus profil {{ $profile->name }}?')">
+                             class="absolute inset-0 bg-black/75 rounded-3xl backdrop-blur-xs flex items-center justify-center gap-2 z-10 transition-opacity p-2">
+                            
+                            <button type="button" 
+                                    @click.stop.prevent="openEditPin({{ $profile->id }}, '{{ addslashes($profile->name) }}')"
+                                    title="Atur / Ganti PIN Profil" 
+                                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-black flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer shrink-0">
+                                <i data-lucide="key-round" class="w-4 h-4 sm:w-5 sm:h-5 text-black pointer-events-none"></i>
+                            </button>
+
+                            <form action="{{ route('profiles.destroy', $profile->id) }}" method="POST" onsubmit="return confirm('Hapus profil {{ addslashes($profile->name) }}?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer">
-                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                <button type="submit" 
+                                        title="Hapus Profil" 
+                                        class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer shrink-0">
+                                    <i data-lucide="trash-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                                 </button>
                             </form>
                         </div>
@@ -253,6 +316,99 @@ function profilesPicker() {
                 </div>
             </form>
 
+        </div>
+    </div>
+
+    <!-- Modal Input PIN Switch Profile -->
+    <div x-show="showPinModal" 
+         x-cloak
+         x-transition.opacity
+         class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        
+        <div @click.outside="showPinModal = false" 
+             class="bg-zinc-900 border border-white/15 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative text-center">
+            
+            <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 mx-auto flex items-center justify-center">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+
+            <div class="space-y-1">
+                <h3 class="font-bold text-white text-lg font-['Outfit']">Masukkan PIN Profil</h3>
+                <p class="text-xs text-zinc-400">Profil <span class="text-white font-bold" x-text="targetProfileName"></span> dilindungi dengan 4-digit PIN.</p>
+            </div>
+
+            <div class="space-y-3">
+                <input type="password" 
+                       x-model="enteredPin"
+                       @keyup.enter="submitPin()"
+                       maxlength="4" 
+                       placeholder="****" 
+                       class="w-full text-center bg-zinc-950 border border-white/15 rounded-2xl px-4 py-3 text-xl font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400 tracking-[0.5em]">
+                
+                <p x-show="pinError" class="text-xs text-red-400 font-medium" x-text="pinError"></p>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 pt-2">
+                <button type="button" @click="showPinModal = false" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-zinc-300 transition-all">
+                    Batal
+                </button>
+                <button type="button" @click="submitPin()" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                    <span>Masuk</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit PIN Subprofile (Owner Only) -->
+    <div x-show="showEditPinModal" 
+         x-cloak
+         x-transition.opacity
+         class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        
+        <div @click.outside="showEditPinModal = false" 
+             class="bg-zinc-900 border border-white/15 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative text-left">
+            
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base font-['Outfit']">Atur / Ganti PIN Profil</h3>
+                        <p class="text-[10px] text-zinc-400 truncate max-w-[180px]" x-text="editPinProfileName"></p>
+                    </div>
+                </div>
+                <button type="button" @click="showEditPinModal = false" class="p-1 rounded-lg text-zinc-400 hover:text-white cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form :action="'/profiles/' + editPinProfileId + '/pin'" method="POST" class="space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label class="block text-xs font-bold text-zinc-300 mb-1">PIN 4-Digit Baru</label>
+                    <input type="password" 
+                           name="pin" 
+                           x-model="editPinValue"
+                           maxlength="4" 
+                           placeholder="****" 
+                           class="w-full bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2.5 text-base font-mono text-center tracking-[0.5em] text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400">
+                    <p class="text-[10px] text-zinc-400 mt-2">Masukkan 4 digit angka untuk memasang/mengubah PIN. Kosongkan lalu klik simpan untuk menghapus PIN.</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-2">
+                    <button type="button" @click="showEditPinModal = false" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-zinc-300 transition-all cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4 text-black"></i>
+                        <span>Simpan PIN</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

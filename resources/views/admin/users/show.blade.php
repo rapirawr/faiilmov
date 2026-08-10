@@ -9,9 +9,7 @@
     <!-- User Header Card -->
     <div class="p-6 rounded-2xl bg-zinc-900/60 border border-white/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 font-extrabold text-xl flex items-center justify-center border border-amber-500/30 shrink-0">
-                {{ strtoupper(substr($user->name, 0, 2)) }}
-            </div>
+            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-14 h-14 rounded-2xl object-cover border border-amber-500/30 shrink-0 bg-zinc-800" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
             <div>
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-white font-['Outfit']">{{ $user->name }}</h2>
@@ -83,7 +81,7 @@
             <div class="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3 shadow-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <img src="{{ $p->avatar_url ?: asset('images/avatar-default.png') }}" class="w-10 h-10 rounded-full object-cover border border-white/10">
+                        <img src="{{ $p->avatar_url }}" alt="{{ $p->name }}" class="w-10 h-10 rounded-full object-cover border border-white/10 bg-zinc-800" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($p->name) }}';">
                         <div>
                             <h4 class="font-bold text-white text-sm">{{ $p->name }}</h4>
                             <p class="text-[10px] text-zinc-400">{{ $p->is_child ? '🧒 Kids Profile' : '👤 Adult Profile' }}</p>
@@ -97,25 +95,17 @@
                 <div class="pt-2 border-t border-white/5 space-y-2 text-xs">
                     <div class="flex justify-between text-zinc-400">
                         <span>Parental PIN:</span>
-                        <span class="font-mono font-bold {{ $p->parental_pin ? 'text-rose-400' : 'text-zinc-500' }}">
-                            {{ $p->parental_pin ? '🔒 Set (Encrypted)' : '🔓 Off' }}
+                        <span class="font-mono font-bold {{ $p->pin ? 'text-amber-400' : 'text-zinc-500' }}">
+                            {{ $p->pin ? '🔒 Set' : '🔓 Off' }}
                         </span>
                     </div>
                     <div class="flex justify-between text-zinc-400">
                         <span>Max Usia Rating:</span>
-                        <span class="font-bold text-white">{{ $p->max_content_rating ?: 'Tanpa Batas' }}</span>
+                        <span class="font-bold {{ $p->is_child ? 'text-purple-300' : 'text-white' }}">
+                            {{ $p->is_child ? 'Ramah Anak (G, PG)' : 'Tanpa Batas (Dewasa)' }}
+                        </span>
                     </div>
                 </div>
-
-                @if($p->parental_pin)
-                    <form action="{{ route('admin.profiles.reset_pin', $p->id) }}" method="POST" onsubmit="return confirm('Reset PIN Parental Control untuk profil ini?')">
-                        @csrf
-                        <button type="submit" class="w-full mt-2 py-1.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold text-xs border border-rose-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
-                            <span>Reset PIN Parental</span>
-                        </button>
-                    </form>
-                @endif
             </div>
         @empty
             <p class="text-xs text-zinc-500 col-span-3 py-6 text-center">Belum ada sub-profil tambahan.</p>

@@ -375,8 +375,69 @@
                 </div>
             </div>
 
+<script>
+function navProfileState() {
+    return {
+        open: false,
+        showPinModal: false,
+        targetProfileId: null,
+        targetProfileName: '',
+        enteredPin: '',
+        pinError: '',
+        isSubmitting: false,
+
+        selectSubProfile(id, name, hasPin) {
+            this.open = false;
+            if (hasPin) {
+                this.targetProfileId = id;
+                this.targetProfileName = name;
+                this.enteredPin = '';
+                this.pinError = '';
+                this.showPinModal = true;
+            } else {
+                this.performSwitch(id, null);
+            }
+        },
+
+        async performSwitch(id, pin) {
+            this.isSubmitting = true;
+            this.pinError = '';
+
+            try {
+                const url = id ? '/profiles/' + id + '/switch' : '/profiles/switch-main';
+                const bodyData = new FormData();
+                bodyData.append('_token', '{{ csrf_token() }}');
+                if (pin) {
+                    bodyData.append('pin', pin);
+                }
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: bodyData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    window.location.reload();
+                } else {
+                    this.pinError = data.message || 'PIN profil salah.';
+                    this.isSubmitting = false;
+                }
+            } catch (err) {
+                this.pinError = 'Terjadi kesalahan sistem.';
+                this.isSubmitting = false;
+            }
+        }
+    };
+}
+</script>
+
             <!-- Profile & Multi-Account Switcher Dropdown -->
-            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+            <div class="relative" x-data="navProfileState()" @click.outside="open = false">
                 <button @click="open = !open" 
                         class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm cursor-pointer group">
                     
@@ -448,50 +509,49 @@
                         <p class="text-[10px] uppercase font-bold text-zinc-500 px-2 pt-1 pb-1 tracking-wider">Ganti Profil</p>
                         
                         <!-- Main Account Option -->
-                        <form action="{{ route('profiles.switch-main') }}" method="POST">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ !$activeProfile ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <div class="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
-                                        @if(Auth::user()->avatar)
-                                            <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
-                                        @else
-                                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                                        @endif
-                                    </div>
-                                    <span class="text-xs font-semibold truncate">{{ Auth::user()->name }} (Utama)</span>
+                        <button type="button" 
+                                @click="selectSubProfile(null, '{{ addslashes(Auth::user()->name) }}', false)"
+                                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ !$activeProfile ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
+                                    @else
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                                    @endif
                                 </div>
-                                @if(!$activeProfile)
-                                    <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
-                                @endif
-                            </button>
-                        </form>
+                                <span class="text-xs font-semibold truncate">{{ Auth::user()->name }} (Utama)</span>
+                            </div>
+                            @if(!$activeProfile)
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                            @endif
+                        </button>
 
                         <!-- Sub Profiles Options -->
                         @foreach($userProfiles as $p)
-                            <form action="{{ route('profiles.switch', $p->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" 
-                                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ $activeProfile && $activeProfile->id == $p->id ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/20 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
-                                            @if($p->avatar)
-                                                <img src="{{ $p->avatar }}" class="w-full h-full object-cover">
-                                            @else
-                                                {{ strtoupper(substr($p->name, 0, 2)) }}
-                                            @endif
-                                        </div>
-                                        <span class="text-xs font-medium truncate">{{ $p->name }}</span>
-                                        @if($p->is_child)
-                                            <span class="text-[8px] font-extrabold uppercase px-1 rounded bg-purple-500/20 text-purple-300">Anak</span>
+                            <button type="button" 
+                                    @click="selectSubProfile({{ $p->id }}, '{{ addslashes($p->name) }}', {{ !empty($p->pin) ? 'true' : 'false' }})"
+                                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ $activeProfile && $activeProfile->id == $p->id ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/20 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                        @if($p->avatar)
+                                            <img src="{{ $p->avatar }}" class="w-full h-full object-cover">
+                                        @else
+                                            {{ strtoupper(substr($p->name, 0, 2)) }}
                                         @endif
                                     </div>
-                                    @if($activeProfile && $activeProfile->id == $p->id)
-                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                    <span class="text-xs font-medium truncate">{{ $p->name }}</span>
+                                    @if($p->is_child)
+                                        <span class="text-[8px] font-extrabold uppercase px-1 rounded bg-purple-500/20 text-purple-300">Anak</span>
                                     @endif
-                                </button>
-                            </form>
+                                    @if(!empty($p->pin))
+                                        <i data-lucide="lock" class="w-3 h-3 text-amber-400 shrink-0"></i>
+                                    @endif
+                                </div>
+                                @if($activeProfile && $activeProfile->id == $p->id)
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                @endif
+                            </button>
                         @endforeach
 
                         <a href="{{ route('profiles.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition-colors">
@@ -547,6 +607,53 @@
                     </div>
 
                 </div>
+
+                <!-- Global Navbar PIN Modal -->
+                <template x-teleport="body">
+                    <div x-show="showPinModal" 
+                         x-cloak
+                         x-transition.opacity
+                         class="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                        
+                        <div @click.outside="showPinModal = false" 
+                             class="bg-zinc-900 border border-white/15 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative text-center">
+                            
+                            <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 mx-auto flex items-center justify-center">
+                                <i data-lucide="lock" class="w-6 h-6"></i>
+                            </div>
+
+                            <div class="space-y-1">
+                                <h3 class="font-bold text-white text-lg font-['Outfit']">Masukkan PIN Profil</h3>
+                                <p class="text-xs text-zinc-400">Profil <span class="text-white font-bold" x-text="targetProfileName"></span> dilindungi dengan 4-digit PIN.</p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <input type="password" 
+                                       x-model="enteredPin"
+                                       @keyup.enter="performSwitch(targetProfileId, enteredPin)"
+                                       maxlength="4" 
+                                       placeholder="****" 
+                                       class="w-full text-center bg-zinc-950 border border-white/15 rounded-2xl px-4 py-3 text-xl font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400 tracking-[0.5em]">
+                                
+                                <p x-show="pinError" class="text-xs text-red-400 font-medium" x-text="pinError"></p>
+                            </div>
+
+                            <div class="flex items-center justify-center gap-3 pt-2">
+                                <button type="button" @click="showPinModal = false" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-zinc-300 transition-all cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="button" 
+                                        @click="performSwitch(targetProfileId, enteredPin)" 
+                                        :disabled="isSubmitting"
+                                        class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                                    <span x-text="isSubmitting ? 'Verifikasi...' : 'Masuk'"></span>
+                                    <i x-show="!isSubmitting" data-lucide="arrow-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
             </div>
         @else
             <a href="{{ route('login') }}" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 hover:text-white transition-all text-xs font-semibold border border-white/10 shadow-sm">
