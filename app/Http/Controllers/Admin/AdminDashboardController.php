@@ -61,6 +61,8 @@ class AdminDashboardController extends Controller
 
         $lastSyncStatus = Setting::get('last_api_sync_status', 'Sinkronisasi API film aktif.');
         $lastSyncAt = $lastSyncAtRaw ? \Carbon\Carbon::parse($lastSyncAtRaw)->diffForHumans() . ' (' . \Carbon\Carbon::parse($lastSyncAtRaw)->format('d M Y H:i') . ')' : 'Baru Saja';
+        $lastSyncDetailsRaw = Setting::get('last_api_sync_details');
+        $lastSyncDetails = $lastSyncDetailsRaw ? json_decode($lastSyncDetailsRaw, true) : null;
 
         return view('admin.dashboard.index', compact(
             'stats',
@@ -68,7 +70,8 @@ class AdminDashboardController extends Controller
             'mostViewedFilms',
             'recentActivityLogs',
             'lastSyncStatus',
-            'lastSyncAt'
+            'lastSyncAt',
+            'lastSyncDetails'
         ));
     }
 }

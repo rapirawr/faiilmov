@@ -50,13 +50,15 @@ class SyncActorsJob implements ShouldQueue
         $syncedActorsCount = 0;
         $processedFilms = 0;
         $failedCount = 0;
+        $skippedDetails = [];
 
         foreach ($films as $film) {
             try {
-                $details = $movieBox->getDetails($film->moviebox_subject_id);
+                $details = $this->fetchWithRetry(fn() => $movieBox->getDetails($film->moviebox_subject_id), 3);
 
                 if (empty($details) || !is_array($details)) {
                     $failedCount++;
+                    $skippedDetails[] = "Film '{$film->title}' [ID: {$film->moviebox_subject_id}]: Details empty after retries.";
                     continue;
                 }
 
@@ -72,7 +74,6 @@ class SyncActorsJob implements ShouldQueue
                         $type = (int)($staff['staffType'] ?? 1);
                         $character = trim($staff['character'] ?? '');
 
-                        // Filter out non-actor roles (Directors, Writers, Creators)
                         if ($type !== 1 && in_array(strtolower($character), ['director', 'writer', 'producer', 'screenplay', 'creator'])) {
                             continue;
                         }
@@ -102,7 +103,7 @@ class SyncActorsJob implements ShouldQueue
                             ]);
                             $syncedActorsCount++;
                         } else {
-                            if ($avatarUrl && str_contains($actor->photo_url, 'unsplash.com') && !str_contains($avatarUrl, 'unsplash.com')) {
+                            if ($avatarUrl && str_contains((string)$actor->photo_url, 'unsplash.com') && !str_contains($avatarUrl, 'unsplash.com')) {
                                 $actor->update(['photo_url' => $avatarUrl]);
                             }
                         }
@@ -123,7 +124,8 @@ class SyncActorsJob implements ShouldQueue
                 $processedFilms++;
             } catch (Exception $e) {
                 $failedCount++;
-                Log::warning("SyncActorsJob failed for film {$film->title} [ID: {$film->moviebox_subject_id}]: " . $e->getMessage());
+                $skippedDetails[] = "Film '{$film->title}': " . $e->getMessage();
+                Log::warning("SyncActorsJob failed for film {$film->title}: " . $e->getMessage());
             }
         }
 
@@ -134,6 +136,12 @@ class SyncActorsJob implements ShouldQueue
 
         Setting::set('last_actor_api_sync_at', now()->toDateTimeString());
         Setting::set('last_actor_api_sync_status', $logMsg);
+        Setting::set('last_actor_api_sync_details', json_encode([
+            'synced_actors' => $syncedActorsCount,
+            'processed_films' => $processedFilms,
+            'failed_films' => $failedCount,
+            'recent_skips' => array_slice($skippedDetails, 0, 10),
+        ]));
 
         if ($this->adminId) {
             AdminActivityLog::create([
@@ -144,5 +152,23 @@ class SyncActorsJob implements ShouldQueue
         }
 
         Log::info($logMsg);
+    }
+
+    private function fetchWithRetry(callable $callback, int $maxRetries = 3): mixed
+    {
+        $attempts = 0;
+        while ($attempts < $maxRetries) {
+            try {
+                $result = $callback();
+                if ($result !== null && $result !== false) {
+                    return $result;
+                }
+            } catch (Exception $e) {
+                Log::debug("SyncActorsJob retry attempt " . ($attempts + 1) . " failed: " . $e->getMessage());
+            }
+            $attempts++;
+            usleep(300000);
+        }
+        return null;
     }
 }

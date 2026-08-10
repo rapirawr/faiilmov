@@ -42,6 +42,76 @@ class Film extends Model
         'updated' => \App\Events\FilmUpdated::class,
     ];
 
+    /**
+     * Get trailer provider type: 'video', 'vimeo', 'dailymotion', 'youtube', 'none'
+     */
+    public function getTrailerProviderAttribute(): string
+    {
+        if (empty($this->trailer_url)) {
+            return 'none';
+        }
+
+        $url = strtolower($this->trailer_url);
+
+        if (preg_match('/\.(mp4|webm|m3u8|ogg)(\?.*)?$/i', $url) || str_contains($url, 'proxy-stream') || str_contains($url, 'aoneroom.com') || str_contains($url, 'macdn')) {
+            return 'video';
+        }
+
+        if (str_contains($url, 'vimeo.com')) {
+            return 'vimeo';
+        }
+
+        if (str_contains($url, 'dailymotion.com') || str_contains($url, 'dai.ly')) {
+            return 'dailymotion';
+        }
+
+        if (str_contains($url, 'youtube.com') || str_contains($url, 'youtu.be')) {
+            return 'youtube';
+        }
+
+        return 'video';
+    }
+
+    /**
+     * Get normalized embed URL for iframe or direct video link
+     */
+    public function getEmbedTrailerUrlAttribute(): ?string
+    {
+        if (empty($this->trailer_url)) {
+            return null;
+        }
+
+        $provider = $this->trailer_provider;
+
+        if ($provider === 'vimeo') {
+            if (preg_match('/vimeo\.com\/(?:video\/)?([0-9]+)/i', $this->trailer_url, $m)) {
+                return 'https://player.vimeo.com/video/' . $m[1] . '?autoplay=1&autopause=0';
+            }
+        }
+
+        if ($provider === 'dailymotion') {
+            if (preg_match('/(?:dailymotion\.com\/(?:embed\/)?video\/|dai\.ly\/|player\.html\?video=)([a-zA-Z0-9]+)/i', $this->trailer_url, $m)) {
+                return 'https://www.dailymotion.com/embed/video/' . $m[1] . '?autoplay=1&mute=1';
+            }
+        }
+
+        if ($provider === 'youtube') {
+            if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $this->trailer_url, $m)) {
+                return 'https://www.youtube-nocookie.com/embed/' . $m[1];
+            }
+        }
+
+        return $this->trailer_url;
+    }
+
+    /**
+     * Legacy YouTube Embed URL accessor
+     */
+    public function getYoutubeEmbedUrlAttribute(): ?string
+    {
+        return $this->embed_trailer_url;
+    }
+
     public function genres()
     {
         return $this->belongsToMany(Genre::class);
@@ -303,6 +373,58 @@ class Film extends Model
 
         if (!$film->content_rating || $film->content_rating === 'SU') {
             $film->update(['content_rating' => $film->autoDetermineContentRating()]);
+        }
+
+        // Auto Sync Actors / Cast Relations
+        $staffList = $data['staffList'] ?? $data['starList'] ?? $data['actors'] ?? $data['actorList'] ?? [];
+        if (is_array($staffList) && !empty($staffList)) {
+            $actorsFound = [];
+            $actorIndex = 0;
+            foreach ($staffList as $staff) {
+                $name = trim($staff['name'] ?? '');
+                if (empty($name)) continue;
+
+                $type = (int)($staff['staffType'] ?? 1);
+                $character = trim($staff['character'] ?? '');
+
+                if ($type !== 1 && in_array(strtolower($character), ['director', 'writer', 'producer', 'screenplay', 'creator'])) {
+                    continue;
+                }
+
+                $avatarUrl = $staff['avatarUrl'] ?? $staff['avatar'] ?? $staff['photo'] ?? null;
+                $actorSlug = Str::slug($name);
+                if (empty($actorSlug)) {
+                    $actorSlug = 'actor-' . substr(md5($name), 0, 6);
+                }
+
+                $actor = \App\Models\Actor::where('name', $name)->first();
+                if (!$actor) {
+                    $baseSlug = $actorSlug;
+                    $count = 1;
+                    while (\App\Models\Actor::where('slug', $actorSlug)->exists()) {
+                        $actorSlug = $baseSlug . '-' . $count++;
+                    }
+
+                    $actor = \App\Models\Actor::create([
+                        'name' => $name,
+                        'slug' => $actorSlug,
+                        'photo_url' => $avatarUrl,
+                    ]);
+                } elseif ($avatarUrl && (!$actor->photo_url || str_contains($actor->photo_url, 'unsplash.com'))) {
+                    $actor->update(['photo_url' => $avatarUrl]);
+                }
+
+                $roleType = ($actorIndex < 2) ? 'main' : 'regular';
+                $actorsFound[$actor->id] = [
+                    'character_name' => $character ?: null,
+                    'role_type' => $roleType,
+                ];
+                $actorIndex++;
+            }
+
+            if (!empty($actorsFound)) {
+                $film->actors()->syncWithoutDetaching($actorsFound);
+            }
         }
 
         return $film;

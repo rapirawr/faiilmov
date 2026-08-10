@@ -30,7 +30,7 @@ class FilmSearchService
             return null;
         }
 
-        // 1. Direct Local DB SQL Match
+        // 1. Direct Local DB SQL Match (Title, Actor, Synopsis)
         $results = $this->buildQuery($query, $filters, $perPage);
 
         // 2. If results are sparse (< 5), attempt Fuzzy & Token Local Match
@@ -54,16 +54,8 @@ class FilmSearchService
             }
         }
 
-        // 4. Fallback to AI query interpretation if still 0 results found
-        if ($results->total() === 0 && !empty(config('services.nvidia.api_key'))) {
-            $aiInterpretation = $this->getAiInterpretation($query);
-            if ($aiInterpretation) {
-                $aiResults = $this->aiSearch($query, $aiInterpretation, $filters, $perPage);
-                if ($aiResults->total() > 0) {
-                    $results = $aiResults;
-                }
-            }
-        }
+        // NOTE: AI Search interpretation is NEVER used to replace main title matching results.
+        // It is exposed separately via getAiRecommendations() for a dedicated recommendation section.
 
         $this->logSearch($query, $results->total(), $ip);
 
@@ -78,21 +70,28 @@ class FilmSearchService
         $cleanQ = $this->sanitize($query);
         $cacheKey = 'mb_live_sync_search_' . md5($cleanQ);
 
-        // Avoid spamming upstream API repeatedly within 10 minutes for the same query
-        Cache::remember($cacheKey, 600, function () use ($cleanQ) {
-            try {
-                $apiData = $this->movieBox->search($cleanQ, 1);
-                if (!empty($apiData)) {
-                    $subjects = Film::extractSearchSubjects($apiData);
-                    if (!empty($subjects)) {
-                        Film::syncFromApiBatch($subjects);
-                    }
+        // Avoid spamming upstream API repeatedly, but do NOT block retry if 0 results synced
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        try {
+            $apiData = $this->movieBox->search($cleanQ, 1);
+            if (!empty($apiData)) {
+                $subjects = Film::extractSearchSubjects($apiData);
+                if (!empty($subjects)) {
+                    Film::syncFromApiBatch($subjects);
+                    // Cache successful sync for 10 minutes
+                    Cache::put($cacheKey, true, 600);
+                    return;
                 }
-            } catch (\Exception $e) {
-                Log::debug("Live MovieBox sync search failed for '{$cleanQ}': " . $e->getMessage());
             }
-            return true;
-        });
+            // Short 15s throttle if no subjects found to allow quick retries
+            Cache::put($cacheKey, true, 15);
+        } catch (\Exception $e) {
+            Log::debug("Live MovieBox sync search failed for '{$cleanQ}': " . $e->getMessage());
+            Cache::put($cacheKey, true, 15);
+        }
     }
 
     public function getAiInterpretation(string $query): ?array
@@ -104,21 +103,21 @@ class FilmSearchService
         return $this->nvidia->interpretQuery($query);
     }
 
-    private function aiSearch(string $originalQuery, array $interpretation, array $filters, int $perPage): LengthAwarePaginator
+    /**
+     * Get AI Semantic Recommendations in a SEPARATE dataset (never replacing exact search)
+     */
+    public function getAiRecommendations(string $originalQuery, array $interpretation, array $excludeIds = [], int $limit = 6): Collection
     {
         $filmQuery = Film::forActiveProfile()->with('genres');
+
+        if (!empty($excludeIds)) {
+            $filmQuery->whereNotIn('id', $excludeIds);
+        }
 
         $this->applyAiFilters($filmQuery, $interpretation);
         $this->applyAiMoodKeywords($filmQuery, $interpretation);
 
-        $sort = $filters['sort'] ?? 'relevance';
-        match ($sort) {
-            'rating_desc' => $filmQuery->orderByDesc('rating'),
-            'title_asc'   => $filmQuery->orderBy('title'),
-            default       => $filmQuery->orderByDesc('rating')->orderByDesc('release_year'),
-        };
-
-        return $filmQuery->paginate($perPage)->withQueryString();
+        return $filmQuery->orderByDesc('rating')->orderByDesc('release_year')->limit($limit)->get();
     }
 
     private function applyAiFilters($filmQuery, array $interpretation): void

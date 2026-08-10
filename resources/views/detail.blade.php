@@ -37,10 +37,45 @@
     <!-- Film Backdrop Header -->
     <div class="relative min-h-[440px] sm:min-h-[500px] flex items-end pb-10 overflow-hidden">
         <div class="absolute inset-0 z-0">
-            <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
-            <div class="absolute inset-0 bg-black/15"></div>
+            @if($film->embed_trailer_url)
+                @if($film->trailer_provider === 'video')
+                    <div class="absolute inset-0 overflow-hidden opacity-60">
+                        <video src="{{ $film->embed_trailer_url }}" 
+                               autoplay loop muted playsinline 
+                               class="w-full h-full object-cover filter brightness-75">
+                        </video>
+                    </div>
+                @elseif($film->trailer_provider === 'vimeo' || $film->trailer_provider === 'dailymotion')
+                    <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-60">
+                        <iframe src="{{ $film->embed_trailer_url }}"
+                                class="w-[160%] h-[160%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-cover pointer-events-none scale-125 border-0"
+                                allow="autoplay; encrypted-media">
+                        </iframe>
+                    </div>
+                @elseif($film->trailer_provider === 'youtube')
+                    @php
+                        preg_match('/embed\/([^?&]+)/', $film->embed_trailer_url, $ytMatches);
+                        $ytId = $ytMatches[1] ?? '';
+                    @endphp
+                    @if($ytId)
+                        <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-60">
+                            <iframe src="https://www.youtube-nocookie.com/embed/{{ $ytId }}?autoplay=1&mute=1&controls=0&loop=1&playlist={{ $ytId }}&playsinline=1"
+                                    class="w-[160%] h-[160%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-cover pointer-events-none scale-125 border-0">
+                            </iframe>
+                        </div>
+                    @else
+                        <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+                    @endif
+                @else
+                    <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+                @endif
+            @else
+                <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+            @endif
+
+            <div class="absolute inset-0 bg-black/40"></div>
             <!-- Side Gradient for Text Readability -->
-            <div class="absolute inset-0 bg-gradient-to-r from-dark-950/80 via-dark-950/30 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-dark-950/90 via-dark-950/40 to-transparent"></div>
             <!-- Bottom Smooth Gradient Fade -->
             <div class="absolute inset-x-0 -bottom-[25px] h-[15rem] bg-gradient-to-t from-dark-950 via-dark-950/95 to-transparent"></div>
         </div>
@@ -600,11 +635,54 @@
 
     </div>
 
+    <!-- Modal Trailer Video -->
+    @if($film->embed_trailer_url)
+        <div x-show="showTrailerModal" 
+             x-cloak
+             x-transition.opacity
+             class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6">
+            
+            <div @click.outside="showTrailerModal = false" 
+                 class="bg-zinc-950 border border-white/20 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl relative">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-zinc-900/80">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="video" class="w-5 h-5 text-red-500"></i>
+                        <h3 class="font-serif font-bold text-white text-base">Trailer Resmi: {{ $film->title }}</h3>
+                    </div>
+                    <button type="button" @click="showTrailerModal = false" class="p-1.5 rounded-xl text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Video Player Embed -->
+                <div class="aspect-video w-full bg-black relative flex items-center justify-center">
+                    <template x-if="showTrailerModal">
+                        @if($film->trailer_provider === 'video')
+                            <video src="{{ $film->embed_trailer_url }}" 
+                                   controls autoplay 
+                                   class="w-full h-full object-contain">
+                            </video>
+                        @else
+                            <iframe src="{{ $film->embed_trailer_url }}?autoplay=1&rel=0" 
+                                    class="w-full h-full border-0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        @endif
+                    </template>
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>
 
 <script>
     function detailPage(initialInWatchlist = false) {
         return {
+            showTrailerModal: false,
             playerOpen: false,
             isFetchingStreams: false,
             resourceList: [],

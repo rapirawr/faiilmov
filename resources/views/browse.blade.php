@@ -154,5 +154,25 @@
         </div>
     @endif
 
+    <!-- Separate Section: AI Recommendations based on Mood / Genre -->
+    @if(isset($aiRecommendations) && $aiRecommendations->count() > 0)
+        <div class="mt-14 pt-8 border-t border-white/10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="font-serif text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+                        <span>Rekomendasi AI (Serupa Berdasarkan Mood & Genre)</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400 mt-1">Daftar judul berikut dipilih oleh AI berdasarkan nuansa & genre dari kata kunci "{{ $searchQuery }}"</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @foreach($aiRecommendations as $aiFilm)
+                    <x-film-card :film="$aiFilm" />
+                @endforeach
+            </div>
+        </div>
+    @endif
+
 </div>
 @endsection

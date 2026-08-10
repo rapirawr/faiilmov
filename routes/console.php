@@ -6,3 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Scheduled Daily Sync for Films & Actors
+Illuminate\Support\Facades\Schedule::job(new \App\Jobs\SyncFilmsJob(null, false, 15))->dailyAt('02:00');
+Illuminate\Support\Facades\Schedule::job(new \App\Jobs\SyncActorsJob(null, false))->dailyAt('03:00');

@@ -54,10 +54,17 @@ class BrowseController extends Controller
 
         // Use smart search when query is provided
         $aiInterpretation = null;
+        $aiRecommendations = collect();
+
         if ($searchQuery && mb_strlen($searchQuery) >= FilmSearchService::MIN_QUERY_LENGTH) {
-            $aiInterpretation = $this->filmSearch->getAiInterpretation($searchQuery);
             $films = $this->filmSearch->search($searchQuery, $filters, 30, $request->ip());
             $noResults = $films && $films->total() === 0;
+
+            $aiInterpretation = $this->filmSearch->getAiInterpretation($searchQuery);
+            if ($aiInterpretation) {
+                $excludeIds = $films ? $films->pluck('id')->toArray() : [];
+                $aiRecommendations = $this->filmSearch->getAiRecommendations($searchQuery, $aiInterpretation, $excludeIds, 6);
+            }
         } else {
             // Standard filter browse
             $query = Film::forActiveProfile()->with('genres');
@@ -86,6 +93,6 @@ class BrowseController extends Controller
             ? Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(6)->get()
             : collect();
 
-        return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation'));
+        return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation', 'aiRecommendations'));
     }
 }

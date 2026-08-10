@@ -613,6 +613,8 @@ class MobileApiController extends Controller
             'slug' => $film->slug ?? Str::slug($film->title),
             'poster_url' => $film->poster_url,
             'backdrop_url' => $film->backdrop_url,
+            'trailer_url' => $film->trailer_url,
+            'youtube_embed_url' => $film->youtube_embed_url,
             'overview' => $film->synopsis ?? '',
             'rating' => (float) ($film->rating ?? 0.0),
             'release_year' => (string) ($film->release_year ?? ''),
