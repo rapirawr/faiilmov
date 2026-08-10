@@ -320,7 +320,7 @@
                                              class="w-11 h-11 rounded-xl object-cover bg-dark-900 border border-amber-500/20 shrink-0">
                                         <div class="min-w-0 flex-1">
                                             <h4 class="text-xs font-bold text-white truncate">{{ $actor->name }}</h4>
-                                            <p class="text-[11px] text-amber-300/80 truncate">{{ $actor->pivot->character_name ?: 'Peran Utama' }}</p>
+                                            <p class="text-[11px] text-amber-300/80 truncate">{{ $actor->pivot->character_name ?: 'Pemeran Utama' }}</p>
                                         </div>
                                     </div>
                                 @endforeach
@@ -348,7 +348,7 @@
                                              class="w-10 h-10 rounded-xl object-cover bg-dark-900 shrink-0">
                                         <div class="min-w-0 flex-1">
                                             <h4 class="text-xs font-semibold text-white truncate">{{ $actor->name }}</h4>
-                                            <p class="text-[11px] text-zinc-400 truncate">{{ $actor->pivot->character_name ?: 'Peran' }}</p>
+                                            <p class="text-[11px] text-zinc-400 truncate">{{ $actor->pivot->character_name ?: 'Pemeran' }}</p>
                                         </div>
                                     </div>
                                 @endforeach

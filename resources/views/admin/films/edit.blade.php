@@ -186,12 +186,12 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">Pemeran Utama (Cast)</label>
                         <!-- Search Box Input -->
-                        <div class="relative min-w-[220px]">
-                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+                        <div class="flex items-center gap-2 px-3 rounded-xl border border-white/10 bg-zinc-900 focus-within:border-amber-500 transition-all min-w-[220px]">
+                            <i data-lucide="search" class="w-3.5 h-3.5 shrink-0 text-zinc-500"></i>
                             <input type="text" 
                                    x-model="actorSearch" 
                                    placeholder="Cari nama aktor..." 
-                                   class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors">
+                                   class="w-full min-w-0 bg-transparent py-1.5 text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
                         </div>
                     </div>
 
