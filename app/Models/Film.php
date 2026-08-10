@@ -433,14 +433,28 @@ class Film extends Model
     public static function isExcludedTitle(string $title): bool
     {
         $t = strtolower($title);
+
+        // 1. Word boundary checks for short acronyms or single-word tags that must not match inside larger words (e.g. 'ost' in 'ghost', 'amv' in 'jamv')
+        $wordBoundaryPatterns = [
+            'ost', 'amv', 'mv', 'shorts', 'batch', 'lesson', 'lecture', 'tutorial', 'ncert', 'cbse'
+        ];
+        foreach ($wordBoundaryPatterns as $w) {
+            if (preg_match('/\b' . preg_quote($w, '/') . '\b/i', $t)) {
+                return true;
+            }
+        }
+
+        // 2. Substring exclusions for multi-word or distinct non-movie phrases
         $excludePatterns = [
             '[hindi]', '[tamil]', '[telugu]', '[kannada]', '[malayalam]',
             'class 1', 'class 2', 'class 3', 'class 4', 'class 5', 'class 6', 'class 7', 'class 8', 'class 9', 'class 10', 'class 11', 'class 12',
             'class 1st', 'class 2nd', 'class 3rd', 'class 4th', 'class 5th', 'class 6th', 'class 7th', 'class 8th', 'class 9th', 'class 10th', 'class 11th', 'class 12th',
             'grade 1', 'grade 2', 'grade 3', 'grade 4', 'grade 5', 'grade 6', 'grade 7', 'grade 8', 'grade 9', 'grade 10', 'grade 11', 'grade 12',
-            'ncert', 'cbse', 'grammar', 'chuchu', 'alphablocks', 'playlist', 'one shot', 'oneshot', 'lecture', 'lesson', 'tutorial', 'homeschooling', 'phonics', 'nursery', 'ekaksha', 'curriculum', 'mathematics', 'physics', 'chemistry', 'biology',
-            'junoon', 'neev', 'udaan', 'uday', 'fastrack', 'champions', 'little masters', 'notices', 'batch', 'revision', 'marathon', 'crash course', 'cocomelon', 'babybus', 'sesame street', 'nunu tv', 'wwe', 'wrestlemania',
-            'amv', 'fight irl', 'performed by', '24 jam', '#', '//', 'reaction', 'gameplay', 'walkthrough', 'unboxing', 'shorts', 'tiktok', 'compilation', 'music video', 'official audio', 'remix', 'opening 1', 'opening 2', 'opening 3', 'opening 4', 'opening 5', 'opening 6', 'opening 7', 'opening 8', 'opening 9', 'opening 10', 'opening 11', 'opening 12', 'opening 13', 'opening 14', 'opening 15', 'opening 16', 'opening 17', 'opening 18', 'opening 19', 'opening 20', 'ending 1', 'ending 2', 'ending 3', 'ending 4', 'ending 5', 'ost', 'theme song', 'cover song'
+            'grammar', 'chuchu', 'alphablocks', 'playlist', 'one shot', 'oneshot', 'homeschooling', 'phonics', 'nursery', 'ekaksha', 'curriculum', 'mathematics', 'physics', 'chemistry', 'biology',
+            'junoon', 'neev', 'udaan', 'uday', 'fastrack', 'champions', 'little masters', 'notices', 'revision', 'marathon', 'crash course', 'cocomelon', 'babybus', 'sesame street', 'nunu tv', 'wwe', 'wrestlemania',
+            'fight irl', 'performed by', '24 jam', '//', 'reaction', 'gameplay', 'walkthrough', 'unboxing', 'tiktok', 'compilation', 'music video', 'official audio', 'remix',
+            'opening 1', 'opening 2', 'opening 3', 'opening 4', 'opening 5', 'opening 6', 'opening 7', 'opening 8', 'opening 9', 'opening 10',
+            'ending 1', 'ending 2', 'ending 3', 'ending 4', 'ending 5', 'theme song', 'cover song'
         ];
         return Str::contains($t, $excludePatterns);
     }
