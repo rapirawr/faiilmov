@@ -160,64 +160,77 @@ class AdminScriptController extends Controller
         }
 
         $systemPrompt = <<<'SYSTEM'
-Kamu adalah AI expert yang menghasilkan script PHP untuk Laravel admin panel bernama FAIILMOV (platform streaming film).
+Kamu adalah AI expert pembuat script PHP murni untuk Laravel admin panel FAIILMOV (platform streaming film).
 
-ATURAN WAJIB — KRITIS, TIDAK BOLEH DILANGGAR:
-1. Output HANYA berupa kode PHP murni. Tidak ada markdown, tidak ada ```php, tidak ada penjelasan apapun.
-2. JANGAN pernah tulis: require, include, atau baris bootstrap Laravel. Laravel sudah berjalan.
-3. JANGAN gunakan `use` statement. Gunakan Fully Qualified Names (FQN): \App\Models\Film::count()
-4. Script berjalan via eval() dalam request Laravel aktif — semua model, service, facade tersedia langsung.
-5. Selalu gunakan echo untuk output. Tambahkan separator dan label yang informatif.
-6. Model tersedia: \App\Models\Film, \App\Models\Actor, \App\Models\User, \App\Models\Review, \App\Models\WatchParty, \App\Models\Genre
-7. Service: app(\App\Services\MovieBoxService::class), app(\App\Services\FilmSearchService::class)
-8. Facade: \Illuminate\Support\Facades\Cache, \Illuminate\Support\Facades\DB, \Illuminate\Support\Facades\Log
-9. Untuk sync film dari API: $movieBox = app(\App\Services\MovieBoxService::class); $movieBox->init(); $data = $movieBox->search($keyword, 1); \App\Models\Film::syncFromApiBatch(\App\Models\Film::extractSearchSubjects($data));
+ATURAN STRICT & MUTLAK:
+1. Output HANYA kode PHP murni tanpa markdown, tanpa ```php, tanpa penjelasan apapun.
+2. JANGAN sertakan <?php, require, include, atau use statements.
+3. Selalu gunakan Fully Qualified Names (FQN), contoh: \App\Models\Film::count()
+4. Gunakan echo untuk mencetak output terminal dengan format yang rapi & profesional.
+5. Model yang tersedia: \App\Models\Film, \App\Models\Actor, \App\Models\User, \App\Models\Review, \App\Models\WatchParty, \App\Models\Genre
+6. Services: app(\App\Services\MovieBoxService::class), app(\App\Services\FilmSearchService::class)
+7. Facades: \Illuminate\Support\Facades\Cache, \Illuminate\Support\Facades\DB, \Illuminate\Support\Facades\Log
+
+CONTOH SINKRONISASI FILM API MOVIEBOX:
+$query = 'KeywordFilm';
+\Illuminate\Support\Facades\Cache::forget('mb_live_sync_search_' . md5($query));
+$movieBox = app(\App\Services\MovieBoxService::class);
+$movieBox->init();
+$apiData = $movieBox->search($query, 1);
+$subjects = \App\Models\Film::extractSearchSubjects($apiData);
+\App\Models\Film::syncFromApiBatch($subjects);
+$films = \App\Models\Film::where('title', 'LIKE', "%{$query}%")->get();
+echo "Total hasil: " . $films->count() . "\n";
+foreach ($films as $f) {
+    echo "- [{$f->subject_type}] {$f->title} ({$f->release_year}) Rating: {$f->rating}\n";
+}
 SYSTEM;
 
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type'  => 'application/json',
-            ])->timeout(60)->post($apiUrl . '/chat/completions', [
-                'model' => 'meta/llama-3.3-70b-instruct',
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $request->input('prompt')],
-                ],
-                'temperature' => 0.2,
-                'max_tokens'  => 2048,
-                'stream'      => false,
-            ]);
+        $modelsToTry = ['meta/llama-3.1-8b-instruct', 'meta/llama-3.2-3b-instruct'];
+        $lastException = null;
 
-            if (!$response->successful()) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'API Error ' . $response->status() . ': ' . substr($response->body(), 0, 300),
-                ], 500);
+        foreach ($modelsToTry as $model) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type'  => 'application/json',
+                ])->timeout(15)->post($apiUrl . '/chat/completions', [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => $request->input('prompt')],
+                    ],
+                    'temperature' => 0.1,
+                    'max_tokens'  => 1500,
+                    'stream'      => false,
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $raw  = $data['choices'][0]['message']['content'] ?? '';
+
+                    // Strip markdown fences if AI ignored instructions
+                    $code = preg_replace('/^```(?:php)?\s*/m', '', $raw);
+                    $code = preg_replace('/^```\s*$/m', '', $code);
+                    $code = preg_replace('/^<\?php\s*/m', '', $code);
+                    $code = trim($code);
+
+                    return response()->json([
+                        'success' => true,
+                        'code'    => $code,
+                        'model'   => $model,
+                        'tokens'  => $data['usage']['total_tokens'] ?? 0,
+                    ]);
+                }
+            } catch (Throwable $e) {
+                $lastException = $e;
             }
-
-            $data = $response->json();
-            $raw  = $data['choices'][0]['message']['content'] ?? '';
-
-            // Strip markdown fences if AI ignored instructions
-            $code = preg_replace('/^```(?:php)?\s*/m', '', $raw);
-            $code = preg_replace('/^```\s*$/m', '', $code);
-            $code = preg_replace('/^<\?php\s*/m', '', $code);
-            $code = trim($code);
-
-            return response()->json([
-                'success' => true,
-                'code'    => $code,
-                'model'   => $data['model'] ?? 'llama-3.3-70b',
-                'tokens'  => $data['usage']['total_tokens'] ?? 0,
-            ]);
-
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Gagal menghubungi AI: ' . $e->getMessage(),
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'error'   => 'Gagal menghubungi AI API: ' . ($lastException ? $lastException->getMessage() : 'All models failed'),
+        ], 500);
     }
 
     /**
