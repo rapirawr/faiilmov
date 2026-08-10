@@ -49,6 +49,88 @@
             </button>
         </div>
     </div>
+    <!-- AI Generate Panel -->
+    <div class="bg-gradient-to-br from-violet-950/60 via-zinc-900/80 to-zinc-900/60 backdrop-blur-xl rounded-3xl border border-violet-500/20 shadow-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-violet-500/20">
+            <div class="flex items-center gap-3">
+                <div class="p-2 rounded-xl bg-violet-500/15 border border-violet-500/25">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-violet-400"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        Generate Script dengan AI
+                        <span class="px-2 py-0.5 rounded-full text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30 font-mono">NVIDIA Llama 3.3</span>
+                    </h2>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Deskripsikan script yang ingin dibuat dalam bahasa natural, AI akan generate kode PHP-nya.</p>
+                </div>
+            </div>
+            <button type="button" @click="aiPanelOpen = !aiPanelOpen"
+                    class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="aiPanelOpen ? '' : '-rotate-90'"></i>
+            </button>
+        </div>
+
+        <div x-show="aiPanelOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="p-6 space-y-4">
+
+            <!-- Prompt Examples -->
+            <div class="flex flex-wrap gap-2">
+                <span class="text-[11px] text-zinc-500 self-center shrink-0">Contoh prompt:</span>
+                <template x-for="example in aiPromptExamples" :key="example">
+                    <button type="button" @click="aiPrompt = example"
+                            class="px-3 py-1 rounded-full text-[11px] bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-colors cursor-pointer"
+                            x-text="example"></button>
+                </template>
+            </div>
+
+            <!-- Prompt Input Row -->
+            <div class="flex gap-3 items-end">
+                <div class="flex-1">
+                    <textarea x-model="aiPrompt"
+                              @keydown.ctrl.enter.prevent="generateWithAI()"
+                              placeholder="Contoh: Buat script untuk sync film Spider-Man dari API MovieBox dan tampilkan hasilnya secara detail..."
+                              rows="2"
+                              class="w-full bg-zinc-950/80 border border-violet-500/20 focus:border-violet-500/50 rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none resize-none font-sans transition-colors"></textarea>
+                </div>
+
+                <button type="button"
+                        @click="generateWithAI()"
+                        :disabled="isGenerating || !aiPrompt.trim()"
+                        class="px-5 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg border border-violet-500/40 shrink-0 h-fit">
+                    <template x-if="!isGenerating">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="wand-2" class="w-4 h-4"></i>
+                            <span>Generate (Ctrl+Enter)</span>
+                        </span>
+                    </template>
+                    <template x-if="isGenerating">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+                            <span>Generating AI...</span>
+                        </span>
+                    </template>
+                </button>
+            </div>
+
+            <!-- AI Status / Error / Token Info -->
+            <template x-if="aiError">
+                <div class="flex items-start gap-3 p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                    <span x-text="aiError"></span>
+                </div>
+            </template>
+
+            <template x-if="aiLastTokens > 0">
+                <div class="flex items-center gap-4 text-[11px] text-zinc-500">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span class="text-emerald-400 font-medium">Script berhasil digenerate!</span>
+                    </span>
+                    <span x-text="'Tokens digunakan: ' + aiLastTokens"></span>
+                    <span x-text="'Model: ' + aiLastModel"></span>
+                </div>
+            </template>
+        </div>
+    </div>
 
     <!-- Main Content Area: Split View -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -207,14 +289,29 @@
 
 @push('scripts')
 <script>
-function scriptRunner() {
-    return {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('scriptRunner', () => ({
         scripts: @json($scripts),
         searchQuery: '',
         selectedScriptId: null,
         isExecuting: false,
         outputConsole: '',
         lastResult: null,
+
+        // AI Generate state
+        aiPanelOpen: true,
+        aiPrompt: '',
+        isGenerating: false,
+        aiError: null,
+        aiLastTokens: 0,
+        aiLastModel: '',
+        aiPromptExamples: [
+            'Sync film Spider-Man dari API MovieBox',
+            'Tampilkan statistik lengkap database film & user',
+            'Cari dan hapus film duplikat berdasarkan judul',
+            'Update semua rating film yang 0 dari API',
+            'Tampilkan 10 film terbaru yang ditambahkan',
+        ],
 
         form: {
             script_id: null,
@@ -226,8 +323,8 @@ function scriptRunner() {
         get filteredScripts() {
             if (!this.searchQuery.trim()) return this.scripts;
             const q = this.searchQuery.toLowerCase();
-            return this.scripts.filter(s => 
-                s.title.toLowerCase().includes(q) || 
+            return this.scripts.filter(s =>
+                s.title.toLowerCase().includes(q) ||
                 (s.description && s.description.toLowerCase().includes(q))
             );
         },
@@ -296,7 +393,6 @@ function scriptRunner() {
                 this.lastResult = data;
                 this.outputConsole = data.output;
 
-                // Update last run stats in local script state if selected
                 if (this.selectedScriptId) {
                     const found = this.scripts.find(s => s.id === this.selectedScriptId);
                     if (found) {
@@ -334,11 +430,25 @@ function scriptRunner() {
                     body: JSON.stringify(this.form),
                 });
 
+                // Check content type before parsing as JSON
+                const contentType = res.headers.get('content-type') || '';
+                if (!res.ok || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    const msg = res.status === 500
+                        ? `Server error 500. Kemungkinan tabel belum di-migrate di production.\nJalankan: php artisan migrate`
+                        : res.status === 419
+                        ? 'Session expired (419). Silakan refresh halaman.'
+                        : `HTTP ${res.status}: ${text.substring(0, 200)}`;
+                    alert('Gagal menyimpan:\n' + msg);
+                    return;
+                }
+
                 const data = await res.json();
                 if (data.success) {
-                    alert('Script berhasil disimpan!');
-                    // Refresh script list
+                    alert('✅ Script berhasil disimpan!');
                     location.reload();
+                } else {
+                    alert('Gagal menyimpan: ' + (data.message || 'Unknown error'));
                 }
             } catch (e) {
                 alert('Gagal menyimpan script: ' + e.message);
@@ -374,9 +484,64 @@ function scriptRunner() {
         clearConsole() {
             this.outputConsole = '';
             this.lastResult = null;
-        }
-    };
-}
+        },
+
+        async generateWithAI() {
+            if (this.isGenerating || !this.aiPrompt.trim()) return;
+
+            this.isGenerating = true;
+            this.aiError = null;
+            this.aiLastTokens = 0;
+            this.aiLastModel = '';
+
+            try {
+                const res = await fetch('{{ route('admin.scripts.generate') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ prompt: this.aiPrompt }),
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    this.aiError = data.error || 'Terjadi kesalahan saat generate script.';
+                    return;
+                }
+
+                // Insert generated code into editor
+                this.form.code = data.code;
+
+                // Auto-set a title based on prompt if editor is blank/default
+                if (!this.form.title || this.form.title === 'Script PHP Kustom Baru') {
+                    const shortPrompt = this.aiPrompt.length > 60
+                        ? this.aiPrompt.substring(0, 57) + '...'
+                        : this.aiPrompt;
+                    this.form.title = 'AI: ' + shortPrompt;
+                }
+
+                this.aiLastTokens = data.tokens || 0;
+                this.aiLastModel  = data.model || 'llama-3.3-70b';
+
+                // Scroll editor into view
+                this.$nextTick(() => {
+                    if (this.$refs.codeTextarea) {
+                        this.$refs.codeTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    if (window.lucide) lucide.createIcons();
+                });
+
+            } catch (e) {
+                this.aiError = 'Network error: ' + e.message;
+            } finally {
+                this.isGenerating = false;
+            }
+        },
+    }));
+});
 </script>
 @endpush
 @endsection

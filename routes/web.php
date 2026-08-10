@@ -213,6 +213,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
     Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');
     Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->name('scripts.execute');
+    Route::post('/scripts/generate', [\App\Http\Controllers\Admin\AdminScriptController::class, 'generateScript'])->name('scripts.generate');
     Route::delete('/scripts/{script}', [\App\Http\Controllers\Admin\AdminScriptController::class, 'destroy'])->name('scripts.destroy');
 
     // API Tester & Postman Suite

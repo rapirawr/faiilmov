@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminScript;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Exception;
 use Throwable;
+
 
 class AdminScriptController extends Controller
 {
@@ -79,6 +81,12 @@ class AdminScriptController extends Controller
         $cleanCode = preg_replace('/^\s*<\?(php)?/i', '', $code);
         $cleanCode = preg_replace('/\?>\s*$/', '', $cleanCode);
 
+        // Strip require/bootstrap lines that break eval() context
+        // (eval() runs inside already-bootstrapped Laravel - these are no-ops or errors)
+        $cleanCode = preg_replace("/^require(?:_once)?\s+['\"].*?(?:vendor\/autoload|bootstrap\/app).*?['\"];\s*\n/m", '', $cleanCode);
+        $cleanCode = preg_replace("/^\\\$app\s*=\s*require_once\s+.*?;\s*\n/m", '', $cleanCode);
+        $cleanCode = preg_replace("/^\\\$app->make\(.*?Kernel.*?\)->bootstrap\(\);\s*\n/m", '', $cleanCode);
+
         $startTime = microtime(true);
         $startMemory = memory_get_usage();
 
@@ -130,6 +138,86 @@ class AdminScriptController extends Controller
             'memory_kb' => max(0, $memoryKb),
             'executed_at' => now()->format('d M Y H:i:s'),
         ]);
+    }
+
+    /**
+     * Generate PHP script from natural language prompt using NVIDIA AI API
+     */
+    public function generateScript(Request $request): JsonResponse
+    {
+        $request->validate([
+            'prompt' => 'required|string|min:5|max:2000',
+        ]);
+
+        $apiKey = env('NVIDIA_API_KEY');
+        $apiUrl = env('NVIDIA_API_URL', 'https://integrate.api.nvidia.com/v1');
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'NVIDIA_API_KEY belum dikonfigurasi di .env',
+            ], 503);
+        }
+
+        $systemPrompt = <<<'SYSTEM'
+Kamu adalah AI expert yang menghasilkan script PHP untuk Laravel admin panel bernama FAIILMOV (platform streaming film).
+
+ATURAN WAJIB — KRITIS, TIDAK BOLEH DILANGGAR:
+1. Output HANYA berupa kode PHP murni. Tidak ada markdown, tidak ada ```php, tidak ada penjelasan apapun.
+2. JANGAN pernah tulis: require, include, atau baris bootstrap Laravel. Laravel sudah berjalan.
+3. JANGAN gunakan `use` statement. Gunakan Fully Qualified Names (FQN): \App\Models\Film::count()
+4. Script berjalan via eval() dalam request Laravel aktif — semua model, service, facade tersedia langsung.
+5. Selalu gunakan echo untuk output. Tambahkan separator dan label yang informatif.
+6. Model tersedia: \App\Models\Film, \App\Models\Actor, \App\Models\User, \App\Models\Review, \App\Models\WatchParty, \App\Models\Genre
+7. Service: app(\App\Services\MovieBoxService::class), app(\App\Services\FilmSearchService::class)
+8. Facade: \Illuminate\Support\Facades\Cache, \Illuminate\Support\Facades\DB, \Illuminate\Support\Facades\Log
+9. Untuk sync film dari API: $movieBox = app(\App\Services\MovieBoxService::class); $movieBox->init(); $data = $movieBox->search($keyword, 1); \App\Models\Film::syncFromApiBatch(\App\Models\Film::extractSearchSubjects($data));
+SYSTEM;
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(60)->post($apiUrl . '/chat/completions', [
+                'model' => 'meta/llama-3.3-70b-instruct',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $request->input('prompt')],
+                ],
+                'temperature' => 0.2,
+                'max_tokens'  => 2048,
+                'stream'      => false,
+            ]);
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'API Error ' . $response->status() . ': ' . substr($response->body(), 0, 300),
+                ], 500);
+            }
+
+            $data = $response->json();
+            $raw  = $data['choices'][0]['message']['content'] ?? '';
+
+            // Strip markdown fences if AI ignored instructions
+            $code = preg_replace('/^```(?:php)?\s*/m', '', $raw);
+            $code = preg_replace('/^```\s*$/m', '', $code);
+            $code = preg_replace('/^<\?php\s*/m', '', $code);
+            $code = trim($code);
+
+            return response()->json([
+                'success' => true,
+                'code'    => $code,
+                'model'   => $data['model'] ?? 'llama-3.3-70b',
+                'tokens'  => $data['usage']['total_tokens'] ?? 0,
+            ]);
+
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Gagal menghubungi AI: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

@@ -7,7 +7,8 @@ import EpisodeSelector from './components/EpisodeSelector';
 
 if (!window.Alpine) {
   window.Alpine = Alpine;
-  Alpine.start();
+  // Defer start so blade @push('scripts') alpine:init listeners register first
+  document.addEventListener('DOMContentLoaded', () => Alpine.start());
 }
 
 function safeJsonParse(rawString, fallback = null) {
