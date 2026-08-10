@@ -404,18 +404,15 @@ class MobileApiController extends Controller
         ]);
     }
 
-    public function search(Request $request)
+    public function search(Request $request, \App\Services\FilmSearchService $filmSearch)
     {
         $q = $request->query('q', '');
         if (empty(trim($q))) {
             return response()->json(['success' => true, 'data' => []]);
         }
 
-        $films = Film::with('genres')
-            ->where('title', 'LIKE', "%{$q}%")
-            ->orWhere('synopsis', 'LIKE', "%{$q}%")
-            ->limit(20)
-            ->get();
+        $paginator = $filmSearch->search($q, [], 30, $request->ip());
+        $films = $paginator ? collect($paginator->items()) : collect();
 
         return response()->json([
             'success' => true,

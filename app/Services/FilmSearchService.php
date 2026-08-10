@@ -17,7 +17,8 @@ class FilmSearchService
     const MIN_QUERY_LENGTH = 2;
 
     public function __construct(
-        private NvidiaAiService $nvidia
+        private NvidiaAiService $nvidia,
+        private MovieBoxService $movieBox
     ) {}
 
     public function search(string $query, array $filters = [], int $perPage = 30, ?string $ip = null): ?LengthAwarePaginator
@@ -28,10 +29,31 @@ class FilmSearchService
             return null;
         }
 
-        // Fast local database search first (< 5ms)
+        // 1. Direct Local DB SQL Match
         $results = $this->buildQuery($query, $filters, $perPage);
 
-        // Fallback to AI query interpretation only if 0 local results found
+        // 2. If results are sparse (< 5), attempt Fuzzy & Token Local Match
+        if ($results->total() < 5) {
+            $fuzzyResults = $this->fuzzyLocalSearch($query, $filters, $perPage);
+            if ($fuzzyResults && $fuzzyResults->total() > $results->total()) {
+                $results = $fuzzyResults;
+            }
+        }
+
+        // 3. If results are still sparse (< 3), fetch Live data from MovieBox API & Sync to DB
+        if ($results->total() < 3) {
+            $this->fetchAndSyncFromMovieBox($query);
+            // Re-query local DB after sync
+            $results = $this->buildQuery($query, $filters, $perPage);
+            if ($results->total() < 3) {
+                $fuzzyResults = $this->fuzzyLocalSearch($query, $filters, $perPage);
+                if ($fuzzyResults && $fuzzyResults->total() > $results->total()) {
+                    $results = $fuzzyResults;
+                }
+            }
+        }
+
+        // 4. Fallback to AI query interpretation if still 0 results found
         if ($results->total() === 0 && !empty(config('services.nvidia.api_key'))) {
             $aiInterpretation = $this->getAiInterpretation($query);
             if ($aiInterpretation) {
@@ -45,6 +67,31 @@ class FilmSearchService
         $this->logSearch($query, $results->total(), $ip);
 
         return $results;
+    }
+
+    /**
+     * Live Upstream Search from MovieBox API and Batch Sync to Local DB
+     */
+    public function fetchAndSyncFromMovieBox(string $query): void
+    {
+        $cleanQ = $this->sanitize($query);
+        $cacheKey = 'mb_live_sync_search_' . md5($cleanQ);
+
+        // Avoid spamming upstream API repeatedly within 10 minutes for the same query
+        Cache::remember($cacheKey, 600, function () use ($cleanQ) {
+            try {
+                $apiData = $this->movieBox->search($cleanQ, 1);
+                if (!empty($apiData)) {
+                    $subjects = Film::extractSearchSubjects($apiData);
+                    if (!empty($subjects)) {
+                        Film::syncFromApiBatch($subjects);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::debug("Live MovieBox sync search failed for '{$cleanQ}': " . $e->getMessage());
+            }
+            return true;
+        });
     }
 
     public function getAiInterpretation(string $query): ?array
@@ -61,7 +108,6 @@ class FilmSearchService
         $filmQuery = Film::forActiveProfile()->with('genres');
 
         $this->applyAiFilters($filmQuery, $interpretation);
-
         $this->applyAiMoodKeywords($filmQuery, $interpretation);
 
         $sort = $filters['sort'] ?? 'relevance';
@@ -160,6 +206,16 @@ class FilmSearchService
             ->where(function ($sub) use ($cleanQ, $normalizedQ, $sqlNormalizeTitle) {
                 $sub->where('title', 'LIKE', '%' . $cleanQ . '%')
                     ->orWhereRaw("{$sqlNormalizeTitle} LIKE ?", ['%' . $normalizedQ . '%']);
+
+                // Tokenize words for multi-word queries (e.g. "spider man")
+                $words = array_values(array_filter(explode(' ', strtolower($cleanQ)), fn($w) => strlen($w) >= 2));
+                if (count($words) > 1) {
+                    $sub->orWhere(function ($qWords) use ($words) {
+                        foreach ($words as $word) {
+                            $qWords->where('title', 'LIKE', '%' . $word . '%');
+                        }
+                    });
+                }
             });
 
         if (!empty($filters['genre'])) {
@@ -186,6 +242,132 @@ class FilmSearchService
         }
 
         return $filmQuery->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * PHP-based Fuzzy Search for Typo Tolerance (Levenshtein, Similar Text, Soundex, & Word Tokens)
+     */
+    public function fuzzyLocalSearch(string $query, array $filters = [], int $perPage = 30): ?LengthAwarePaginator
+    {
+        $cleanQ = strtolower($this->sanitize($query));
+        $queryWords = array_values(array_filter(explode(' ', $cleanQ), fn($w) => strlen($w) >= 2));
+
+        if (empty($cleanQ)) {
+            return null;
+        }
+
+        $candidatesQuery = Film::forActiveProfile()->with('genres', 'actors');
+
+        if (!empty($filters['genre'])) {
+            $candidatesQuery->whereHas('genres', fn($q) => $q->where('slug', $filters['genre']));
+        }
+        if (!empty($filters['type'])) {
+            $candidatesQuery->where('subject_type', $filters['type']);
+        }
+        if (!empty($filters['min_rating'])) {
+            $candidatesQuery->where('rating', '>=', (float)$filters['min_rating']);
+        }
+
+        $allFilms = $candidatesQuery->get();
+        if ($allFilms->isEmpty()) {
+            return null;
+        }
+
+        $matchedScores = [];
+        $querySoundex = soundex($cleanQ);
+
+        foreach ($allFilms as $film) {
+            $titleLower = strtolower($film->title);
+            $score = 0;
+
+            // 1. Check exact word token matching or partial match
+            $titleWords = array_values(array_filter(explode(' ', preg_replace('/[^a-z0-9 ]/', '', $titleLower))));
+            
+            // 2. Levenshtein edit distance & similar_text on full title
+            similar_text($cleanQ, $titleLower, $percent);
+            $lev = levenshtein($cleanQ, substr($titleLower, 0, 255));
+            $maxLen = max(strlen($cleanQ), strlen($titleLower));
+            $levScore = $maxLen > 0 ? (1 - ($lev / $maxLen)) * 100 : 0;
+
+            $maxSimilarity = max($percent, $levScore);
+
+            // 3. Word token level fuzzy matching (e.g., "spidrman" vs "spider")
+            $tokenMatchScore = 0;
+            foreach ($queryWords as $qWord) {
+                $bestWordScore = 0;
+                foreach ($titleWords as $tWord) {
+                    if (empty($tWord)) continue;
+                    
+                    if (str_contains($tWord, $qWord) || str_contains($qWord, $tWord)) {
+                        $bestWordScore = max($bestWordScore, 85);
+                    } else {
+                        $wLev = levenshtein($qWord, substr($tWord, 0, 255));
+                        $wMaxLen = max(strlen($qWord), strlen($tWord));
+                        if ($wLev <= 2 && $wMaxLen > 3) {
+                            $wScore = (1 - ($wLev / $wMaxLen)) * 100;
+                            $bestWordScore = max($bestWordScore, $wScore);
+                        }
+                    }
+                }
+                $tokenMatchScore += $bestWordScore;
+            }
+
+            if (count($queryWords) > 0) {
+                $avgTokenScore = $tokenMatchScore / count($queryWords);
+                $maxSimilarity = max($maxSimilarity, $avgTokenScore);
+            }
+
+            // 4. Soundex matching
+            if (soundex($titleLower) === $querySoundex) {
+                $maxSimilarity = max($maxSimilarity, 70);
+            }
+
+            // 5. Multi-field match in Synopsis or Actor names
+            if ($maxSimilarity < 45) {
+                if (str_contains(strtolower($film->synopsis ?? ''), $cleanQ)) {
+                    $maxSimilarity = 50;
+                }
+                foreach ($film->actors as $actor) {
+                    if (str_contains(strtolower($actor->name ?? ''), $cleanQ)) {
+                        $maxSimilarity = 65;
+                        break;
+                    }
+                }
+            }
+
+            // Threshold: Similarity >= 45% or Edit Distance score >= 45
+            if ($maxSimilarity >= 45) {
+                $matchedScores[$film->id] = $maxSimilarity;
+            }
+        }
+
+        if (empty($matchedScores)) {
+            return null;
+        }
+
+        // Sort film IDs by score descending
+        arsort($matchedScores);
+        $filmIds = array_keys($matchedScores);
+
+        // Retrieve films maintaining fuzzy score order
+        $orderedFilms = Film::forActiveProfile()
+            ->with('genres')
+            ->whereIn('id', $filmIds)
+            ->get()
+            ->sortByDesc(fn($f) => $matchedScores[$f->id] ?? 0)
+            ->values();
+
+        // Manual Pagination
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $slice = $orderedFilms->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $slice,
+            $orderedFilms->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => request()->query()]
+        );
     }
 
     public function autocomplete(string $query, bool $isPopular = false): array
@@ -222,7 +404,7 @@ class FilmSearchService
         $sqlNormalizeTitle = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(title, 'and', ''), 'dan', ''), '&', ''), '-', ''), ' ', ''), ':', ''), '.', ''), '!', ''), '?', ''))";
         $cacheKey = 'autocomplete_' . md5($clean);
 
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($clean, $normalized, $sqlNormalizeTitle) {
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($clean, $normalized, $sqlNormalizeTitle, $query) {
             $matches = Film::select('id', 'title', 'slug', 'release_year', 'poster_url', 'subject_type', 'rating')
                 ->where(function ($sub) use ($clean, $normalized, $sqlNormalizeTitle) {
                     $sub->where('title', 'LIKE', '%' . $clean . '%')
@@ -231,6 +413,14 @@ class FilmSearchService
                 ->orderByDesc('rating')
                 ->limit(8)
                 ->get();
+
+            if ($matches->count() < 4) {
+                $fuzzyPaginator = $this->fuzzyLocalSearch($query, [], 8);
+                if ($fuzzyPaginator && $fuzzyPaginator->total() > 0) {
+                    $fuzzyItems = collect($fuzzyPaginator->items());
+                    $matches = $matches->concat($fuzzyItems)->unique('id')->take(8);
+                }
+            }
 
             return $matches->map(function ($film) {
                 return [
