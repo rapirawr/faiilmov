@@ -209,6 +209,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
 
+    // Custom PHP Script Runner & Saved Scripts
+    Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
+    Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');
+    Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->name('scripts.execute');
+    Route::delete('/scripts/{script}', [\App\Http\Controllers\Admin\AdminScriptController::class, 'destroy'])->name('scripts.destroy');
+
     // API Tester & Postman Suite
     Route::get('/api-tester', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'index'])->name('api_tester.index');
     Route::get('/api-tester/export-postman', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'exportPostman'])->name('api_tester.export_postman');
