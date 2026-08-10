@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="O5FIi4EuweW7xm1i2EspXhFlPbSIPOx4ZQ3gZMp1wmM">
+
     <!-- Primary Meta Tags -->
     <title>@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')</title>
     <meta name="title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
