@@ -563,7 +563,7 @@ function navProfileState() {
                     <div class="p-2 space-y-0.5">
                         <a href="{{ route('profile') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
                             <i data-lucide="user-cog" class="w-4 h-4 text-zinc-400"></i>
-                            <span>Pengaturan Pengguna</span>
+                            <span>Akun</span>
                         </a>
 
                         <a href="{{ route('notifications.index') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
