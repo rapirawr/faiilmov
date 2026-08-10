@@ -5,7 +5,8 @@ namespace App\Services;
 use App\Models\Film;
 use App\Models\SearchLog;
 use App\Models\Genre;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
@@ -358,15 +359,15 @@ class FilmSearchService
             ->values();
 
         // Manual Pagination
-        $page = LengthAwarePaginator::resolveCurrentPage();
+        $page = Paginator::resolveCurrentPage();
         $slice = $orderedFilms->slice(($page - 1) * $perPage, $perPage)->values();
 
-        return new \Illuminate\Pagination\LengthAwarePaginator(
+        return new LengthAwarePaginator(
             $slice,
             $orderedFilms->count(),
             $perPage,
             $page,
-            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => request()->query()]
+            ['path' => Paginator::resolveCurrentPath(), 'query' => request()->query()]
         );
     }
 
