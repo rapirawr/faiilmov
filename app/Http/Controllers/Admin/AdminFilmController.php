@@ -95,6 +95,7 @@ class AdminFilmController extends Controller
             'actors' => 'nullable|array',
             'actors.*' => 'exists:actors,id',
             'actor_characters' => 'nullable|array',
+            'actor_roles' => 'nullable|array',
         ]);
 
         $posterUrl = $request->poster_url;
@@ -127,7 +128,11 @@ class AdminFilmController extends Controller
             $actorData = [];
             foreach ($validated['actors'] as $actorId) {
                 $charName = $request->input("actor_characters.{$actorId}", null);
-                $actorData[$actorId] = ['character_name' => $charName];
+                $roleType = $request->input("actor_roles.{$actorId}", 'regular');
+                $actorData[$actorId] = [
+                    'character_name' => $charName,
+                    'role_type' => in_array($roleType, ['main', 'regular']) ? $roleType : 'regular',
+                ];
             }
             $film->actors()->sync($actorData);
         }
@@ -142,7 +147,6 @@ class AdminFilmController extends Controller
         $film->load(['genres', 'actors', 'seasons.episodes']);
         $genres = Genre::orderBy('name')->get();
         $actors = Actor::orderBy('name')->get();
-
         return view('admin.films.edit', compact('film', 'genres', 'actors'));
     }
 
@@ -167,6 +171,7 @@ class AdminFilmController extends Controller
             'actors' => 'nullable|array',
             'actors.*' => 'exists:actors,id',
             'actor_characters' => 'nullable|array',
+            'actor_roles' => 'nullable|array',
         ]);
 
         if ($request->hasFile('poster')) {
@@ -197,7 +202,11 @@ class AdminFilmController extends Controller
             $actorData = [];
             foreach ($validated['actors'] as $actorId) {
                 $charName = $request->input("actor_characters.{$actorId}", null);
-                $actorData[$actorId] = ['character_name' => $charName];
+                $roleType = $request->input("actor_roles.{$actorId}", 'regular');
+                $actorData[$actorId] = [
+                    'character_name' => $charName,
+                    'role_type' => in_array($roleType, ['main', 'regular']) ? $roleType : 'regular',
+                ];
             }
             $film->actors()->sync($actorData);
         } else {

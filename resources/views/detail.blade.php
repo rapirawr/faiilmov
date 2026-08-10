@@ -295,21 +295,66 @@
 
             <!-- Cast / Actors -->
             @if($film->actors->count() > 0)
-                <section>
-                    <h3 class="font-serif font-bold text-xl text-white mb-4">Pemeran / Aktor</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        @foreach($film->actors as $actor)
-                            <div class="glass-card p-3 rounded-2xl border border-white/10 flex items-center gap-3">
-                                <img src="{{ $actor->photo_url ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' }}" 
-                                     alt="{{ $actor->name }}" 
-                                     class="w-10 h-10 rounded-xl object-cover bg-dark-900">
-                                <div class="min-w-0">
-                                    <h4 class="text-xs font-semibold text-white truncate">{{ $actor->name }}</h4>
-                                    <p class="text-[11px] text-zinc-400 truncate">{{ $actor->pivot->character_name ?: 'Peran' }}</p>
-                                </div>
+                @php
+                    $mainActors = $film->actors->filter(fn($a) => $a->pivot->role_type === 'main');
+                    $regularActors = $film->actors->filter(fn($a) => $a->pivot->role_type !== 'main');
+                @endphp
+
+                <section class="space-y-6">
+                    <!-- Pemeran Utama -->
+                    @if($mainActors->count() > 0)
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
+                                <h3 class="font-serif font-bold text-lg text-white">Pemeran Utama</h3>
+                                <span class="text-[10px] text-amber-400 font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">Lead Cast</span>
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                @foreach($mainActors as $actor)
+                                    <div class="glass-card p-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 hover:border-amber-400/60 transition-all flex items-center gap-3 shadow-md relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 w-6 h-6 bg-amber-500/20 rounded-bl-xl flex items-center justify-center text-amber-400">
+                                            <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                                        </div>
+                                        <img src="{{ $actor->photo_url ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' }}" 
+                                             alt="{{ $actor->name }}" 
+                                             class="w-11 h-11 rounded-xl object-cover bg-dark-900 border border-amber-500/20 shrink-0">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="text-xs font-bold text-white truncate">{{ $actor->name }}</h4>
+                                            <p class="text-[11px] text-amber-300/80 truncate">{{ $actor->pivot->character_name ?: 'Peran Utama' }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Pemeran Pendukung / Regular Cast -->
+                    @if($regularActors->count() > 0 || $mainActors->count() === 0)
+                        @php
+                            $displayRegulars = $mainActors->count() > 0 ? $regularActors : $film->actors;
+                        @endphp
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <i data-lucide="users" class="w-4 h-4 text-zinc-400"></i>
+                                <h3 class="font-serif font-bold text-lg text-white">
+                                    {{ $mainActors->count() > 0 ? 'Pemeran Pendukung' : 'Pemeran / Aktor' }}
+                                </h3>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                @foreach($displayRegulars as $actor)
+                                    <div class="glass-card p-3 rounded-2xl border border-white/10 flex items-center gap-3 hover:border-white/20 transition-all">
+                                        <img src="{{ $actor->photo_url ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150' }}" 
+                                             alt="{{ $actor->name }}" 
+                                             class="w-10 h-10 rounded-xl object-cover bg-dark-900 shrink-0">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="text-xs font-semibold text-white truncate">{{ $actor->name }}</h4>
+                                            <p class="text-[11px] text-zinc-400 truncate">{{ $actor->pivot->character_name ?: 'Peran' }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </section>
             @endif
 

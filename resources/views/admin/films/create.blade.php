@@ -148,16 +148,32 @@
                 </div>
 
                 <!-- Actors / Cast -->
-                <div class="md:col-span-2 space-y-2">
-                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">Pemeran Utama (Cast)</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-zinc-950 border border-white/10 max-h-60 overflow-y-auto">
+                <div class="md:col-span-2 space-y-2" x-data="{ actorSearch: '' }">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">Pemeran Utama (Cast)</label>
+                        <!-- Search Box Input -->
+                        <div class="relative min-w-[220px]">
+                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+                            <input type="text" 
+                                   x-model="actorSearch" 
+                                   placeholder="Cari nama aktor..." 
+                                   class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-zinc-950 border border-white/10 max-h-64 overflow-y-auto">
                         @foreach($actors as $actor)
-                            <div class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/60 border border-white/5">
+                            <div x-show="!actorSearch || '{{ strtolower(addslashes($actor->name)) }}'.includes(actorSearch.toLowerCase())"
+                                 class="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/60 border border-white/5 hover:border-white/20 transition-colors">
                                 <input type="checkbox" name="actors[]" value="{{ $actor->id }}" id="actor-{{ $actor->id }}" 
                                        class="rounded border-white/20 bg-zinc-900 text-amber-500 focus:ring-amber-500">
                                 <label for="actor-{{ $actor->id }}" class="text-xs font-bold text-white flex-1 cursor-pointer truncate">
                                     {{ $actor->name }}
                                 </label>
+                                <select name="actor_roles[{{ $actor->id }}]" class="bg-zinc-950 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-amber-400 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+                                    <option value="main">⭐ Utama</option>
+                                    <option value="regular" selected>Pemeran</option>
+                                </select>
                                 <input type="text" name="actor_characters[{{ $actor->id }}]" placeholder="Nama Karakter..." 
                                        class="w-28 bg-zinc-950 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500">
                             </div>

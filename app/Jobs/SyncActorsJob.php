@@ -64,6 +64,7 @@ class SyncActorsJob implements ShouldQueue
                 $staffList = $details['staffList'] ?? $details['starList'] ?? $details['actors'] ?? $details['actorList'] ?? [];
 
                 if (is_array($staffList)) {
+                    $actorIndex = 0;
                     foreach ($staffList as $staff) {
                         $name = trim($staff['name'] ?? '');
                         if (empty($name)) continue;
@@ -106,7 +107,12 @@ class SyncActorsJob implements ShouldQueue
                             }
                         }
 
-                        $actorsFound[$actor->id] = ['character_name' => $character ?: null];
+                        $roleType = ($actorIndex < 2) ? 'main' : 'regular';
+                        $actorsFound[$actor->id] = [
+                            'character_name' => $character ?: null,
+                            'role_type' => $roleType,
+                        ];
+                        $actorIndex++;
                     }
                 }
 

@@ -49,7 +49,21 @@ class Film extends Model
 
     public function actors()
     {
-        return $this->belongsToMany(Actor::class, 'film_actor')->withPivot('character_name');
+        return $this->belongsToMany(Actor::class, 'film_actor')->withPivot(['character_name', 'role_type']);
+    }
+
+    public function mainActors()
+    {
+        return $this->belongsToMany(Actor::class, 'film_actor')
+            ->wherePivot('role_type', 'main')
+            ->withPivot(['character_name', 'role_type']);
+    }
+
+    public function regularActors()
+    {
+        return $this->belongsToMany(Actor::class, 'film_actor')
+            ->wherePivot('role_type', 'regular')
+            ->withPivot(['character_name', 'role_type']);
     }
 
     public function reviews()
