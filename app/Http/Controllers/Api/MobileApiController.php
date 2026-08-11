@@ -850,6 +850,22 @@ class MobileApiController extends Controller
 
         if ($includeDetails) {
             $data['cast'] = $film->actors ? $film->actors->pluck('name')->toArray() : [];
+            $data['actors'] = $film->actors ? $film->actors->map(function($actor) {
+                return [
+                    'id' => $actor->id,
+                    'name' => $actor->name,
+                    'photo_url' => $actor->photo_url,
+                    'character_name' => $actor->pivot->character_name ?? '',
+                    'role_type' => $actor->pivot->role_type ?? 'regular',
+                ];
+            })->values()->toArray() : [];
+
+            try {
+                $data['soundtracks'] = app(\App\Services\SoundtrackService::class)->getSoundtracksForFilm($film);
+            } catch (\Throwable $e) {
+                $data['soundtracks'] = [];
+            }
+
             $data['duration_minutes'] = $film->duration_minutes;
             $data['max_resolution'] = $film->max_resolution;
         }
