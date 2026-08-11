@@ -38,10 +38,18 @@ class MobileApiController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first() ?? 'Email atau password tidak valid',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
         $user = User::where('email', $request->email)->first();
 
@@ -68,11 +76,19 @@ class MobileApiController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first() ?? 'Pendaftaran gagal. Periksa data Anda.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
         $user = User::create([
             'name' => $request->name,
