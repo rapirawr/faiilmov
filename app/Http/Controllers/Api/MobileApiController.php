@@ -469,6 +469,55 @@ class MobileApiController extends Controller
         ]);
     }
 
+    public function becauseYouWatched(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        $profileId = $this->resolveProfileId($request);
+
+        $query = WatchHistory::with('film.genres')->where('user_id', $user->id);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+        $lastWatched = $query->latest('updated_at')->first();
+
+        if (!$lastWatched || !$lastWatched->film) {
+            $recommendations = Film::with('genres')->inRandomOrder()->limit(10)->get();
+            return response()->json([
+                'success' => true,
+                'last_watched_title' => null,
+                'data' => $recommendations->map(fn($film) => $this->formatFilm($film)),
+            ]);
+        }
+
+        $lastFilm = $lastWatched->film;
+        $genreIds = $lastFilm->genres->pluck('id')->toArray();
+
+        $recommendations = Film::with('genres')
+            ->where('id', '!=', $lastFilm->id)
+            ->whereHas('genres', function ($q) use ($genreIds) {
+                $q->whereIn('genres.id', $genreIds);
+            })
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        if ($recommendations->isEmpty()) {
+            $recommendations = Film::with('genres')
+                ->where('id', '!=', $lastFilm->id)
+                ->inRandomOrder()
+                ->limit(10)
+                ->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'last_watched_title' => $lastFilm->title,
+            'data' => $recommendations->map(fn($film) => $this->formatFilm($film)),
+        ]);
+    }
+
     public function showMovie($id, Request $request)
     {
         $film = Film::with(['genres', 'actors', 'reviews.user'])->findOrFail($id);
