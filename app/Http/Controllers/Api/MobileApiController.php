@@ -531,6 +531,8 @@ class MobileApiController extends Controller
             'success' => true,
             'last_watched_title' => $lastFilm->title,
             'data' => $recommendations->map(fn($film) => $this->formatFilm($film)),
+            ]);
+    }
     public function getAvatars()
     {
         $styles = [
