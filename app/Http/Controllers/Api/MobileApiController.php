@@ -469,13 +469,37 @@ class MobileApiController extends Controller
         ]);
     }
 
-    public function showMovie($id)
+    public function showMovie($id, Request $request)
     {
         $film = Film::with(['genres', 'actors', 'reviews.user'])->findOrFail($id);
+        $user = $this->resolveUser($request);
+        $profileId = $this->resolveProfileId($request);
+
+        $data = $this->formatFilm($film, true);
+
+        // Check if in watchlist for this specific profile or main account
+        $wlQuery = Watchlist::where('user_id', $user->id)->where('film_id', $id);
+        if ($profileId) {
+            $wlQuery->where('profile_id', $profileId);
+        } else {
+            $wlQuery->whereNull('profile_id');
+        }
+        $data['is_in_watchlist'] = $wlQuery->exists();
+
+        // Check watch history for this specific profile or main account
+        $whQuery = WatchHistory::where('user_id', $user->id)->where('film_id', $id);
+        if ($profileId) {
+            $whQuery->where('profile_id', $profileId);
+        } else {
+            $whQuery->whereNull('profile_id');
+        }
+        $history = $whQuery->first();
+        $data['progress_seconds'] = $history->progress_seconds ?? 0;
+        $data['completed'] = (bool)($history->completed ?? false);
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatFilm($film, true),
+            'data' => $data,
         ]);
     }
 
