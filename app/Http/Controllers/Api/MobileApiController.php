@@ -702,6 +702,14 @@ class MobileApiController extends Controller
 
     public function postReview($id, Request $request)
     {
+        $profileId = $this->resolveProfileId($request);
+        if ($profileId !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sub-akun tidak memiliki izin untuk memberikan ulasan/rating.',
+            ], 403);
+        }
+
         $request->validate([
             'rating' => 'required|numeric|min:1|max:5',
             'comment' => 'required|string|max:1000',
