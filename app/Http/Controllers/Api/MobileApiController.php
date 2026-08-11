@@ -303,7 +303,15 @@ class MobileApiController extends Controller
     public function clearWatchHistory(Request $request)
     {
         $user = $this->resolveUser($request);
-        WatchHistory::where('user_id', $user->id)->delete();
+        $profileId = $this->resolveProfileId($request);
+
+        $query = WatchHistory::where('user_id', $user->id);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+        $query->delete();
 
         return response()->json([
             'success' => true,
@@ -314,7 +322,15 @@ class MobileApiController extends Controller
     public function clearWatchlist(Request $request)
     {
         $user = $this->resolveUser($request);
-        Watchlist::where('user_id', $user->id)->delete();
+        $profileId = $this->resolveProfileId($request);
+
+        $query = Watchlist::where('user_id', $user->id);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+        $query->delete();
 
         return response()->json([
             'success' => true,
@@ -498,13 +514,32 @@ class MobileApiController extends Controller
     // WATCHLIST & HISTORY SYNC ENDPOINTS
     // ==========================================
 
+    private function resolveProfileId(Request $request): ?int
+    {
+        $profileId = $request->header('X-Profile-ID') 
+            ?? $request->input('profile_id') 
+            ?? $request->query('profile_id');
+
+        if ($profileId !== null && is_numeric($profileId) && (int)$profileId > 0) {
+            return (int)$profileId;
+        }
+
+        return null;
+    }
+
     public function getWatchlist(Request $request)
     {
         $user = $this->resolveUser($request);
-        $watchlists = Watchlist::with('film.genres')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
+        $profileId = $this->resolveProfileId($request);
+
+        $query = Watchlist::with('film.genres')->where('user_id', $user->id);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+
+        $watchlists = $query->latest()->get();
 
         $films = $watchlists->map(function ($item) {
             return $item->film ? $this->formatFilm($item->film) : null;
@@ -523,10 +558,12 @@ class MobileApiController extends Controller
         ]);
 
         $user = $this->resolveUser($request);
+        $profileId = $this->resolveProfileId($request);
         $filmId = $request->film_id;
 
         Watchlist::firstOrCreate([
             'user_id' => $user->id,
+            'profile_id' => $profileId,
             'film_id' => $filmId,
         ]);
 
@@ -539,10 +576,15 @@ class MobileApiController extends Controller
     public function removeFromWatchlist($filmId, Request $request)
     {
         $user = $this->resolveUser($request);
+        $profileId = $this->resolveProfileId($request);
 
-        Watchlist::where('user_id', $user->id)
-            ->where('film_id', $filmId)
-            ->delete();
+        $query = Watchlist::where('user_id', $user->id)->where('film_id', $filmId);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+        $query->delete();
 
         return response()->json([
             'success' => true,
@@ -553,10 +595,16 @@ class MobileApiController extends Controller
     public function getWatchHistory(Request $request)
     {
         $user = $this->resolveUser($request);
-        $history = WatchHistory::with('film.genres')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
+        $profileId = $this->resolveProfileId($request);
+
+        $query = WatchHistory::with('film.genres')->where('user_id', $user->id);
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->whereNull('profile_id');
+        }
+
+        $history = $query->latest()->get();
 
         $data = $history->map(function ($item) {
             if (!$item->film) return null;
@@ -584,9 +632,10 @@ class MobileApiController extends Controller
         ]);
 
         $user = $this->resolveUser($request);
+        $profileId = $this->resolveProfileId($request);
 
         WatchHistory::updateOrCreate(
-            ['user_id' => $user->id, 'film_id' => $request->film_id],
+            ['user_id' => $user->id, 'profile_id' => $profileId, 'film_id' => $request->film_id],
             [
                 'progress_seconds' => $request->progress_seconds ?? 0,
                 'completed' => $request->completed ?? false,
