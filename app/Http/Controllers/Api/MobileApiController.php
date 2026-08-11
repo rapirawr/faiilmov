@@ -360,11 +360,20 @@ class MobileApiController extends Controller
 
     public function featured()
     {
-        $films = Film::with('genres')
-            ->whereNotNull('backdrop_url')
-            ->orderBy('rating', 'desc')
-            ->limit(5)
-            ->get();
+        $featuredIds = json_decode(\App\Models\Setting::get('featured_film_ids', '[]'), true) ?: [];
+        if (!empty($featuredIds)) {
+            $ids = array_map('intval', $featuredIds);
+            $films = Film::with('genres')->whereIn('id', $ids)->get();
+            if ($films->isNotEmpty()) {
+                $films = $films->sortBy(function ($film) use ($ids) {
+                    return array_search($film->id, $ids);
+                })->values();
+            } else {
+                $films = Film::with('genres')->whereNotNull('backdrop_url')->orderBy('rating', 'desc')->limit(6)->get();
+            }
+        } else {
+            $films = Film::with('genres')->whereNotNull('backdrop_url')->orderBy('rating', 'desc')->limit(6)->get();
+        }
 
         return response()->json([
             'success' => true,
