@@ -17,7 +17,7 @@ class AdminAppReleaseController extends Controller
         $versionData = [
             'latest_version' => '1.0.0',
             'latest_build_number' => 1,
-            'download_url' => url('/download/faiilmov-release.apk'),
+            'download_url' => url('/apk-files/faiilmov-release.apk'),
             'force_update' => false,
             'release_notes' => 'Rilis perdana aplikasi mobile.',
         ];
@@ -30,21 +30,48 @@ class AdminAppReleaseController extends Controller
             }
         }
 
-        // List files in public/download folder
-        $downloadDir = public_path('download');
+        if (isset($versionData['download_url'])) {
+            $versionData['download_url'] = preg_replace('/^https:\/\/(127\.0\.0\.1|localhost)/', 'http://$1', $versionData['download_url']);
+        }
+
+        // List files in public/apk-files folder
+        $downloadDir = public_path('apk-files');
         $uploadedFiles = [];
 
         if (File::exists($downloadDir)) {
             $files = File::files($downloadDir);
+            $latestMtime = 0;
+            $latestFile = null;
+
             foreach ($files as $file) {
                 if ($file->getFilename() === '.gitkeep') continue;
+
+                if (strtolower($file->getExtension()) === 'apk') {
+                    if ($file->getMTime() > $latestMtime) {
+                        $latestMtime = $file->getMTime();
+                        $latestFile = $file;
+                    }
+                }
+
+                $fileUrl = asset('apk-files/' . $file->getFilename());
+                $fileUrl = preg_replace('/^https:\/\/(127\.0\.0\.1|localhost)/', 'http://$1', $fileUrl);
                 $uploadedFiles[] = [
                     'name' => $file->getFilename(),
                     'size' => $this->formatFileSize($file->getSize()),
                     'size_bytes' => $file->getSize(),
                     'modified_at' => date('d M Y H:i', $file->getMTime()),
-                    'url' => asset('download/' . $file->getFilename()),
+                    'url' => $fileUrl,
                 ];
+            }
+
+            if ($latestFile) {
+                $apkMeta = \App\Services\ApkParser::parse($latestFile->getRealPath());
+                if (!empty($apkMeta['version_name'])) {
+                    $versionData['latest_version'] = $apkMeta['version_name'];
+                }
+                if (!empty($apkMeta['build_number'])) {
+                    $versionData['latest_build_number'] = (int) $apkMeta['build_number'];
+                }
             }
         }
 
@@ -57,43 +84,79 @@ class AdminAppReleaseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'version_name' => 'required|string|max:20',
-            'build_number' => 'required|integer|min:1',
-            'download_url' => 'nullable|url',
+            'version_name' => 'nullable|string|max:20',
+            'build_number' => 'nullable|integer|min:1',
             'apk_file'     => 'nullable|file|max:204800', // Max 200MB
             'release_notes'=> 'required|string|max:2000',
         ], [
-            'version_name.required' => 'Nama versi (misal 1.0.1) wajib diisi.',
-            'build_number.required' => 'Nomor build wajib diisi.',
             'apk_file.max'          => 'Ukuran file APK maksimal adalah 200MB.',
             'release_notes.required'=> 'Catatan pembaruan wajib diisi.',
         ]);
 
-        $versionName = trim($request->input('version_name'));
-        $buildNumber = (int) $request->input('build_number');
+        $versionFilePath = public_path('version.json');
+        $existingData = [
+            'latest_version' => '1.0.0',
+            'latest_build_number' => 1,
+            'download_url' => url('/apk-files/faiilmov-release.apk'),
+        ];
+        if (File::exists($versionFilePath)) {
+            $jsonContent = File::get($versionFilePath);
+            $decoded = json_decode($jsonContent, true);
+            if (is_array($decoded)) {
+                $existingData = array_merge($existingData, $decoded);
+            }
+        }
+
+        $versionName = trim($request->input('version_name') ?? '');
+        $buildNumber = $request->filled('build_number') ? (int) $request->input('build_number') : null;
         $forceUpdate = $request->has('force_update');
         $releaseNotes = trim($request->input('release_notes'));
-
         $downloadUrl = $request->input('download_url');
 
-        // Handle APK file upload
+        // Handle APK file upload and auto-extract version & build number
         if ($request->hasFile('apk_file')) {
             $file = $request->file('apk_file');
-            $downloadDir = public_path('download');
+            $downloadDir = public_path('apk-files');
 
             if (!File::exists($downloadDir)) {
                 File::makeDirectory($downloadDir, 0755, true);
+            }
+
+            // Extract versionName and versionCode directly from uploaded APK binary metadata
+            $apkMeta = \App\Services\ApkParser::parse($file->getRealPath());
+            
+            if (!empty($apkMeta['version_name'])) {
+                $versionName = $apkMeta['version_name'];
+            }
+            if (!empty($apkMeta['build_number'])) {
+                $buildNumber = (int) $apkMeta['build_number'];
+            }
+
+            // Fallback if APK parser didn't find versionName
+            if (empty($versionName)) {
+                $versionName = $existingData['latest_version'];
+            }
+            if (empty($buildNumber)) {
+                $buildNumber = $existingData['latest_build_number'] + 1;
             }
 
             $cleanVersion = preg_replace('/[^a-zA-Z0-9\._-]/', '', $versionName);
             $fileName = 'faiilmov-v' . $cleanVersion . '.apk';
             
             $file->move($downloadDir, $fileName);
-            $downloadUrl = asset('download/' . $fileName);
+            $downloadUrl = asset('apk-files/' . $fileName);
+        }
+
+        // Final fallback if no file was uploaded and inputs were left empty
+        if (empty($versionName)) {
+            $versionName = $existingData['latest_version'];
+        }
+        if (empty($buildNumber)) {
+            $buildNumber = $existingData['latest_build_number'];
         }
 
         if (empty($downloadUrl)) {
-            $downloadUrl = asset('download/faiilmov-v' . $versionName . '.apk');
+            $downloadUrl = asset('apk-files/faiilmov-v' . $versionName . '.apk');
         }
 
         // Save config to version.json
@@ -108,7 +171,18 @@ class AdminAppReleaseController extends Controller
 
         File::put(public_path('version.json'), json_encode($versionData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-        return redirect()->back()->with('success', "Rilis versi {$versionName} (Build {$buildNumber}) berhasil dipublikasikan!");
+        $msg = "Rilis versi {$versionName} (Build {$buildNumber}) berhasil dipublikasikan!";
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'version' => $versionName,
+                'build'   => $buildNumber,
+            ]);
+        }
+
+        return redirect()->back()->with('success', $msg);
     }
 
     /**
@@ -116,7 +190,7 @@ class AdminAppReleaseController extends Controller
      */
     public function destroyFile($filename)
     {
-        $filePath = public_path('download/' . basename($filename));
+        $filePath = public_path('apk-files/' . basename($filename));
         if (File::exists($filePath)) {
             File::delete($filePath);
             return redirect()->back()->with('success', "File APK {$filename} berhasil dihapus.");
