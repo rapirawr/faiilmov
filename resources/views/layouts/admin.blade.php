@@ -210,6 +210,13 @@
                                 <span>Activity Audit Log</span>
                             </a>
 
+                            <a href="{{ route('admin.app_release.index') }}" 
+                               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                                <span class="text-zinc-600 font-mono text-[10px]">└</span>
+                                <i data-lucide="smartphone" class="w-3.5 h-3.5 text-sky-400"></i>
+                                <span>Rilis APK Mobile</span>
+                            </a>
+
                             <a href="{{ route('admin.settings.index') }}" 
                                class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-white/15' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="text-zinc-600 font-mono text-[10px]">└</span>

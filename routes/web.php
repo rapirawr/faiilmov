@@ -101,6 +101,7 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminActivityLogController;
+use App\Http\Controllers\Admin\AdminAppReleaseController;
 
 // Auth Routes (Authenticated Users)
 Route::middleware('auth')->group(function () {
@@ -219,6 +220,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // API Tester & Postman Suite
     Route::get('/api-tester', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'index'])->name('api_tester.index');
     Route::get('/api-tester/export-postman', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'exportPostman'])->name('api_tester.export_postman');
+
+    // APK Mobile Release Management
+    Route::get('/app-release', [AdminAppReleaseController::class, 'index'])->name('app_release.index');
+    Route::post('/app-release', [AdminAppReleaseController::class, 'store'])->name('app_release.store');
+    Route::delete('/app-release/file/{filename}', [AdminAppReleaseController::class, 'destroyFile'])->name('app_release.destroy_file');
 });
 
 // MovieBox API Proxy Routes (For Stream Player & Modal) - ADD RATE LIMITING

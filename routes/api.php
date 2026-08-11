@@ -109,6 +109,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::get('/settings', [MobileApiController::class, 'getSettings']);
     Route::get('/changelogs', [MobileApiController::class, 'getChangelogs']);
     Route::get('/changelogs/latest', [MobileApiController::class, 'getLatestChangelog']);
+    Route::get('/app-version', [MobileApiController::class, 'getAppVersion']);
 
     // ---------------------------------------------------------
     // 13. ADMIN ACTIVITY LOGS
