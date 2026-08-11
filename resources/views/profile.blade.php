@@ -43,8 +43,6 @@
                         <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-extrabold uppercase">Profil Anak</span>
                     @elseif($activeProfile)
                         <span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/20 text-[10px] font-extrabold uppercase">Sub Profil</span>
-                    @elseif($user->is_admin)
-                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold uppercase">Akun Utama • Admin</span>
                     @else
                         <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold uppercase">Akun Utama</span>
                     @endif
