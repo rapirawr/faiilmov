@@ -36,6 +36,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::get('/movies/trending', [MobileApiController::class, 'trending']);
     Route::get('/movies/popular-series', [MobileApiController::class, 'popularSeries']);
     Route::get('/movies/because-you-watched', [MobileApiController::class, 'becauseYouWatched']);
+    Route::get('/avatars', [MobileApiController::class, 'getAvatars']);
     Route::get('/movies/{id}', [MobileApiController::class, 'showMovie']);
     Route::get('/browse', [MobileApiController::class, 'browse']);
 

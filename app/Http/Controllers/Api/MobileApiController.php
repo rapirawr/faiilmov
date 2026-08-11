@@ -515,6 +515,31 @@ class MobileApiController extends Controller
             'success' => true,
             'last_watched_title' => $lastFilm->title,
             'data' => $recommendations->map(fn($film) => $this->formatFilm($film)),
+    public function getAvatars()
+    {
+        $styles = [
+            'avataaars' => ['Felix', 'Luna', 'Jasper', 'Zara', 'Nova', 'Atlas', 'Ember', 'Lyra'],
+            'bottts' => ['Cyber', 'Gamer', 'Robo', 'Mochi', 'Spark', 'Echo', 'Volt', 'Byte'],
+            'lorelei' => ['Clara', 'Mia', 'Leo', 'Toby', 'Skye', 'Chloe', 'Oliver', 'Zoe'],
+            'adventurer' => ['Orion', 'Finn', 'Freya', 'Rowan', 'Jax', 'Aria', 'Kael', 'Siren'],
+            'fun-emoji' => ['Happy', 'Chill', 'Cool', 'Wink', 'Party', 'Star', 'Smile', 'Love'],
+            'thumbs' => ['Joy', 'Sunny', 'Cookie', 'Boba', 'Pancake', 'Pixel', 'Hero', 'Sparky'],
+        ];
+
+        $avatars = [];
+        foreach ($styles as $style => $seeds) {
+            foreach ($seeds as $seed) {
+                $avatars[] = [
+                    'style' => $style,
+                    'seed' => $seed,
+                    'url' => "https://api.dicebear.com/7.x/{$style}/png?seed={$seed}&size=150",
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $avatars,
         ]);
     }
 
