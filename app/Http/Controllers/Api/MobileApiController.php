@@ -381,6 +381,50 @@ class MobileApiController extends Controller
         ]);
     }
 
+    public function banners()
+    {
+        $featuredIds = json_decode(\App\Models\Setting::get('featured_film_ids', '[]'), true) ?: [];
+        if (!empty($featuredIds)) {
+            $ids = array_map('intval', $featuredIds);
+            $films = Film::with('genres')->whereIn('id', $ids)->get();
+            if ($films->isNotEmpty()) {
+                $films = $films->sortBy(function ($film) use ($ids) {
+                    return array_search($film->id, $ids);
+                })->values();
+            } else {
+                $films = Film::with('genres')->whereNotNull('backdrop_url')->orderBy('rating', 'desc')->limit(6)->get();
+            }
+        } else {
+            $films = Film::with('genres')->whereNotNull('backdrop_url')->orderBy('rating', 'desc')->limit(6)->get();
+        }
+
+        $banners = $films->map(function ($f) {
+            return [
+                'id' => $f->id,
+                'title' => $f->title,
+                'slug' => $f->slug ?? Str::slug($f->title),
+                'backdrop_url' => $f->backdrop_url ?: $f->poster_url,
+                'poster_url' => $f->poster_url,
+                'rating' => (float) ($f->rating ?? 0.0),
+                'release_year' => (string) ($f->release_year ?? ''),
+                'subject_type' => $f->subject_type ?? 'movie',
+                'synopsis' => $f->synopsis ?? '',
+                'genres' => $f->genres ? $f->genres->pluck('name')->toArray() : [],
+                'genres_string' => $f->genres ? $f->genres->pluck('name')->implode(', ') : '',
+                'web_url' => url('/film/' . ($f->slug ?? Str::slug($f->title))),
+                'video_url' => $f->moviebox_subject_id 
+                    ? url('/moviebox/proxy-stream?id=' . urlencode($f->moviebox_subject_id)) 
+                    : ($f->trailer_url ?? ''),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'total' => $banners->count(),
+            'data' => $banners,
+        ]);
+    }
+
     public function trending()
     {
         $films = Film::with('genres')
