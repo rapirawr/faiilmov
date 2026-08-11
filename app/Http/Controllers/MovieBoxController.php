@@ -126,7 +126,17 @@ class MovieBoxController extends Controller
         $rawTitle = $request->query('title') ?? $request->query('name') ?? $request->query('filename');
         $isDownload = $request->boolean('download', false);
 
-        if (!$targetUrl) {
+        if (empty($targetUrl) && $subjectId) {
+            try {
+                $freshData = $this->movieBox->getResources($subjectId, $season, $episode, 1, null, 20, true);
+                $list = $freshData['list'] ?? [];
+                if (!empty($list)) {
+                    $targetUrl = $list[0]['resourceLink'] ?? $list[0]['url'] ?? $list[0]['playUrl'] ?? null;
+                }
+            } catch (\Exception $e) {}
+        }
+
+        if (empty($targetUrl)) {
             return response()->json(['error' => 'URL parameter is required.'], 400);
         }
 
