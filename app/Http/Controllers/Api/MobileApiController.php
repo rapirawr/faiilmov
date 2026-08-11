@@ -518,28 +518,25 @@ class MobileApiController extends Controller
     public function getAvatars()
     {
         $styles = [
-            'avataaars' => ['Felix', 'Luna', 'Jasper', 'Zara', 'Nova', 'Atlas', 'Ember', 'Lyra'],
-            'bottts' => ['Cyber', 'Gamer', 'Robo', 'Mochi', 'Spark', 'Echo', 'Volt', 'Byte'],
-            'lorelei' => ['Clara', 'Mia', 'Leo', 'Toby', 'Skye', 'Chloe', 'Oliver', 'Zoe'],
-            'adventurer' => ['Orion', 'Finn', 'Freya', 'Rowan', 'Jax', 'Aria', 'Kael', 'Siren'],
-            'fun-emoji' => ['Happy', 'Chill', 'Cool', 'Wink', 'Party', 'Star', 'Smile', 'Love'],
-            'thumbs' => ['Joy', 'Sunny', 'Cookie', 'Boba', 'Pancake', 'Pixel', 'Hero', 'Sparky'],
+            ['id' => 'avataaars-neutral', 'label' => 'Avataaars', 'emoji' => '🧑', 'api_style' => 'avataaars-neutral'],
+            ['id' => 'adventurer-neutral', 'label' => 'Adventurer', 'emoji' => '🧙', 'api_style' => 'adventurer-neutral'],
+            ['id' => 'bottts-neutral', 'label' => 'Bottts', 'emoji' => '🤖', 'api_style' => 'bottts-neutral'],
+            ['id' => 'blobs', 'label' => 'Blobs', 'emoji' => '🫧', 'api_style' => 'blobs'],
+            ['id' => 'clay', 'label' => 'Clay', 'emoji' => '🏺', 'api_style' => 'clay'],
+            ['id' => 'fun-emoji', 'label' => 'Fun Emoji', 'emoji' => '😄', 'api_style' => 'fun-emoji'],
         ];
 
-        $avatars = [];
-        foreach ($styles as $style => $seeds) {
-            foreach ($seeds as $seed) {
-                $avatars[] = [
-                    'style' => $style,
-                    'seed' => $seed,
-                    'url' => "https://api.dicebear.com/7.x/{$style}/png?seed={$seed}&size=150",
-                ];
-            }
-        }
+        $seeds = ['Felix','Luna','Mochi','Jasper','Zara','Echo','Orion','Nova','Sable','Atlas','Ember','Sage','Flynn','Lyra','Rune','Cleo','Onyx','Iris','Finn','Halo','Mira','Dax','Wren','Skye','Bex','Juno','Loki','Nyx','Cove','Ash','Storm','Vale','Rex','Zoe','Kai','Rue','Vex','Mox','Pax','Sol'];
 
         return response()->json([
             'success' => true,
-            'data' => $avatars,
+            'styles' => $styles,
+            'seeds' => $seeds,
+            'meta' => [
+                'total_seeds' => count($seeds),
+                'total_styles' => count($styles),
+                'provider' => 'DiceBear',
+            ],
         ]);
     }
 
