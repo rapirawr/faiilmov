@@ -38,7 +38,6 @@
                         <!-- Coming Soon / Segera Hadir Section -->
                         <div class="w-full max-w-lg space-y-4 text-left">
                             <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold text-xs shadow-lg shadow-amber-500/5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
                                 <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
                                 <span>Aplikasi Mobile - Segera Hadir (Coming Soon)</span>
                             </div>
@@ -137,49 +136,6 @@
 
     </div>
 
-    <!-- Section 2: Key Mobile Features -->
-    <div class="space-y-8 border-t border-white/10 pt-12">
-        <div class="text-center max-w-xl mx-auto space-y-2">
-            <span class="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Fitur Utama Versi Mobile</span>
-            <h2 class="font-serif font-bold text-2xl sm:text-3xl text-white">Kenapa Harus Menggunakan App Mobile faiilmov?</h2>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            
-            <div class="glass-panel p-6 rounded-3xl border border-white/10 space-y-3 hover:border-amber-500/30 transition-all">
-                <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                    <i data-lucide="smartphone" class="w-5 h-5"></i>
-                </div>
-                <h3 class="text-sm font-bold text-white">Performa Native 60fps</h3>
-                <p class="text-xs text-zinc-400 leading-relaxed">Dibangun dengan Flutter untuk navigasi secepat kilat, animasi halus, dan konsumsi memori yang efisien.</p>
-            </div>
-
-            <div class="glass-panel p-6 rounded-3xl border border-white/10 space-y-3 hover:border-amber-500/30 transition-all">
-                <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                    <i data-lucide="popcorn" class="w-5 h-5"></i>
-                </div>
-                <h3 class="text-sm font-bold text-white">Watch Party On-the-Go</h3>
-                <p class="text-xs text-zinc-400 leading-relaxed">Nonton bareng dari mana saja. Sinkronisasi detik tayangan & obrolan obrolan langsung dari HP.</p>
-            </div>
-
-            <div class="glass-panel p-6 rounded-3xl border border-white/10 space-y-3 hover:border-amber-500/30 transition-all">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                    <i data-lucide="sliders" class="w-5 h-5"></i>
-                </div>
-                <h3 class="text-sm font-bold text-white">Kustom Gesture Player</h3>
-                <p class="text-xs text-zinc-400 leading-relaxed">Atur kecerahan & volume suara cukup dengan usapan jari di layar player, plus double-tap skip 10 detik.</p>
-            </div>
-
-            <div class="glass-panel p-6 rounded-3xl border border-white/10 space-y-3 hover:border-amber-500/30 transition-all">
-                <div class="w-10 h-10 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
-                </div>
-                <h3 class="text-sm font-bold text-white">Push Notifications</h3>
-                <p class="text-xs text-zinc-400 leading-relaxed">Notifikasi langsung ketika teman mengundang Anda ke ruang Nobar atau saat versi aplikasi terbaru rilis.</p>
-            </div>
-
-        </div>
-    </div>
 
     <!-- Section 3: Cara Install APK Android -->
     <div class="p-8 rounded-3xl bg-zinc-900/80 border border-white/10 space-y-6">
