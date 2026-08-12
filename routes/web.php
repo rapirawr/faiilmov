@@ -52,6 +52,7 @@ Route::get('/soundtrack/download', function (\Illuminate\Http\Request $request) 
 })->name('soundtrack.download');
 
 Route::get('/download', [\App\Http\Controllers\DownloadAppController::class, 'index'])->name('download.app');
+Route::get('/version.json', [\App\Http\Controllers\DownloadAppController::class, 'getVersionJson']);
 Route::get('/mobile-app', function() { return redirect()->route('download.app'); });
 Route::post('/download/notify-me', [\App\Http\Controllers\DownloadAppController::class, 'notifyMe'])->name('download.notify-me');
 Route::get('/privacy-policy', function() { return view('privacy-policy'); })->name('privacy-policy');

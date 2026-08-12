@@ -110,4 +110,68 @@ class DownloadAppController extends Controller
             'message' => 'Terima kasih! Email Anda telah tersimpan. Kami akan mengirimkan notifikasi begitu versi mobile rilis.',
         ]);
     }
+
+    /**
+     * Dynamically serve version.json reading latest uploaded APK file metadata.
+     */
+    public function getVersionJson()
+    {
+        $versionFilePath = public_path('version.json');
+        $versionData = [
+            'latest_version'      => '1.0.0',
+            'latest_build_number' => 1,
+            'download_url'        => url('/apk-files/faiilmov-release.apk'),
+            'force_update'        => false,
+            'release_notes'       => 'Pembaruan aplikasi Faiilmov terbaru.',
+        ];
+
+        if (File::exists($versionFilePath)) {
+            $jsonContent = File::get($versionFilePath);
+            $decoded = json_decode($jsonContent, true);
+            if (is_array($decoded)) {
+                $versionData = array_merge($versionData, $decoded);
+            }
+        }
+
+        // Auto-detect latest uploaded APK file in public/apk-files
+        $downloadDir = public_path('apk-files');
+        if (File::exists($downloadDir)) {
+            $files = File::files($downloadDir);
+            $latestMtime = 0;
+            $latestFile = null;
+
+            foreach ($files as $file) {
+                if ($file->getFilename() === '.gitkeep') continue;
+                if (strtolower($file->getExtension()) === 'apk') {
+                    if ($file->getMTime() > $latestMtime) {
+                        $latestMtime = $file->getMTime();
+                        $latestFile = $file;
+                    }
+                }
+            }
+
+            if ($latestFile) {
+                $apkUrl = asset('apk-files/' . $latestFile->getFilename());
+                $apkUrl = preg_replace('/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/', request()->root(), $apkUrl);
+                $versionData['download_url'] = $apkUrl;
+
+                $apkMeta = \App\Services\ApkParser::parse($latestFile->getRealPath());
+                if (!empty($apkMeta['version_name'])) {
+                    $versionData['latest_version'] = $apkMeta['version_name'];
+                }
+                if (!empty($apkMeta['build_number'])) {
+                    $versionData['latest_build_number'] = (int) $apkMeta['build_number'];
+                }
+
+                // Sync back to version.json file on disk so static file server also reflects it
+                File::put($versionFilePath, json_encode($versionData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            }
+        }
+
+        if (isset($versionData['download_url'])) {
+            $versionData['download_url'] = preg_replace('/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/', request()->root(), $versionData['download_url']);
+        }
+
+        return response()->json($versionData, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
 }

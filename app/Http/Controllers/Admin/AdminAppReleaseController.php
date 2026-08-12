@@ -31,7 +31,7 @@ class AdminAppReleaseController extends Controller
         }
 
         if (isset($versionData['download_url'])) {
-            $versionData['download_url'] = preg_replace('/^https:\/\/(127\.0\.0\.1|localhost)/', 'http://$1', $versionData['download_url']);
+            $versionData['download_url'] = preg_replace('/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/', request()->root(), $versionData['download_url']);
         }
 
         // List files in public/apk-files folder
@@ -54,7 +54,7 @@ class AdminAppReleaseController extends Controller
                 }
 
                 $fileUrl = asset('apk-files/' . $file->getFilename());
-                $fileUrl = preg_replace('/^https:\/\/(127\.0\.0\.1|localhost)/', 'http://$1', $fileUrl);
+                $fileUrl = preg_replace('/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/', request()->root(), $fileUrl);
                 $uploadedFiles[] = [
                     'name' => $file->getFilename(),
                     'size' => $this->formatFileSize($file->getSize()),

@@ -1534,18 +1534,6 @@ class MobileApiController extends Controller
 
     public function getAppVersion()
     {
-        $versionFile = public_path('version.json');
-        if (file_exists($versionFile)) {
-            $data = json_decode(file_get_contents($versionFile), true);
-            return response()->json($data);
-        }
-
-        return response()->json([
-            'latest_version' => '1.0.0',
-            'latest_build_number' => 1,
-            'download_url' => url('/download/faiilmov-v1.0.0.apk'),
-            'force_update' => false,
-            'release_notes' => 'Initial Release',
-        ]);
+        return (new \App\Http\Controllers\DownloadAppController())->getVersionJson();
     }
 }
