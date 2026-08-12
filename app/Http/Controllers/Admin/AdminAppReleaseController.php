@@ -83,106 +83,203 @@ class AdminAppReleaseController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        // 1. Detect if payload exceeded PHP post_max_size before reaching Laravel
+        $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
+        if ($contentLength > 0 && empty($_POST) && empty($_FILES)) {
+            $postMaxSize = ini_get('post_max_size');
+            $uploadMaxFilesize = ini_get('upload_max_filesize');
+            
+            \Illuminate\Support\Facades\Log::error('APK Upload Gagal: Payload melebihi post_max_size PHP.', [
+                'content_length_bytes' => $contentLength,
+                'content_length_mb'    => round($contentLength / 1048576, 2) . 'MB',
+                'post_max_size'        => $postMaxSize,
+                'upload_max_filesize'  => $uploadMaxFilesize,
+            ]);
+
+            $errorMsg = "Ukuran total request (" . round($contentLength / 1048576, 1) . "MB) melebihi batas post_max_size PHP ({$postMaxSize}) pada server.";
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg, 'errors' => ['apk_file' => [$errorMsg]]], 422);
+            }
+            return redirect()->back()->with('error', $errorMsg);
+        }
+
+        // 2. Validate request
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'version_name' => 'nullable|string|max:20',
             'build_number' => 'nullable|integer|min:1',
-            'apk_file'     => 'nullable|file|max:204800', // Max 200MB
+            'apk_file'     => 'nullable|file|max:204800', // Max 200MB (204800 KB)
             'release_notes'=> 'required|string|max:2000',
         ], [
+            'apk_file.file'         => 'File yang diunggah bukan file valid.',
             'apk_file.max'          => 'Ukuran file APK maksimal adalah 200MB.',
             'release_notes.required'=> 'Catatan pembaruan wajib diisi.',
         ]);
 
-        $versionFilePath = public_path('version.json');
-        $existingData = [
-            'latest_version' => '1.0.0',
-            'latest_build_number' => 1,
-            'download_url' => url('/apk-files/faiilmov-release.apk'),
-        ];
-        if (File::exists($versionFilePath)) {
-            $jsonContent = File::get($versionFilePath);
-            $decoded = json_decode($jsonContent, true);
-            if (is_array($decoded)) {
-                $existingData = array_merge($existingData, $decoded);
+        if ($validator->fails()) {
+            $firstError = $validator->errors()->first();
+
+            // Detailed check if upload error code exists on uploaded file
+            if ($request->hasFile('apk_file')) {
+                $file = $request->file('apk_file');
+                if (!$file->isValid()) {
+                    $errCode = $file->getError();
+                    $errMap = [
+                        1 => 'Ukuran file APK melebihi upload_max_filesize (' . ini_get('upload_max_filesize') . ') di php.ini server.',
+                        2 => 'Ukuran file APK melebihi batas form HTML.',
+                        3 => 'File APK hanya terunggah sebagian (koneksi terputus).',
+                        4 => 'Tidak ada file APK yang terunggah.',
+                        6 => 'Folder temporary PHP (sys_temp_dir) tidak ditemukan di server.',
+                        7 => 'Gagal menulis file APK ke disk server (periksa sisa storage / write permission).',
+                        8 => 'Pengunggahan file dihentikan oleh ekstensi PHP.',
+                    ];
+                    $firstError = $errMap[$errCode] ?? "Gagal mengunggah file APK (Error Code: {$errCode}).";
+
+                    \Illuminate\Support\Facades\Log::error("APK Upload Gagal: UploadedFile invalid with code {$errCode}", [
+                        'upload_error_code' => $errCode,
+                        'file_name'         => $file->getClientOriginalName(),
+                        'client_size'       => $file->getSize(),
+                        'upload_max_size'   => ini_get('upload_max_filesize'),
+                        'post_max_size'     => ini_get('post_max_size'),
+                    ]);
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::warning('APK Upload Validation Failed', [
+                    'errors' => $validator->errors()->toArray(),
+                ]);
             }
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $firstError,
+                    'errors'  => $validator->errors()->toArray()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $versionName = trim($request->input('version_name') ?? '');
-        $buildNumber = $request->filled('build_number') ? (int) $request->input('build_number') : null;
-        $forceUpdate = $request->has('force_update');
-        $releaseNotes = trim($request->input('release_notes'));
-        $downloadUrl = $request->input('download_url');
-
-        // Handle APK file upload and auto-extract version & build number
-        if ($request->hasFile('apk_file')) {
-            $file = $request->file('apk_file');
-            $downloadDir = public_path('apk-files');
-
-            if (!File::exists($downloadDir)) {
-                File::makeDirectory($downloadDir, 0755, true);
+        try {
+            $versionFilePath = public_path('version.json');
+            $existingData = [
+                'latest_version' => '1.0.0',
+                'latest_build_number' => 1,
+                'download_url' => url('/apk-files/faiilmov-release.apk'),
+            ];
+            if (File::exists($versionFilePath)) {
+                $jsonContent = File::get($versionFilePath);
+                $decoded = json_decode($jsonContent, true);
+                if (is_array($decoded)) {
+                    $existingData = array_merge($existingData, $decoded);
+                }
             }
 
-            // Extract versionName and versionCode directly from uploaded APK binary metadata
-            $apkMeta = \App\Services\ApkParser::parse($file->getRealPath());
-            
-            if (!empty($apkMeta['version_name'])) {
-                $versionName = $apkMeta['version_name'];
-            }
-            if (!empty($apkMeta['build_number'])) {
-                $buildNumber = (int) $apkMeta['build_number'];
+            $versionName = trim($request->input('version_name') ?? '');
+            $buildNumber = $request->filled('build_number') ? (int) $request->input('build_number') : null;
+            $forceUpdate = $request->has('force_update');
+            $releaseNotes = trim($request->input('release_notes'));
+            $downloadUrl = $request->input('download_url');
+
+            // Handle APK file upload and auto-extract version & build number
+            if ($request->hasFile('apk_file')) {
+                $file = $request->file('apk_file');
+                $downloadDir = public_path('apk-files');
+
+                if (!File::exists($downloadDir)) {
+                    File::makeDirectory($downloadDir, 0755, true);
+                }
+
+                // Extract versionName and versionCode directly from uploaded APK binary metadata
+                $apkMeta = [];
+                try {
+                    $apkMeta = \App\Services\ApkParser::parse($file->getRealPath());
+                } catch (\Throwable $eParser) {
+                    \Illuminate\Support\Facades\Log::warning('APK Parser Notice: ' . $eParser->getMessage());
+                }
+                
+                if (!empty($apkMeta['version_name'])) {
+                    $versionName = $apkMeta['version_name'];
+                }
+                if (!empty($apkMeta['build_number'])) {
+                    $buildNumber = (int) $apkMeta['build_number'];
+                }
+
+                // Fallback if APK parser didn't find versionName
+                if (empty($versionName)) {
+                    $versionName = $existingData['latest_version'];
+                }
+                if (empty($buildNumber)) {
+                    $buildNumber = $existingData['latest_build_number'] + 1;
+                }
+
+                $cleanVersion = preg_replace('/[^a-zA-Z0-9\._-]/', '', $versionName);
+                $fileName = 'faiilmov-v' . $cleanVersion . '.apk';
+                
+                $file->move($downloadDir, $fileName);
+                $downloadUrl = asset('apk-files/' . $fileName);
+
+                \Illuminate\Support\Facades\Log::info("APK Upload Sukses: {$fileName}", [
+                    'original_name' => $file->getClientOriginalName(),
+                    'saved_file'    => $fileName,
+                    'version_name'  => $versionName,
+                    'build_number'  => $buildNumber,
+                    'file_size'     => $this->formatFileSize(File::size($downloadDir . '/' . $fileName)),
+                ]);
             }
 
-            // Fallback if APK parser didn't find versionName
+            // Final fallback if no file was uploaded and inputs were left empty
             if (empty($versionName)) {
                 $versionName = $existingData['latest_version'];
             }
             if (empty($buildNumber)) {
-                $buildNumber = $existingData['latest_build_number'] + 1;
+                $buildNumber = $existingData['latest_build_number'];
             }
 
-            $cleanVersion = preg_replace('/[^a-zA-Z0-9\._-]/', '', $versionName);
-            $fileName = 'faiilmov-v' . $cleanVersion . '.apk';
-            
-            $file->move($downloadDir, $fileName);
-            $downloadUrl = asset('apk-files/' . $fileName);
-        }
+            if (empty($downloadUrl)) {
+                $downloadUrl = asset('apk-files/faiilmov-v' . $versionName . '.apk');
+            }
 
-        // Final fallback if no file was uploaded and inputs were left empty
-        if (empty($versionName)) {
-            $versionName = $existingData['latest_version'];
-        }
-        if (empty($buildNumber)) {
-            $buildNumber = $existingData['latest_build_number'];
-        }
+            // Save config to version.json
+            $versionData = [
+                'latest_version'      => $versionName,
+                'latest_build_number' => $buildNumber,
+                'download_url'        => $downloadUrl,
+                'force_update'        => $forceUpdate,
+                'release_notes'       => $releaseNotes,
+                'updated_at'          => date('Y-m-d H:i:s'),
+            ];
 
-        if (empty($downloadUrl)) {
-            $downloadUrl = asset('apk-files/faiilmov-v' . $versionName . '.apk');
-        }
+            File::put(public_path('version.json'), json_encode($versionData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-        // Save config to version.json
-        $versionData = [
-            'latest_version'      => $versionName,
-            'latest_build_number' => $buildNumber,
-            'download_url'        => $downloadUrl,
-            'force_update'        => $forceUpdate,
-            'release_notes'       => $releaseNotes,
-            'updated_at'          => date('Y-m-d H:i:s'),
-        ];
+            $msg = "Rilis versi {$versionName} (Build {$buildNumber}) berhasil dipublikasikan!";
 
-        File::put(public_path('version.json'), json_encode($versionData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $msg,
+                    'version' => $versionName,
+                    'build'   => $buildNumber,
+                ]);
+            }
 
-        $msg = "Rilis versi {$versionName} (Build {$buildNumber}) berhasil dipublikasikan!";
+            return redirect()->back()->with('success', $msg);
 
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $msg,
-                'version' => $versionName,
-                'build'   => $buildNumber,
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('APK Upload Storage Exception: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
             ]);
-        }
 
-        return redirect()->back()->with('success', $msg);
+            $errMessage = 'Gagal menyimpan file APK ke server: ' . $e->getMessage();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errMessage], 500);
+            }
+
+            return redirect()->back()->with('error', $errMessage);
+        }
     }
 
     /**

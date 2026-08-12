@@ -417,7 +417,7 @@ function apkUploadForm() {
 
             xhr.addEventListener('load', () => {
                 this.progress = 100;
-                if (xhr.status >= 200 && xhr.status < 400) {
+                if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const res = JSON.parse(xhr.responseText);
                         this.successMessage = res.message || 'File APK berhasil diunggah & dipublikasikan!';
@@ -429,11 +429,30 @@ function apkUploadForm() {
                     }, 1200);
                 } else {
                     this.uploading = false;
+                    let parsedMessage = '';
+
                     try {
                         const res = JSON.parse(xhr.responseText);
-                        this.errorMessage = res.message || 'Terjadi kesalahan saat mengunggah file APK.';
-                    } catch (_) {
-                        this.errorMessage = 'Gagal mengunggah file APK. Silakan periksa ukuran file (maks 200MB).';
+                        if (res.message) {
+                            parsedMessage = res.message;
+                        } else if (res.errors && typeof res.errors === 'object') {
+                            const errKeys = Object.keys(res.errors);
+                            if (errKeys.length > 0 && Array.isArray(res.errors[errKeys[0]])) {
+                                parsedMessage = res.errors[errKeys[0]][0];
+                            }
+                        }
+                    } catch (e) {
+                        // Response is HTML (HTTP 413, 500, etc.)
+                    }
+
+                    if (parsedMessage) {
+                        this.errorMessage = parsedMessage;
+                    } else if (xhr.status === 413) {
+                        this.errorMessage = 'Ukuran file melebihi batas request Web Server (HTTP 413 Payload Too Large). Periksa setting LimitRequestBody / post_max_size pada web server / cPanel.';
+                    } else if (xhr.status === 500) {
+                        this.errorMessage = 'Terjadi kesalahan internal server (HTTP 500). Silakan periksa log Laravel di storage/logs/laravel.log.';
+                    } else {
+                        this.errorMessage = `Gagal mengunggah file APK (HTTP Status ${xhr.status}). Silakan periksa ukuran file dan log server.`;
                     }
                 }
             });
