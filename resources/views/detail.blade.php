@@ -1,36 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Nonton ' . $film->title . ' (' . ($film->release_year ?: date('Y')) . ') Subtitle Indonesia | faiilmov')
-@section('meta_description', 'Nonton film ' . $film->title . ' (' . $film->release_year . ') subtitle Indonesia gratis kualitas HD. ' . \Illuminate\Support\Str::limit(strip_tags($film->synopsis ?: 'Streaming & nonton film ' . $film->title . ' di faiilmov.'), 150))
-@section('meta_keywords', $film->title . ', nonton ' . $film->title . ', streaming ' . $film->title . ' sub indo, ' . ($film->genres ? $film->genres->pluck('name')->implode(', ') : 'film online'))
-@section('og_type', $film->subject_type === 'series' ? 'video.tv_show' : 'video.movie')
-@section('og_image', $film->backdrop_url ?: $film->poster_url)
-
-@section('schema_org')
-<script type="application/ld+json">
-{
-  "{{ '@' }}context": "https://schema.org",
-  "{{ '@' }}type": "{{ $film->subject_type === 'series' ? 'TVSeries' : 'Movie' }}",
-  "name": "{{ addslashes($film->title) }}",
-  "description": "{{ addslashes(strip_tags($film->synopsis ?: 'Nonton film ' . $film->title . ' di faiilmov.')) }}",
-  "image": "{{ $film->backdrop_url ?: $film->poster_url }}",
-  "datePublished": "{{ $film->release_year }}-01-01",
-  "genre": [
-    @foreach($film->genres as $g)
-      "{{ $g->name }}"@if(!$loop->last),@endif
-    @endforeach
-  ],
-  "aggregateRating": {
-    "{{ '@' }}type": "AggregateRating",
-    "ratingValue": "{{ number_format($film->rating ?: 4.5, 1) }}",
-    "bestRating": "5",
-    "worstRating": "1",
-    "ratingCount": "{{ max(1, (int)($film->view_count ?: 10)) }}"
-  }
-}
-</script>
-@endsection
-
 @section('content')
 <div x-data="detailPage({{ $userWatchlist ? 'true' : 'false' }})">
 
@@ -64,13 +33,13 @@
                             </iframe>
                         </div>
                     @else
-                        <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+                        <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="Backdrop film {{ $film->title }} ({{ $film->release_year }})" class="w-full h-full object-cover filter brightness-95">
                     @endif
                 @else
-                    <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+                    <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="Backdrop film {{ $film->title }} ({{ $film->release_year }})" class="w-full h-full object-cover filter brightness-95">
                 @endif
             @else
-                <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover filter brightness-95">
+                <img src="{{ $film->backdrop_url ?: $film->poster_url }}" alt="Backdrop film {{ $film->title }} ({{ $film->release_year }})" class="w-full h-full object-cover filter brightness-95">
             @endif
 
             <div class="absolute inset-0 bg-black/40"></div>
@@ -85,7 +54,7 @@
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col md:flex-row items-start md:items-end gap-8">
             <!-- Glass Poster Card -->
             <div class="w-48 sm:w-56 shrink-0 aspect-[2/3] rounded-3xl overflow-hidden glass-panel p-1.5 -mb-6 md:mb-0 shadow-2xl">
-                <img src="{{ $film->poster_url }}" alt="{{ $film->title }}" class="w-full h-full object-cover rounded-2xl">
+                <img src="{{ $film->poster_url }}" alt="Poster film {{ $film->title }} ({{ $film->release_year }})" class="w-full h-full object-cover rounded-2xl">
             </div>
 
             <!-- Details Overview -->
@@ -245,7 +214,7 @@
             
             <!-- Synopsis Glass Panel -->
             <section class="glass-panel p-7 rounded-3xl border border-white/10">
-                <h3 class="font-serif font-bold text-xl text-white mb-3">Sinopsis</h3>
+                <h2 class="font-serif font-bold text-xl text-white mb-3">Sinopsis</h2>
                 <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed">
                     {{ $film->synopsis ?: 'Belum ada deskripsi sinopsis resmi untuk film ini.' }}
                 </p>

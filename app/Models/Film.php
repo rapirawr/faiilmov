@@ -42,6 +42,24 @@ class Film extends Model
         'updated' => \App\Events\FilmUpdated::class,
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+        });
+
+        static::deleted(function () {
+            \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+        });
+
+        static::creating(function (Film $film) {
+            if (empty($film->slug) && !empty($film->title)) {
+                $baseSlug = Str::slug($film->title);
+                $film->slug = $baseSlug ? $baseSlug . '-' . Str::random(5) : 'film-' . rand(1000, 9999);
+            }
+        });
+    }
+
     /**
      * Get trailer provider type: 'video', 'vimeo', 'dailymotion', 'youtube', 'none'
      */
@@ -288,6 +306,141 @@ class Film extends Model
             }
         }
         return $url;
+    }
+
+    /**
+     * Get dynamic SEO title for film detail page
+     */
+    public function getSeoTitleAttribute(): string
+    {
+        $year = $this->release_year ?: date('Y');
+        $typeLabel = $this->subject_type === 'series' ? 'Series' : 'Film';
+        return "{$this->title} ({$year}) - Nonton {$typeLabel} Subtitle Indonesia | faiilmov";
+    }
+
+    /**
+     * Get dynamic SEO description clipped to 150-160 characters without cutting words
+     */
+    public function getSeoDescriptionAttribute(): string
+    {
+        $rawText = trim(strip_tags($this->synopsis ?: ''));
+        if (empty($rawText)) {
+            $typeLabel = $this->subject_type === 'series' ? 'TV Series' : 'film';
+            return "Streaming & nonton {$typeLabel} {$this->title} ({$this->release_year}) subtitle Indonesia gratis kualitas HD di faiilmov.";
+        }
+
+        if (mb_strlen($rawText) <= 155) {
+            return $rawText;
+        }
+
+        // Clip cleanly to ~150 chars without cutting words in the middle
+        $truncated = mb_substr($rawText, 0, 150);
+        $lastSpace = mb_strrpos($truncated, ' ');
+        if ($lastSpace !== false && $lastSpace > 110) {
+            $truncated = mb_substr($truncated, 0, $lastSpace);
+        }
+
+        return rtrim($truncated, '.,!?;:') . '...';
+    }
+
+    /**
+     * Get dynamic SEO keywords
+     */
+    public function getSeoKeywordsAttribute(): string
+    {
+        $keywords = [
+            $this->title,
+            "nonton {$this->title}",
+            "streaming {$this->title}",
+            "{$this->title} sub indo",
+            "{$this->title} {$this->release_year}",
+            "faiilmov"
+        ];
+
+        if ($this->relationLoaded('genres') && $this->genres->isNotEmpty()) {
+            foreach ($this->genres as $genre) {
+                $keywords[] = strtolower($genre->name);
+            }
+        }
+
+        if ($this->relationLoaded('actors') && $this->actors->isNotEmpty()) {
+            foreach ($this->actors->take(3) as $actor) {
+                $keywords[] = strtolower($actor->name);
+            }
+        }
+
+        return implode(', ', array_unique($keywords));
+    }
+
+    /**
+     * Get Schema.org JSON-LD data structure for Movie or TVSeries
+     */
+    public function getSchemaJsonLdArrayAttribute(): array
+    {
+        $isSeries = $this->subject_type === 'series';
+        $canonicalUrl = route('film.show', $this->slug);
+
+        $images = [];
+        if (!empty($this->backdrop_url)) {
+            $images[] = $this->backdrop_url;
+        }
+        if (!empty($this->poster_url)) {
+            $images[] = $this->poster_url;
+        }
+        if (empty($images)) {
+            $images[] = asset('images/logo.png');
+        }
+
+        $genres = [];
+        if ($this->relationLoaded('genres') && $this->genres->isNotEmpty()) {
+            $genres = $this->genres->pluck('name')->toArray();
+        }
+
+        $actors = [];
+        if ($this->relationLoaded('actors') && $this->actors->isNotEmpty()) {
+            foreach ($this->actors as $actor) {
+                $actors[] = [
+                    '@type' => 'Person',
+                    'name' => $actor->name,
+                ];
+            }
+        }
+
+        $rating = $this->rating ?: 4.5;
+        $reviewCount = max(1, (int)($this->reviews_count ?? $this->view_count ?: 10));
+
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@type' => $isSeries ? 'TVSeries' : 'Movie',
+            'name' => $this->title,
+            'url' => $canonicalUrl,
+            'description' => $this->seo_description,
+            'image' => count($images) === 1 ? $images[0] : $images,
+            'datePublished' => ($this->release_year ?: 2024) . '-01-01',
+            'inLanguage' => 'id',
+        ];
+
+        if (!empty($genres)) {
+            $schema['genre'] = $genres;
+        }
+
+        if (!empty($actors)) {
+            $schema['actor'] = $actors;
+        }
+
+        if ($this->duration_minutes && $this->duration_minutes > 0) {
+            $schema['duration'] = "PT{$this->duration_minutes}M";
+        }
+
+        $schema['aggregateRating'] = [
+            '@type' => 'AggregateRating',
+            'ratingValue' => number_format((float)$rating, 1, '.', ''),
+            'bestRating' => '5',
+            'worstRating' => '1',
+            'ratingCount' => (string)$reviewCount,
+        ];
+
+        return $schema;
     }
 
     public static function fromApiData(array $data): ?self

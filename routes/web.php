@@ -44,6 +44,7 @@ Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robo
 // Public Pages
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/browse', [BrowseController::class, 'index'])->name('browse');
+Route::get('/genre/{slug}', [BrowseController::class, 'genre'])->name('genre.show');
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
 

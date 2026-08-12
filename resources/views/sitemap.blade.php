@@ -43,7 +43,7 @@
     <!-- Genre Filter Pages -->
     @foreach($genres as $genre)
     <url>
-        <loc>{{ route('browse', ['genre' => $genre->slug]) }}</loc>
+        <loc>{{ route('genre.show', $genre->slug) }}</loc>
         <lastmod>{{ $genre->updated_at ? $genre->updated_at->toAtomString() : date('c') }}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>

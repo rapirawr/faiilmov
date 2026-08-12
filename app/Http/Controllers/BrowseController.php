@@ -95,4 +95,23 @@ class BrowseController extends Controller
 
         return view('browse', compact('films', 'genres', 'searchQuery', 'noResults', 'suggestedFilms', 'aiInterpretation', 'aiRecommendations'));
     }
+
+    public function genre(string $slug, Request $request)
+    {
+        $genreModel = Genre::where('slug', $slug)->first();
+        if (!$genreModel && !in_array($slug, ['action', 'comedy', 'drama', 'horror', 'romance', 'sci-fi', 'animation', 'thriller', 'adventure'])) {
+            abort(404, 'Genre tidak ditemukan.');
+        }
+
+        $request->merge(['genre' => $slug]);
+        $genreName = $genreModel ? $genreModel->name : ucfirst($slug);
+
+        $seoTitle = "Katalog Film Genre {$genreName} - Subtitle Indonesia | faiilmov";
+        $seoDesc = "Daftar koleksi film dan serial TV genre {$genreName} subtitle Indonesia gratis kualitas HD. Temukan ribuan film {$genreName} terbaik di faiilmov.";
+
+        \Illuminate\Support\Facades\View::share('title', $seoTitle);
+        \Illuminate\Support\Facades\View::share('meta_description', $seoDesc);
+
+        return $this->index($request);
+    }
 }

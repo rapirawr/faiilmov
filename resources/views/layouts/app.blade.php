@@ -8,51 +8,23 @@
     <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="O5FIi4EuweW7xm1i2EspXhFlPbSIPOx4ZQ3gZMp1wmM">
 
-    <!-- Primary Meta Tags -->
-    <title>@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')</title>
-    <meta name="title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
-    <meta name="description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
-    <meta name="keywords" content="@yield('meta_keywords', 'nonton film, streaming film, film gratis, film sub indo, faiilmov, serial tv, moviebox, anime, streaming bioskop')">
-    <meta name="robots" content="@yield('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
-    <meta name="author" content="faiilmov">
-    <link rel="canonical" href="@yield('canonical', url()->current())">
-
-    <!-- Open Graph / Facebook / WhatsApp -->
-    <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:site_name" content="faiilmov">
-    <meta property="og:url" content="@yield('canonical', url()->current())">
-    <meta property="og:title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
-    <meta property="og:description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
-    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="id_ID">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="@yield('twitter_card', 'summary_large_image')">
-    <meta name="twitter:url" content="@yield('canonical', url()->current())">
-    <meta name="twitter:title" content="@yield('title', 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia')">
-    <meta name="twitter:description" content="@yield('meta_description', 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.')">
-    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
-
-    <!-- Schema.org JSON-LD Structured Data -->
-    @hasSection('schema_org')
-        @yield('schema_org')
+    <!-- SEO Meta Tags & Schema.org JSON-LD -->
+    @if(isset($film) && $film instanceof \App\Models\Film)
+        <x-seo-meta :film="$film" />
+    @elseif(View::hasSection('title'))
+        <x-seo-meta 
+            :title="View::getSection('title')" 
+            :description="View::hasSection('meta_description') ? View::getSection('meta_description') : null" 
+            :keywords="View::hasSection('meta_keywords') ? View::getSection('meta_keywords') : null" 
+            :image="View::hasSection('og_image') ? View::getSection('og_image') : null" 
+            :type="View::hasSection('og_type') ? View::getSection('og_type') : null" 
+            :url="View::hasSection('canonical') ? View::getSection('canonical') : null" 
+        />
+        @hasSection('schema_org')
+            @yield('schema_org')
+        @endif
     @else
-        <script type="application/ld+json">
-        {
-          "{{ '@' }}context": "https://schema.org",
-          "{{ '@' }}type": "WebSite",
-          "name": "faiilmov",
-          "url": "{{ url('/') }}",
-          "description": "Streaming & nonton film online subtitle Indonesia gratis HD.",
-          "potentialAction": {
-            "{{ '@' }}type": "SearchAction",
-            "target": "{{ route('browse') }}?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
-        }
-        </script>
+        <x-seo-meta />
     @endif
 
     <!-- Favicon & App Icon -->

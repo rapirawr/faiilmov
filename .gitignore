@@ -25,6 +25,8 @@ Homestead.yaml
 Thumbs.db
 /prompt/
 /scratch/
+/public/apk-files/*
+!/public/apk-files/.gitkeep
 
 FINAL_TESTING_REPORT.md
 security_audit_composer.txt
