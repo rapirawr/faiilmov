@@ -42,6 +42,10 @@ class MovieDetailController extends Controller
             }
         }
 
+        if (!$film) {
+            abort(404, 'Film tidak ditemukan.');
+        }
+
         if (!$this->isAllowedForActiveProfile($film)) {
             return redirect()->route('home')->with('error', 'Profil Anak tidak dapat mengakses film atau series dengan batasan usia ini.');
         }
@@ -114,6 +118,10 @@ class MovieDetailController extends Controller
             } catch (Exception $e) {
                 abort(404, 'Film tidak ditemukan.');
             }
+        }
+
+        if (!$film) {
+            abort(404, 'Film tidak ditemukan.');
         }
 
         if (!$this->isAllowedForActiveProfile($film)) {
