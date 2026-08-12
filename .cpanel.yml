@@ -4,6 +4,12 @@ deployment:
     - export DEPLOYPATH=/home/faiiller/faiilmov.my.id/public/
     - export REPOPATH=/home/faiiller/faiilmov.my.id/faiilmov-repo/
     - /bin/mkdir -p $DEPLOYPATH
-    - /bin/find public -mindepth 1 ! -name "index.php" -exec /bin/cp -R {} $DEPLOYPATH \;
+    - /bin/find public -mindepth 1 ! -name "index.php" ! -name "apk-files" ! -name "version.json" -exec /bin/cp -R {} $DEPLOYPATH \;
     - /bin/mkdir -p $REPOPATH/storage/app/public
     - /bin/ln -s -f $REPOPATH/storage/app/public $DEPLOYPATH/storage
+    - /bin/mkdir -p $REPOPATH/public/apk-files
+    - /bin/rm -rf $DEPLOYPATH/apk-files
+    - /bin/ln -s -f $REPOPATH/public/apk-files $DEPLOYPATH/apk-files
+    - /bin/touch $REPOPATH/public/version.json
+    - /bin/rm -f $DEPLOYPATH/version.json
+    - /bin/ln -s -f $REPOPATH/public/version.json $DEPLOYPATH/version.json
