@@ -2,5 +2,8 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/faiiller/faiilmov.my.id/public/
+    - export REPOPATH=/home/faiiller/faiilmov.my.id/faiilmov-repo/
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/find public -mindepth 1 ! -name "index.php" -exec /bin/cp -R {} $DEPLOYPATH \;
+    - /bin/mkdir -p $REPOPATH/storage/app/public
+    - /bin/ln -s -f $REPOPATH/storage/app/public $DEPLOYPATH/storage

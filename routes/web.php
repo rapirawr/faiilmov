@@ -14,6 +14,29 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MovieBoxController;
 use App\Http\Controllers\SearchController;
 
+// Storage Symlink Utility Route for cPanel Deployment
+Route::get('/create-storage-link', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        
+        // Manual fallback symlink if Artisan command is restricted on cPanel
+        $target = storage_path('app/public');
+        $shortcut = public_path('storage');
+        if (!file_exists($shortcut)) {
+            @symlink($target, $shortcut);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Simbolik link folder storage berhasil dibuat!',
+            'target' => $target,
+            'shortcut' => $shortcut
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+});
+
 // SEO Routes
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
