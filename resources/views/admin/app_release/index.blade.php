@@ -194,25 +194,25 @@
                     <!-- Version Name -->
                     <div>
                         <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nama Versi Baru <span class="text-amber-400/80 font-normal">(Opsional - Otomatis dari APK)</span></label>
-                        <input type="text" name="version_name" value="{{ old('version_name', $versionData['latest_version']) }}"
-                               placeholder="Otomatis dibaca dari file APK"
+                        <input type="text" name="version_name" value="{{ old('version_name') }}"
+                               placeholder="Otomatis dibaca dari file APK (misal: 1.0.2)"
                                class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/50 disabled:opacity-50 font-mono">
-                        <p class="text-[11px] text-zinc-500 mt-1">Biarkan default/kosong saat upload file APK baru. Sistem akan membaca metadata `versionName` dari file APK secara otomatis.</p>
+                        <p class="text-[11px] text-zinc-500 mt-1">Biarkan kosong saat upload file APK baru. Sistem akan membaca metadata `versionName` dari file APK secara otomatis.</p>
                     </div>
 
                     <!-- Build Number -->
                     <div>
                         <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nomor Build / versionCode <span class="text-amber-400/80 font-normal">(Opsional - Otomatis dari APK)</span></label>
-                        <input type="number" name="build_number" value="{{ old('build_number', $versionData['latest_build_number'] + 1) }}" min="1"
-                               placeholder="Otomatis dibaca dari file APK"
+                        <input type="number" name="build_number" value="{{ old('build_number') }}" min="1"
+                               placeholder="Otomatis dibaca dari file APK (misal: 3)"
                                class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/50 disabled:opacity-50 font-mono">
-                        <p class="text-[11px] text-zinc-500 mt-1">Biarkan default/kosong saat upload file APK baru. Sistem akan mengekstrak `versionCode` secara otomatis.</p>
+                        <p class="text-[11px] text-zinc-500 mt-1">Biarkan kosong saat upload file APK baru. Sistem akan mengekstrak `versionCode` secara otomatis.</p>
                     </div>
                 </div>
 
                 <!-- Force Update Checkbox -->
                 <div class="flex items-center gap-3 p-4 rounded-xl bg-zinc-950 border border-white/10">
-                    <input type="checkbox" id="force_update" name="force_update" value="1" {{ old('force_update', $versionData['force_update']) ? 'checked' : '' }}
+                    <input type="checkbox" id="force_update" name="force_update" value="1" {{ old('force_update') ? 'checked' : '' }}
                            class="w-4 h-4 rounded border-white/20 bg-zinc-900 text-amber-500 focus:ring-0 cursor-pointer disabled:opacity-50">
                     <div>
                         <label for="force_update" class="text-sm font-bold text-white cursor-pointer">Paksa Pengguna Update (Wajib Update / Force Update)</label>
@@ -225,7 +225,7 @@
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Catatan Pembaruan (Release Notes) *</label>
                     <textarea name="release_notes" rows="4" required
                               placeholder="• Perbaikan fitur Watch Party&#10;• Peningkatan kecepatan streaming&#10;• Perbaikan bug pada tampilan"
-                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-white/50 leading-relaxed disabled:opacity-50">{{ old('release_notes', $versionData['release_notes']) }}</textarea>
+                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-white/50 leading-relaxed disabled:opacity-50">{{ old('release_notes') }}</textarea>
                 </div>
 
                 <div class="pt-2">
