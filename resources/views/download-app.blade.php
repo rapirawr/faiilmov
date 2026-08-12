@@ -34,24 +34,43 @@
                                 <div class="text-[11px] font-medium opacity-80">v{{ $versionData['latest_version'] }} • {{ $apkFile['size'] }}</div>
                             </div>
                         </a>
-                    @elseif(!empty($versionData['download_url']) && filter_var($versionData['download_url'], FILTER_VALIDATE_URL))
-                        <a href="{{ $versionData['download_url'] }}" download target="_blank"
-                           class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-base transition-all duration-300 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/40 hover:-translate-y-0.5 flex items-center justify-center gap-3 border border-amber-300/40">
-                            <i data-lucide="download" class="w-6 h-6 stroke-[2.5]"></i>
-                            <div class="text-left leading-tight">
-                                <div>Unduh APK Android</div>
-                                <div class="text-[11px] font-medium opacity-80">v{{ $versionData['latest_version'] }}</div>
-                            </div>
-                        </a>
                     @else
-                        <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-2 max-w-md">
-                            <div class="flex items-center gap-2 font-bold">
-                                <i data-lucide="alert-circle" class="w-4 h-4 text-amber-400"></i>
-                                <span>File APK v{{ $versionData['latest_version'] }} Belum Diunggah</span>
+                        <!-- Coming Soon / Segera Hadir Section -->
+                        <div class="w-full max-w-lg space-y-4 text-left">
+                            <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold text-xs shadow-lg shadow-amber-500/5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                                <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+                                <span>Aplikasi Mobile - Segera Hadir (Coming Soon)</span>
                             </div>
-                            <p class="text-zinc-300 leading-relaxed text-[11px]">
-                                Silakan upload file <code>.apk</code> melalui <a href="{{ route('admin.app_release.index') }}" class="underline font-bold text-amber-400">Menu Admin Rilis APK</a> atau letakkan file di <code>public/apk-files/</code>.
-                            </p>
+
+                            <div class="p-5 rounded-2xl bg-zinc-900/80 border border-white/10 space-y-3">
+                                <div class="text-sm font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                                    <span>Dapatkan Notifikasi Rilis Pertama</span>
+                                </div>
+                                <p class="text-xs text-zinc-400 leading-relaxed">
+                                    Aplikasi Android <strong class="text-white">Faiilmov</strong> sedang disiapkan. Masukkan email Anda untuk mendapatkan notifikasi langsung begitu file APK dirilis.
+                                </p>
+                                <div x-data="notifyForm()" class="space-y-2">
+                                    <template x-if="!success">
+                                        <form @submit.prevent="submitEmail()" class="flex flex-col sm:flex-row gap-2">
+                                            <input type="email" x-model="email" placeholder="Masukkan alamat email Anda..." required
+                                                   class="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-white/15 text-white text-xs placeholder:text-zinc-500 focus:outline-none focus:border-amber-500 transition-all">
+                                            <button type="submit" :disabled="loading"
+                                                    class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shrink-0 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                                <span x-show="!loading">Beri Tahu Saya</span>
+                                                <span x-show="loading" class="animate-spin text-xs">🌀</span>
+                                            </button>
+                                        </form>
+                                    </template>
+                                    <template x-if="success">
+                                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium flex items-center gap-2">
+                                            <i data-lucide="check-circle" class="w-4 h-4 shrink-0"></i>
+                                            <span x-text="message"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                     @endif
 
