@@ -25,7 +25,17 @@ class SocialAuthController extends Controller
     {
         $this->validateProvider($provider);
 
-        return Socialite::driver($provider)->redirect();
+        try {
+            return Socialite::driver($provider)->redirect();
+        } catch (\Exception $e) {
+            Log::error("Social login redirect failed [{$provider}]", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Layanan login ' . ucfirst($provider) . ' belum dikonfigurasi di server atau sedang tidak tersedia.']);
+        }
     }
 
     /**
