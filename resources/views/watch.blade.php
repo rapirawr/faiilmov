@@ -7,10 +7,15 @@
 @section('og_image', $film->backdrop_url ?: $film->poster_url)
 
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 @php
     $selectedSeasonNumber = $season ?? 0;
-    $selectedEpisodeNumber = $episode ?? 0;
-    $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . urlencode($film->moviebox_subject_id) . '&se=' . $selectedSeasonNumber . '&ep=' . $selectedEpisodeNumber : '';
+    $isDracin = ($film->subject_type === 'dracin' || str_starts_with($film->moviebox_subject_id ?? '', 'anichin:'));
+    $proxyActiveStream = $activeStream ? (
+        $isDracin
+            ? $activeStream
+            : url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . urlencode($film->moviebox_subject_id) . '&se=' . $selectedSeasonNumber . '&ep=' . $selectedEpisodeNumber
+    ) : '';
     
     // Sort resourceList so h264/avc codecs come before hevc
     $sortedList = $resourceList ?? [];
@@ -924,6 +929,7 @@
             seasons: config.seasons || [],
             nextEpisode: config.nextEpisode || null,
             
+            hlsInstance: null,
             introStart: 0,
             introEnd: 0,
             isIntroSkipped: false,
@@ -1008,6 +1014,12 @@
                 this.$nextTick(() => {
                     const video = this.$refs.video;
                     if (!video) return;
+
+                    this.attachHlsOrSrc(this.activeStream);
+
+                    this.$watch('activeStream', (newStream) => {
+                        this.attachHlsOrSrc(newStream);
+                    });
 
                     // IntersectionObserver for Auto Floating Mini Player when scrolling
                     if (this.$refs.theaterPlaceholder) {
@@ -1673,6 +1685,50 @@
                         this.showControls = false;
                     }, 2500);
                 }
+            },
+
+            attachHlsOrSrc(url) {
+                if (!url) return;
+                this.$nextTick(() => {
+                    const video = this.$refs.video;
+                    if (!video) return;
+
+                    if (url.includes('.m3u8') || url.includes('/anichin/hls')) {
+                        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                            if (this.hlsInstance) {
+                                this.hlsInstance.destroy();
+                            }
+                            const hls = new Hls({
+                                enableWorker: true,
+                                lowLatencyMode: true,
+                            });
+                            this.hlsInstance = hls;
+                            hls.loadSource(url);
+                            hls.attachMedia(video);
+                            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                this.isBuffering = false;
+                                this.safePlay();
+                            });
+                            hls.on(Hls.Events.ERROR, (event, data) => {
+                                if (data.fatal) {
+                                    console.warn('HLS Fatal Error:', data);
+                                    this.handleVideoError(data);
+                                }
+                            });
+                            return;
+                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            video.src = url;
+                            this.safePlay();
+                            return;
+                        }
+                    }
+
+                    if (this.hlsInstance) {
+                        this.hlsInstance.destroy();
+                        this.hlsInstance = null;
+                    }
+                    video.src = url;
+                });
             },
 
             formatTime(seconds) {

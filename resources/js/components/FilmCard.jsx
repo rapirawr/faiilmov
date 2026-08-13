@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { Play, Film as FilmIcon, Tv } from 'lucide-react';
 
 function formatDuration(minutes, type) {
-  if (!minutes || minutes <= 0) {
-    return type === 'series' ? 'TV Series' : '1h 30m';
-  }
+  if (type === 'dracin') return 'Dracin';
+  if (type === 'series') return 'TV Series';
+  if (!minutes || minutes <= 0) return '1h 30m';
   const hrs = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hrs > 0 && mins > 0) return `${hrs}h ${mins}m`;

@@ -80,6 +80,10 @@ class MovieBoxService
      */
     public function getDetails(string $subjectId): mixed
     {
+        if (str_starts_with($subjectId, 'anichin:')) {
+            return [];
+        }
+
         $cacheKey = 'mb_detail_' . $subjectId;
         return Cache::remember($cacheKey, 3600, function () use ($subjectId) {
             $path = sprintf('/wefeed-mobile-bff/subject-api/get?subjectId=%s', $subjectId);
@@ -127,6 +131,10 @@ class MovieBoxService
         bool $forceRefresh = false,
         bool $includeCaptions = true
     ): mixed {
+        if (str_starts_with($subjectId, 'anichin:')) {
+            return ['list' => []];
+        }
+
         $cacheKey = sprintf('mb_res_%s_%d_%d_%d_%s_%d', $subjectId, $season, $episode, $page, $resolution ?? 'all', $includeCaptions ? 1 : 0);
         
         if ($forceRefresh) {
@@ -240,6 +248,10 @@ class MovieBoxService
      */
     public function getCaptions(string $subjectId, int $season = 0, int $episode = 0): array
     {
+        if (str_starts_with($subjectId, 'anichin:')) {
+            return [];
+        }
+
         try {
             $resourcesData = $this->getResources($subjectId, $season, $episode, 1, null, 20, false, false);
             $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);

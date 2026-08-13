@@ -29,7 +29,7 @@
             <span>Informasi Utama</span>
         </button>
 
-        @if($film->subject_type === 'series')
+        @if($film->isEpisodic())
             <button @click="activeTab = 'seasons'" 
                     :class="activeTab === 'seasons' ? 'border-purple-500 text-purple-300 font-bold bg-purple-500/10' : 'border-transparent text-zinc-400 hover:text-white'"
                     class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer">
@@ -60,6 +60,7 @@
                     <select name="subject_type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                         <option value="movie" {{ old('subject_type', $film->subject_type) === 'movie' ? 'selected' : '' }}>Movie</option>
                         <option value="series" {{ old('subject_type', $film->subject_type) === 'series' ? 'selected' : '' }}>Series</option>
+                        <option value="dracin" {{ old('subject_type', $film->subject_type) === 'dracin' ? 'selected' : '' }}>Drama China (Dracin)</option>
                     </select>
                 </div>
 
@@ -345,7 +346,7 @@ if (typeof window.castPicker !== 'function') {
     </div>
 
     <!-- Tab 2: Season & Episode Manager (Series Only) -->
-    @if($film->subject_type === 'series')
+    @if($film->isEpisodic())
         <div x-show="activeTab === 'seasons'" class="space-y-6">
 
             <!-- Add New Season Card -->

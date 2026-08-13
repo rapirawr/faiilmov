@@ -296,6 +296,43 @@
             </section>
         @endif
 
+        <!-- Popular Dracin Row -->
+        @if(isset($popularDracin) && is_countable($popularDracin) && count($popularDracin) > 0)
+            <section x-data="{
+                        scrollNext() { $refs.dracinContainer.scrollBy({ left: 300, behavior: 'smooth' }) },
+                        scrollPrev() { $refs.dracinContainer.scrollBy({ left: -300, behavior: 'smooth' }) }
+                     }" 
+                     class="space-y-4">
+                
+                <div class="flex items-center justify-between">
+                    <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                        <i data-lucide="tv-2" class="w-5 h-5 text-rose-400"></i>
+                        <span>Drama China Terpopuler</span>
+                    </h2>
+                    <a href="{{ route('browse', ['type' => 'dracin']) }}" class="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1">
+                        <span>Lihat Semua</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+
+                <div class="relative group">
+                    <div x-ref="dracinContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
+                        @foreach($popularDracin as $film)
+                            @if($film)
+                                <div class="w-36 sm:w-44 shrink-0">
+                                    <x-film-card :film="$film" />
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <button @click="scrollNext()" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/80 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+        @endif
+
         <!-- 2. Trending Movies Row -->
         @if(isset($trendingMovies) && is_countable($trendingMovies) && count($trendingMovies) > 0)
             <section x-data="{

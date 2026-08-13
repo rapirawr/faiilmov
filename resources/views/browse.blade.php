@@ -11,6 +11,26 @@
         <p class="text-zinc-400 text-xs sm:text-sm mt-2">Cari dan filter koleksi database film lengkap berdasarkan kriteria Anda.</p>
     </div>
 
+    <!-- Type Filter Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <a href="{{ route('browse', request()->except('type')) }}" 
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ !request('type') ? 'bg-white text-zinc-950 shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            Semua
+        </a>
+        <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'series'])) }}" 
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'series' ? 'bg-purple-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            📺 Series
+        </a>
+        <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'dracin'])) }}" 
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'dracin' ? 'bg-rose-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            🌸 Dracin
+        </a>
+        <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'movie'])) }}" 
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'movie' ? 'bg-blue-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            🎬 Movie
+        </a>
+    </div>
+
     <!-- Curved Bridge Filter Bar Form -->
     <form action="{{ route('browse') }}" method="GET" class="bridge-container p-4 rounded-[2.5rem] shadow-xl">
         @if(request('type'))

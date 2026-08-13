@@ -90,7 +90,8 @@ Route::middleware('throttle:search')->group(function () {
 });
 
 // Nonton Bareng (Watch Party) Routes - ADD RATE LIMITING
-Route::middleware('throttle:watch-party-create')->post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');
+// Requires email verification to CREATE a room (joining is open to all)
+Route::middleware(['throttle:watch-party-create', 'auth', 'verified'])->post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');
 
 Route::prefix('watch-party/{roomCode}')->name('watch-party.')->group(function () {
     Route::get('/', [\App\Http\Controllers\WatchPartyController::class, 'show'])->name('show');
@@ -118,6 +119,22 @@ Route::middleware(['guest', 'throttle:auth'])->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
+// Password Reset Routes (Guest)
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:6,1');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+});
+
+// Social Auth Routes (Google, Facebook) — accessible from login & register pages
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/{provider}', [\App\Http\Controllers\SocialAuthController::class, 'redirect'])
+        ->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [\App\Http\Controllers\SocialAuthController::class, 'callback'])
+        ->name('social.callback');
+});
+
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminFilmController;
 use App\Http\Controllers\Admin\AdminGenreController;
@@ -128,6 +145,15 @@ use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\Admin\AdminAppReleaseController;
 
+// Email Verification Routes (Authenticated)
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [AuthController::class, 'verificationNotice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationVerify'])
+        ->middleware('signed')->name('verification.verify');
+    Route::post('/email/verification-notification', [AuthController::class, 'verificationResend'])
+        ->middleware('throttle:6,1')->name('verification.send');
+});
+
 // Auth Routes (Authenticated Users)
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -137,20 +163,20 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::delete('/profile/watchlist', [ProfileController::class, 'clearWatchlist'])->name('profile.clear-watchlist');
     Route::delete('/profile/delete-account', [ProfileController::class, 'deleteAccount'])->name('profile.delete-account');
-    
-    // Review with rate limiting
-    Route::middleware('throttle:review')->group(function () {
+
+    // Review — requires email verification
+    Route::middleware(['throttle:review', 'verified'])->group(function () {
         Route::post('/film/{film}/review', [ReviewController::class, 'store'])->name('review.store');
         Route::post('/film/{film}/review/{review}/report', [AdminReviewController::class, 'storeReport'])->name('review.report');
     });
-    
+
     Route::delete('/review/{review}', [ReviewController::class, 'destroy'])->name('review.destroy');
-    
+
     Route::post('/film/{film}/watchlist', [WatchlistController::class, 'toggle'])->name('watchlist.toggle');
     Route::post('/watch-history/progress', [MovieDetailController::class, 'updateProgress'])->name('watch-history.progress');
     Route::delete('/watch-history/clear-all', [ProfileController::class, 'clearHistory'])->name('watch-history.clear-all');
     Route::delete('/watch-history/{watchHistory}', [ProfileController::class, 'destroyHistory'])->name('watch-history.destroy');
-    
+
     // Profiles (Multi-Profile)
     Route::get('/profiles', [ProfileSwitchController::class, 'index'])->name('profiles.index');
     Route::post('/profiles', [ProfileSwitchController::class, 'store'])->name('profiles.store');
@@ -158,14 +184,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/profiles/{profile}/switch', [ProfileSwitchController::class, 'switch'])->name('profiles.switch');
     Route::put('/profiles/{profile}/pin', [ProfileSwitchController::class, 'updatePin'])->name('profiles.update-pin');
     Route::delete('/profiles/{profile}', [ProfileSwitchController::class, 'destroy'])->name('profiles.destroy');
-    
+
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
-    
+
     // Parental Control
     Route::post('/parental/verify-pin', [ParentalControlController::class, 'verifyPin'])->name('parental.verify-pin');
     Route::post('/parental/set-pin', [ParentalControlController::class, 'setPin'])->name('parental.set-pin');
@@ -180,6 +206,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Film Management
     Route::post('/films/sync-api', [AdminFilmController::class, 'syncApi'])->name('films.sync_api');
+    Route::post('/films/sync-dracin-api', [AdminFilmController::class, 'syncDracinApi'])->name('films.sync_dracin_api');
     Route::post('/films/bulk-delete', [AdminFilmController::class, 'bulkDelete'])->name('films.bulk_delete');
     Route::post('/films/bulk-restore', [AdminFilmController::class, 'bulkRestore'])->name('films.bulk_restore');
     Route::delete('/films/empty-trash', [AdminFilmController::class, 'emptyTrash'])->name('films.empty_trash');
@@ -264,4 +291,16 @@ Route::prefix('moviebox')->middleware('throttle:120,1')->group(function () {
         Route::get('/proxy-stream', [MovieBoxController::class, 'proxyStream']);
         Route::get('/proxy-subtitle', [MovieBoxController::class, 'proxySubtitle']);
     });
+});
+
+// Anichin API Proxy & Stream Routes (For Dracin Player & Feeds)
+Route::prefix('anichin')->middleware('throttle:120,1')->group(function () {
+    Route::get('/hls', [\App\Http\Controllers\AnichinController::class, 'hlsStream'])->name('anichin.hls');
+    Route::get('/detail/{source}/{id}', [\App\Http\Controllers\AnichinController::class, 'detail']);
+    Route::get('/trending/{source?}', [\App\Http\Controllers\AnichinController::class, 'trending']);
+    Route::get('/foryou/{source?}', [\App\Http\Controllers\AnichinController::class, 'forYou']);
+    Route::get('/search/{source?}', [\App\Http\Controllers\AnichinController::class, 'search']);
+    Route::get('/hotrank/{source?}', [\App\Http\Controllers\AnichinController::class, 'hotRank']);
+    Route::get('/recommended/{source?}', [\App\Http\Controllers\AnichinController::class, 'recommended']);
+    Route::get('/latest/{source?}', [\App\Http\Controllers\AnichinController::class, 'latest']);
 });

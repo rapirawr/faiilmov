@@ -6,8 +6,8 @@
 @section('content')
 <div x-data="apiTesterApp()" class="space-y-6">
 
-    <!-- Header Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-zinc-900 p-6 md:p-8 border border-white/10 shadow-2xl">
+    <!-- Header Banner Card -->
+    <div class="relative overflow-hidden rounded-3xl bg-zinc-900/90 p-6 md:p-8 border border-zinc-800 shadow-xl">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="space-y-2 max-w-2xl">
                 <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight font-['Outfit']">
@@ -21,7 +21,7 @@
             <!-- Export Postman Button -->
             <div class="flex flex-wrap items-center gap-3 shrink-0">
                 <a href="{{ route('admin.api_tester.export_postman') }}" 
-                   class="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-extrabold text-xs shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                   class="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
                     <i data-lucide="download-cloud" class="w-4 h-4"></i>
                     <span>Export Postman Collection</span>
                 </a>
@@ -33,36 +33,36 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- Left Sidebar: Endpoint Navigator -->
-        <div class="lg:col-span-4 bg-zinc-900/80 border border-white/10 rounded-3xl p-4 backdrop-blur-xl space-y-4 shadow-xl">
+        <div class="lg:col-span-4 bg-zinc-900/90 border border-zinc-800 rounded-3xl p-4 space-y-4 shadow-xl">
             <div class="flex items-center justify-between px-2">
                 <h3 class="font-['Outfit'] font-bold text-sm text-white flex items-center gap-2">
-                    <i data-lucide="list-tree" class="w-4 h-4 text-indigo-400"></i>
+                    <i data-lucide="list-tree" class="w-4 h-4 text-sky-400"></i>
                     Daftar Endpoints ({{ count($endpoints) }})
                 </h3>
             </div>
 
             <!-- Quick Filter Input -->
             <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-3"></i>
+                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-3"></i>
                 <input type="text" 
                        x-model="filterQuery"
                        placeholder="Cari endpoint atau kata kunci..." 
-                       class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-zinc-950/80 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 transition-colors">
+                       class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors">
             </div>
 
-            <!-- Grouped Endpoints Accordion/List -->
-            <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700">
+            <!-- Grouped Endpoints List -->
+            <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
                 <template x-for="(groupItems, groupName) in filteredGroups" :key="groupName">
                     <div class="space-y-1.5" x-show="groupItems.length > 0">
                         <div class="px-2 py-1 text-[11px] font-extrabold tracking-wider text-zinc-400 uppercase font-['Outfit'] flex items-center justify-between">
                             <span x-text="groupName"></span>
-                            <span class="px-1.5 py-0.2 rounded-md bg-white/5 text-zinc-400 text-[10px]" x-text="groupItems.length"></span>
+                            <span class="px-1.5 py-0.2 rounded-md bg-zinc-950 border border-zinc-800 text-zinc-400 text-[10px]" x-text="groupItems.length"></span>
                         </div>
 
                         <div class="space-y-1">
                             <template x-for="(ep, idx) in groupItems" :key="ep.name">
                                 <button @click="selectEndpoint(ep)" 
-                                        :class="selectedEndpoint.name === ep.name ? 'bg-white/15 border-white/30 text-white font-bold' : 'bg-zinc-950/50 border-white/5 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'"
+                                        :class="selectedEndpoint.name === ep.name ? 'bg-zinc-800 border-amber-500/50 text-white font-bold' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'"
                                         class="w-full text-left px-3 py-2.5 rounded-xl border text-xs transition-all flex items-center justify-between gap-2 group cursor-pointer">
                                     <div class="flex items-center gap-2.5 min-w-0">
                                         <!-- Method Badge -->
@@ -78,17 +78,17 @@
             </div>
         </div>
 
-        <!-- Right Panel: Interactive Request & Response Execution Panel -->
+        <!-- Right Panel: Request & Response -->
         <div class="lg:col-span-8 space-y-6">
             
             <!-- Request Builder Box -->
-            <div class="bg-zinc-900/80 border border-white/10 rounded-3xl p-5 md:p-6 backdrop-blur-xl space-y-5 shadow-xl">
+            <div class="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-5 md:p-6 space-y-5 shadow-xl">
                 
                 <!-- Top URL & Method Bar -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider font-['Outfit']" x-text="selectedEndpoint.group"></span>
-                        <span x-show="selectedEndpoint.auth" class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 flex items-center gap-1">
+                        <span x-show="selectedEndpoint.auth" class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/30 flex items-center gap-1">
                             <i data-lucide="lock" class="w-3 h-3"></i> Require Token Auth
                         </span>
                     </div>
@@ -98,7 +98,7 @@
 
                     <!-- URL Input Group -->
                     <div class="flex flex-col sm:flex-row items-stretch gap-2 pt-2">
-                        <div class="flex items-center gap-0 w-full rounded-2xl border border-white/15 bg-zinc-950 overflow-hidden focus-within:border-indigo-500 transition-colors">
+                        <div class="flex items-center gap-0 w-full rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden focus-within:border-amber-500 transition-colors">
                             <span :class="getMethodBadgeClass(selectedEndpoint.method)" class="px-4 py-3 text-xs font-black uppercase tracking-wider shrink-0" x-text="selectedEndpoint.method"></span>
                             <input type="text" 
                                    x-model="activeUrl" 
@@ -107,7 +107,7 @@
 
                         <button @click="executeRequest()" 
                                 :disabled="isLoading"
-                                class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+                                class="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50">
                             <i x-show="!isLoading" data-lucide="send" class="w-4 h-4"></i>
                             <i x-show="isLoading" data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
                             <span x-text="isLoading ? 'Sending...' : 'Send Request'"></span>
@@ -116,22 +116,22 @@
                 </div>
 
                 <!-- Tabs: Query Params / Headers / Body -->
-                <div class="space-y-4 pt-2 border-t border-white/10">
-                    <div class="flex items-center gap-2 border-b border-white/10 pb-2">
+                <div class="space-y-4 pt-2 border-t border-zinc-800">
+                    <div class="flex items-center gap-2 border-b border-zinc-800 pb-2">
                         <button @click="activeTab = 'params'" 
-                                :class="activeTab === 'params' ? 'text-white border-white font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
-                                class="px-3 py-1.5 text-xs border-b-2 transition-colors">
+                                :class="activeTab === 'params' ? 'text-amber-400 border-amber-400 font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
+                                class="px-3 py-1.5 text-xs border-b-2 transition-colors cursor-pointer">
                             Query Parameters (<span x-text="Object.keys(queryParams).length"></span>)
                         </button>
                         <button @click="activeTab = 'headers'" 
-                                :class="activeTab === 'headers' ? 'text-white border-white font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
-                                class="px-3 py-1.5 text-xs border-b-2 transition-colors">
+                                :class="activeTab === 'headers' ? 'text-amber-400 border-amber-400 font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
+                                class="px-3 py-1.5 text-xs border-b-2 transition-colors cursor-pointer">
                             Headers (<span x-text="Object.keys(requestHeaders).length"></span>)
                         </button>
                         <button x-show="selectedEndpoint.method !== 'GET'" 
                                 @click="activeTab = 'body'" 
-                                :class="activeTab === 'body' ? 'text-white border-white font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
-                                class="px-3 py-1.5 text-xs border-b-2 transition-colors">
+                                :class="activeTab === 'body' ? 'text-amber-400 border-amber-400 font-bold' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
+                                class="px-3 py-1.5 text-xs border-b-2 transition-colors cursor-pointer">
                             JSON Body
                         </button>
                     </div>
@@ -140,8 +140,8 @@
                     <div x-show="activeTab === 'params'" class="space-y-2">
                         <template x-for="(val, key) in queryParams" :key="key">
                             <div class="flex items-center gap-2">
-                                <input type="text" :value="key" readonly class="w-1/3 px-3 py-2 rounded-xl bg-zinc-950 border border-white/10 text-xs font-mono text-zinc-300">
-                                <input type="text" x-model="queryParams[key]" @input="updateActiveUrl()" class="w-2/3 px-3 py-2 rounded-xl bg-zinc-950 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-indigo-500">
+                                <input type="text" :value="key" readonly class="w-1/3 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-400">
+                                <input type="text" x-model="queryParams[key]" @input="updateActiveUrl()" class="w-2/3 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
                             </div>
                         </template>
                         <p x-show="Object.keys(queryParams).length === 0" class="text-xs text-zinc-500 italic py-2">Tidak ada query parameter untuk endpoint ini.</p>
@@ -151,8 +151,8 @@
                     <div x-show="activeTab === 'headers'" class="space-y-2">
                         <template x-for="(val, key) in requestHeaders" :key="key">
                             <div class="flex items-center gap-2">
-                                <input type="text" :value="key" readonly class="w-1/3 px-3 py-2 rounded-xl bg-zinc-950 border border-white/10 text-xs font-mono text-zinc-300">
-                                <input type="text" x-model="requestHeaders[key]" class="w-2/3 px-3 py-2 rounded-xl bg-zinc-950 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-indigo-500">
+                                <input type="text" :value="key" readonly class="w-1/3 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-400">
+                                <input type="text" x-model="requestHeaders[key]" class="w-2/3 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
                             </div>
                         </template>
                     </div>
@@ -161,15 +161,15 @@
                     <div x-show="activeTab === 'body' && selectedEndpoint.method !== 'GET'" class="space-y-2">
                         <textarea x-model="requestBody" 
                                   rows="6" 
-                                  class="w-full p-3 rounded-xl bg-zinc-950 border border-white/10 font-mono text-xs text-emerald-400 focus:outline-none focus:border-indigo-500"></textarea>
+                                  class="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-emerald-400 focus:outline-none focus:border-amber-500"></textarea>
                     </div>
                 </div>
 
             </div>
 
             <!-- Response Console Display -->
-            <div class="bg-zinc-900/80 border border-white/10 rounded-3xl p-5 md:p-6 backdrop-blur-xl space-y-4 shadow-xl">
-                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
                     <h3 class="font-['Outfit'] font-bold text-sm text-white flex items-center gap-2">
                         <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i>
                         Response Output
@@ -177,7 +177,7 @@
 
                     <div class="flex items-center gap-3">
                         <span x-show="responseStatus" 
-                              :class="responseStatus >= 200 && responseStatus < 300 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'"
+                              :class="responseStatus >= 200 && responseStatus < 300 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'"
                               class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold border" 
                               x-text="responseStatus + ' ' + responseStatusText"></span>
 
@@ -185,14 +185,14 @@
 
                         <button x-show="responseBody" 
                                 @click="copyResponse()" 
-                                class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white font-medium transition-colors flex items-center gap-1.5">
+                                class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs text-white font-medium transition-colors flex items-center gap-1.5 cursor-pointer">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             <span x-text="copied ? 'Copied!' : 'Copy JSON'"></span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Empty State / Response Area -->
+                <!-- Response Display Area -->
                 <div>
                     <div x-show="!responseBody && !isLoading" class="py-12 text-center text-zinc-500 space-y-2">
                         <i data-lucide="play-circle" class="w-10 h-10 mx-auto stroke-1 text-zinc-600"></i>
@@ -200,12 +200,12 @@
                     </div>
 
                     <div x-show="isLoading" class="py-12 text-center text-zinc-400 space-y-3">
-                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-indigo-400"></i>
+                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-amber-400"></i>
                         <p class="text-xs font-mono">Mengirim permintaan HTTP ke server...</p>
                     </div>
 
                     <div x-show="responseBody && !isLoading" class="space-y-3">
-                        <pre class="w-full max-h-96 overflow-auto p-4 rounded-2xl bg-zinc-950 border border-white/10 font-mono text-xs text-emerald-400 leading-relaxed scrollbar-thin scrollbar-thumb-zinc-800"><code x-text="responseBody"></code></pre>
+                        <pre class="w-full max-h-96 overflow-auto p-4 rounded-2xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-emerald-400 leading-relaxed scrollbar-thin"><code x-text="responseBody"></code></pre>
                     </div>
                 </div>
             </div>
@@ -299,10 +299,10 @@ function apiTesterApp() {
 
         getMethodBadgeClass(method) {
             switch(method) {
-                case 'GET': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-                case 'POST': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
-                case 'PUT': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
-                case 'DELETE': return 'bg-red-500/20 text-red-400 border border-red-500/30';
+                case 'GET': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+                case 'POST': return 'bg-sky-500/10 text-sky-400 border border-sky-500/30';
+                case 'PUT': return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+                case 'DELETE': return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
                 default: return 'bg-zinc-800 text-zinc-300';
             }
         },

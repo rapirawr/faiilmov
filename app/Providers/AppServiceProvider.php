@@ -48,9 +48,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Shared Welcome Modal Visibility Logic
+        // Shared Welcome Modal Visibility Logic (Disabled on auth pages)
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
-            $shouldShow = !\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()?->has_seen_welcome_modal;
+            $isAuthPage = request()->is('login*', 'register*', 'password*', 'auth*') || request()->routeIs('login', 'register', 'password.*');
+            $shouldShow = !$isAuthPage && (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()?->has_seen_welcome_modal);
             $view->with('shouldShowWelcomeModal', $shouldShow);
         });
     }

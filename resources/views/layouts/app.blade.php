@@ -9,7 +9,7 @@
     <meta name="google-site-verification" content="O5FIi4EuweW7xm1i2EspXhFlPbSIPOx4ZQ3gZMp1wmM">
 
     <!-- SEO Meta Tags & Schema.org JSON-LD -->
-    @if(isset($film) && $film instanceof \App\Models\Film)
+    @if(request()->routeIs('film.show', 'film.watch') && isset($film) && $film instanceof \App\Models\Film)
         <x-seo-meta :film="$film" />
     @elseif(View::hasSection('title'))
         <x-seo-meta 

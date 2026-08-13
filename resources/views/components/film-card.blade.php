@@ -28,10 +28,12 @@
     };
 
     $dur = '1h 30m';
-    if ($film->duration_minutes > 0) {
+    if ($film->duration_minutes > 0 && $film->subject_type === 'movie') {
         $h = floor($film->duration_minutes / 60);
         $m = $film->duration_minutes % 60;
         $dur = ($h > 0 ? "{$h}h " : '') . ($m > 0 ? "{$m}m" : '');
+    } elseif ($film->subject_type === 'dracin') {
+        $dur = 'Dracin';
     } elseif ($film->subject_type === 'series') {
         $dur = 'TV Series';
     }

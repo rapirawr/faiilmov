@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -54,26 +57,31 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        Auth::login($user);
-        
+        Auth::login($user, remember: true);
+        $request->session()->regenerate();
+
+        // Send email verification notification
+        $user->sendEmailVerificationNotification();
+
         Log::info('New user registered', [
             'user_id' => $user->id,
-            'email' => $user->email,
-            'ip' => $request->ip(),
+            'email'   => $user->email,
+            'ip'      => $request->ip(),
         ]);
 
-        return redirect('/')->with('success', 'Akun berhasil dibuat!');
+        return redirect('/')
+            ->with('success', 'Selamat datang di faiilmov! Akun Anda berhasil dibuat. Silakan cek email Anda untuk melakukan verifikasi.');
     }
 
     public function logout(Request $request)
@@ -91,10 +99,146 @@ class AuthController extends Controller
         
         Log::info('User logout', [
             'user_id' => $userId,
-            'email' => $email,
-            'ip' => $request->ip(),
+            'email'   => $email,
+            'ip'      => $request->ip(),
         ]);
 
         return redirect('/')->with('success', 'Berhasil keluar.');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PASSWORD RESET
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Show the forgot-password form.
+     */
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /**
+     * Send the password reset link to the given email.
+     * Rate-limited via route: throttle:6,1
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        if ($status === Password::RESET_LINK_SENT) {
+            Log::info('Password reset link sent', ['email' => $request->email, 'ip' => $request->ip()]);
+
+            return back()->with('status', 'Link reset password telah dikirim ke email Anda. Periksa folder spam jika tidak muncul dalam beberapa menit.');
+        }
+
+        // Intentionally vague response to prevent user enumeration
+        return back()->with('status', 'Jika email tersebut terdaftar, kami akan segera mengirimkan link reset password.');
+    }
+
+    /**
+     * Show the reset-password form for the given token.
+     */
+    public function showResetForm(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    /**
+     * Validate the token and update the user's password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token'                 => 'required',
+            'email'                 => 'required|email',
+            'password'              => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password'       => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+
+                Log::info('Password reset successful', [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                ]);
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')
+                ->with('success', 'Password berhasil direset. Silakan masuk dengan password baru Anda.');
+        }
+
+        return back()->withErrors(['email' => __($status)])->withInput($request->only('email'));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // EMAIL VERIFICATION
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Show the email verification notice page.
+     */
+    public function verificationNotice()
+    {
+        if (auth()->user()->hasVerifiedEmail()) {
+            return redirect()->intended('/');
+        }
+
+        return view('auth.verify-email');
+    }
+
+    /**
+     * Handle email verification via signed URL.
+     */
+    public function verificationVerify(Request $request, $id, $hash)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Link verifikasi tidak valid.');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect('/')->with('info', 'Email Anda sudah terverifikasi sebelumnya.');
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new \Illuminate\Auth\Events\Verified($user));
+            Log::info('Email verified', ['user_id' => $user->id, 'email' => $user->email]);
+        }
+
+        return redirect('/')->with('success', 'Email berhasil diverifikasi! Selamat menikmati faiilmov.');
+    }
+
+    /**
+     * Resend the email verification notification.
+     * Rate-limited via route: throttle:6,1
+     */
+    public function verificationResend(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect('/')->with('info', 'Email Anda sudah terverifikasi.');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
     }
 }

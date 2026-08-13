@@ -55,4 +55,19 @@ return [
         'embedding_model' => env('NVIDIA_EMBEDDING_MODEL', 'nvidia/nv-embed-v2'),
     ],
 
+    'anichin' => [
+        'api_url'      => env('ANICHIN_API_URL', 'https://api.anichin.bio'),
+        'priv_api_url' => env('ANICHIN_PRIV_API_URL', 'https://priv-api.anichin.bio'),
+        'api_key'      => env('ANICHIN_API_KEY', 'ANICHIN-285757D6C7247E91356ACD175840B15D'),
+        'priv_api_key' => env('ANICHIN_PRIV_API_KEY', 'dk_live_d6350c820e0098a55f8d1e88c7c255c5'),
+    ],
+
+    // ─── Social OAuth Providers ───────────────────────────────────────────────
+
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
 ];

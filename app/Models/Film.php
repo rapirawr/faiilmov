@@ -309,12 +309,24 @@ class Film extends Model
     }
 
     /**
+     * Check if film has episodes (Series or Dracin)
+     */
+    public function isEpisodic(): bool
+    {
+        return in_array($this->subject_type, ['series', 'dracin'], true);
+    }
+
+    /**
      * Get dynamic SEO title for film detail page
      */
     public function getSeoTitleAttribute(): string
     {
         $year = $this->release_year ?: date('Y');
-        $typeLabel = $this->subject_type === 'series' ? 'Series' : 'Film';
+        $typeLabel = match($this->subject_type) {
+            'series' => 'Series',
+            'dracin' => 'Drama China',
+            default => 'Film'
+        };
         return "{$this->title} ({$year}) - Nonton {$typeLabel} Subtitle Indonesia | faiilmov";
     }
 
@@ -325,7 +337,11 @@ class Film extends Model
     {
         $rawText = trim(strip_tags($this->synopsis ?: ''));
         if (empty($rawText)) {
-            $typeLabel = $this->subject_type === 'series' ? 'TV Series' : 'film';
+            $typeLabel = match($this->subject_type) {
+                'series' => 'TV Series',
+                'dracin' => 'Drama China',
+                default => 'film'
+            };
             return "Streaming & nonton {$typeLabel} {$this->title} ({$this->release_year}) subtitle Indonesia gratis kualitas HD di faiilmov.";
         }
 
@@ -377,7 +393,7 @@ class Film extends Model
      */
     public function getSchemaJsonLdArrayAttribute(): array
     {
-        $isSeries = $this->subject_type === 'series';
+        $isSeries = $this->isEpisodic();
         $canonicalUrl = route('film.show', $this->slug);
 
         $images = [];
@@ -519,7 +535,7 @@ class Film extends Model
                 'poster_url' => $posterUrl,
                 'backdrop_url' => $backdropUrl,
                 'rating' => (float)($data['imdbRatingValue'] ?? $data['score'] ?? 0.0),
-                'subject_type' => ($stype === 2) ? 'series' : 'movie',
+                'subject_type' => $data['subject_type'] ?? (($existing && $existing->subject_type === 'dracin') ? 'dracin' : (($stype === 2) ? 'series' : 'movie')),
                 'max_resolution' => $maxRes,
             ]
         );

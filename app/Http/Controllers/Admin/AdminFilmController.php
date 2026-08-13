@@ -60,6 +60,7 @@ class AdminFilmController extends Controller
             'total' => Film::count(),
             'movies' => Film::where('subject_type', 'movie')->count(),
             'series' => Film::where('subject_type', 'series')->count(),
+            'dracin' => Film::where('subject_type', 'dracin')->count(),
             'unrated' => Film::whereNull('content_rating')->count(),
             'trash' => count($trashedFilms),
         ];
@@ -81,7 +82,7 @@ class AdminFilmController extends Controller
             'release_year' => 'nullable|integer|min:1900|max:2099',
             'duration_minutes' => 'nullable|integer|min:1',
             'rating' => 'nullable|numeric|min:0|max:10',
-            'subject_type' => 'required|in:movie,series',
+            'subject_type' => 'required|in:movie,series,dracin',
             'content_rating' => 'nullable|string|in:SU,G,PG,13+,16+,18+',
             'max_resolution' => 'nullable|string|in:480P,720P,1080P,4K',
             'view_count' => 'nullable|integer|min:0',
@@ -156,7 +157,7 @@ class AdminFilmController extends Controller
             'release_year' => 'nullable|integer|min:1900|max:2099',
             'duration_minutes' => 'nullable|integer|min:1',
             'rating' => 'nullable|numeric|min:0|max:10',
-            'subject_type' => 'required|in:movie,series',
+            'subject_type' => 'required|in:movie,series,dracin',
             'content_rating' => 'nullable|string|in:SU,G,PG,13+,16+,18+',
             'max_resolution' => 'nullable|string|in:480P,720P,1080P,4K',
             'view_count' => 'nullable|integer|min:0',
@@ -294,6 +295,15 @@ class AdminFilmController extends Controller
         AdminActivityLog::log('sync_api_triggered', "Memulai job sinkronisasi film dari MovieBox API dalam background queue.");
 
         return redirect()->route('admin.films.index')->with('success', 'Proses sinkronisasi film dari API eksternal telah dimulai di latar belakang.');
+    }
+
+    public function syncDracinApi()
+    {
+        \App\Jobs\SyncDracinJob::dispatch(Auth::id());
+
+        AdminActivityLog::log('sync_dracin_api_triggered', "Memulai job sinkronisasi Dracin dari Anichin API dalam background queue.");
+
+        return redirect()->route('admin.films.index')->with('success', 'Proses sinkronisasi Dracin dari Anichin API telah dimulai di latar belakang.');
     }
 
     public function contentRatingEditor(Request $request)

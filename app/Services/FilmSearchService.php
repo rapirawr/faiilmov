@@ -131,7 +131,7 @@ class FilmSearchService
         }
 
         $type = $interpretation['type'] ?? null;
-        if ($type && in_array($type, ['movie', 'series'])) {
+        if ($type && in_array($type, ['movie', 'series', 'dracin'])) {
             $filmQuery->where('subject_type', $type);
         }
 

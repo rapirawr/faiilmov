@@ -81,6 +81,8 @@ class HomeController extends Controller
         if ($popularSeries->isEmpty()) {
             $popularSeries = Film::forActiveProfile()->with('genres')->orderByDesc('rating')->limit(12)->get();
         }
+
+        $popularDracin = Film::forActiveProfile()->with('genres')->where('subject_type', 'dracin')->orderByDesc('rating')->limit(12)->get();
         
         $trendingMovies = Film::forActiveProfile()->with('genres')
             ->where('subject_type', 'movie')
@@ -138,6 +140,6 @@ class HomeController extends Controller
             return view('partials.catalog-grid', compact('films', 'searchQuery'));
         }
 
-        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery'));
+        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'popularDracin', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery'));
     }
 }

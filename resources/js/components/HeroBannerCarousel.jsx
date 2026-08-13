@@ -68,8 +68,8 @@ export default function HeroBannerCarousel({ films = [] }) {
           className="flex items-center gap-2 flex-wrap"
         >
           <span className="px-3 py-1 rounded-xl glass-chip text-xs font-extrabold text-amber-300 border border-amber-500/30 shadow-lg flex items-center gap-1.5 uppercase">
-            {currentFilm.subject_type === 'series' ? <Tv className="w-3.5 h-3.5 text-amber-400" /> : <FilmIcon className="w-3.5 h-3.5 text-amber-400" />}
-            <span>{currentFilm.subject_type === 'series' ? 'Series' : 'Movie'}</span>
+            {currentFilm.subject_type === 'series' || currentFilm.subject_type === 'dracin' ? <Tv className="w-3.5 h-3.5 text-amber-400" /> : <FilmIcon className="w-3.5 h-3.5 text-amber-400" />}
+            <span>{currentFilm.subject_type === 'dracin' ? 'Dracin' : (currentFilm.subject_type === 'series' ? 'Series' : 'Movie')}</span>
           </span>
 
           <span className="px-3 py-1 rounded-xl glass-chip text-xs font-bold text-amber-400 border border-amber-400/20 flex items-center gap-1">

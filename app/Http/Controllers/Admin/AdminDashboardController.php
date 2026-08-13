@@ -20,11 +20,13 @@ class AdminDashboardController extends Controller
         $totalFilms = Film::count();
         $totalMovies = Film::where('subject_type', 'movie')->count();
         $totalSeries = Film::where('subject_type', 'series')->count();
+        $totalDracin = Film::where('subject_type', 'dracin')->count();
 
         $stats = [
             'total_films' => $totalFilms,
             'total_movies' => $totalMovies,
             'total_series' => $totalSeries,
+            'total_dracin' => $totalDracin,
             'total_users' => User::count(),
             'new_users_7d' => User::where('created_at', '>=', now()->subDays(7))->count(),
             'total_reviews' => Review::count(),

@@ -87,7 +87,7 @@ class WatchPartyController extends Controller
             ->firstOrFail();
 
         $film = $watchParty->film;
-        if ($film->subject_type === 'series') {
+        if ($film->isEpisodic()) {
             $this->syncSeriesStructure($film);
             $film->load('seasons.episodes');
         }
@@ -884,7 +884,7 @@ class WatchPartyController extends Controller
      */
     protected function syncSeriesStructure(Film $film): void
     {
-        if ($film->subject_type !== 'series' || !$film->moviebox_subject_id) return;
+        if (!$film->isEpisodic() || !$film->moviebox_subject_id) return;
 
         try {
             $details = $this->movieBox->getDetails($film->moviebox_subject_id);

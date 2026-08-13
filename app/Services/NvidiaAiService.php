@@ -105,7 +105,7 @@ class NvidiaAiService
             $film->title,
             $genreNames,
             $film->synopsis,
-            $film->subject_type === 'series' ? 'TV Series' : 'Movie',
+            $film->subject_type === 'dracin' ? 'Drama China' : ($film->subject_type === 'series' ? 'TV Series' : 'Movie'),
             "Released: {$film->release_year}",
         ])));
 
@@ -122,7 +122,7 @@ Available genres: Action, Comedy, Drama, Horror, Thriller, Romance, Sci-Fi, Fant
 Output ONLY valid JSON with these fields (all optional):
 {
   "genres": ["genre1", "genre2"],
-  "type": "movie" or "series" or null,
+  "type": "movie" or "series" or "dracin" or null,
   "min_rating": float between 0-10 or null,
   "mood_keywords": ["keyword1", "keyword2"],
   "similar_to_title": "film title" or null,

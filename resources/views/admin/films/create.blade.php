@@ -35,6 +35,7 @@
                     <select name="subject_type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                         <option value="movie" {{ old('subject_type') === 'movie' ? 'selected' : '' }}>Movie</option>
                         <option value="series" {{ old('subject_type') === 'series' ? 'selected' : '' }}>Series</option>
+                        <option value="dracin" {{ old('subject_type') === 'dracin' ? 'selected' : '' }}>Drama China (Dracin)</option>
                     </select>
                 </div>
 

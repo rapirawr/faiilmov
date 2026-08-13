@@ -28,6 +28,15 @@ class MovieDetailController extends Controller
         $film = Film::with(['genres', 'actors', 'seasons.episodes'])->where('slug', $slug)->first();
 
         if (!$film) {
+            // Try fallback lookup by subject_id or partial slug
+            $film = Film::with(['genres', 'actors', 'seasons.episodes'])
+                ->where('moviebox_subject_id', $slug)
+                ->orWhere('moviebox_subject_id', str_replace('-', ':', $slug))
+                ->orWhere('moviebox_subject_id', 'like', '%' . $slug)
+                ->first();
+        }
+
+        if (!$film) {
             $subjectId = $slug;
             if (str_contains($slug, '-')) {
                 $parts = explode('-', $slug);
@@ -61,7 +70,7 @@ class MovieDetailController extends Controller
             } catch (Exception $e) {}
         }
 
-        if ($film->subject_type === 'series') {
+        if ($film->isEpisodic()) {
             $this->syncSeriesStructure($film);
             $film->load('seasons.episodes');
         }
@@ -106,6 +115,15 @@ class MovieDetailController extends Controller
         $film = Film::with(['genres', 'actors', 'seasons.episodes'])->where('slug', $slug)->first();
 
         if (!$film) {
+            // Try fallback lookup by subject_id or partial slug
+            $film = Film::with(['genres', 'actors', 'seasons.episodes'])
+                ->where('moviebox_subject_id', $slug)
+                ->orWhere('moviebox_subject_id', str_replace('-', ':', $slug))
+                ->orWhere('moviebox_subject_id', 'like', '%' . $slug)
+                ->first();
+        }
+
+        if (!$film) {
             $subjectId = $slug;
             if (str_contains($slug, '-')) {
                 $parts = explode('-', $slug);
@@ -132,7 +150,7 @@ class MovieDetailController extends Controller
         $episode = (int)($request->query('episode') ?? $request->query('ep') ?? 0);
         $resParam = $request->query('resolution');
 
-        if ($film->subject_type === 'series') {
+        if ($film->isEpisodic()) {
             $this->syncSeriesStructure($film);
             $film->load('seasons.episodes');
 
@@ -164,17 +182,31 @@ class MovieDetailController extends Controller
         }
 
         $resourcesData = [];
+        $activeStream = null;
+
         if ($film->moviebox_subject_id) {
-            try {
-                $resourcesData = $this->movieBox->getResources($film->moviebox_subject_id, $season, $episode, 1, $resParam);
-            } catch (Exception $e) {
+            if (str_starts_with($film->moviebox_subject_id, 'anichin:')) {
+                $parts = explode(':', $film->moviebox_subject_id);
+                $anichinSource = $parts[1] ?? 'dramabox';
+                $anichinId = $parts[2] ?? '';
+                $epNum = max(1, $episode);
+
+                $activeStream = route('anichin.hls', [
+                    'source' => $anichinSource,
+                    'id' => $anichinId,
+                    'ep' => $epNum,
+                ], false);
+            } else {
+                try {
+                    $resourcesData = $this->movieBox->getResources($film->moviebox_subject_id, $season, $episode, 1, $resParam);
+                } catch (Exception $e) {
+                }
             }
         }
 
         $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
-        $activeStream = null;
 
-        if (!empty($resourceList)) {
+        if (empty($activeStream) && !empty($resourceList)) {
             $h264Item = null;
             foreach ($resourceList as $resItem) {
                 $codec = strtolower($resItem['codecName'] ?? '');
@@ -208,7 +240,7 @@ class MovieDetailController extends Controller
         $activeEpisode = null;
         $nextEpisode = null;
 
-        if ($film->subject_type === 'series') {
+        if ($film->isEpisodic()) {
             $activeEpisode = Episode::whereHas('season', fn($q) => $q->where('film_id', $film->id)->where('season_number', $season))
                 ->where('episode_number', $episode)
                 ->first();
@@ -218,7 +250,12 @@ class MovieDetailController extends Controller
             }
         }
 
-        $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $film->moviebox_subject_id . '&title=' . urlencode($film->title) . '&se=' . $season . '&ep=' . $episode : '';
+        $isDracin = ($film->subject_type === 'dracin' || str_starts_with($film->moviebox_subject_id ?? '', 'anichin:'));
+        $proxyActiveStream = $activeStream ? (
+            $isDracin
+                ? $activeStream
+                : url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $film->moviebox_subject_id . '&title=' . urlencode($film->title) . '&se=' . $season . '&ep=' . $episode
+        ) : '';
         $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $season, $episode) : [];
 
         if (Auth::check()) {
@@ -329,7 +366,7 @@ class MovieDetailController extends Controller
      */
     protected function syncSeriesStructure(Film $film): void
     {
-        if ($film->subject_type !== 'series' || !$film->moviebox_subject_id) return;
+        if (!$film->isEpisodic() || !$film->moviebox_subject_id) return;
         
         // Skip network API calls if seasons & episodes are already stored in local DB
         if ($film->seasons()->exists()) return;

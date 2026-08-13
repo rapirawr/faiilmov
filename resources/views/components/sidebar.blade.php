@@ -20,9 +20,10 @@
         @php
             $isHome = request()->routeIs('home');
             $isTvShow = request()->routeIs('browse') && request('type') === 'series';
+            $isDracin = request()->routeIs('browse') && request('type') === 'dracin';
+            $isMovie = request()->routeIs('browse') && request('type') === 'movie';
             $isAnimation = request()->routeIs('browse') && request('genre') === 'animation';
             $isMostWatched = request()->routeIs('browse') && request('sort') === 'rating_desc';
-            $isMovie = request()->routeIs('browse') && !$isTvShow && !$isAnimation && !$isMostWatched;
         @endphp
         <div class="space-y-2">
             <a href="{{ route('home') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isHome ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
@@ -33,6 +34,11 @@
             <a href="{{ route('browse', ['type' => 'series']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isTvShow ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
                 <i data-lucide="tv" class="w-5 h-5 {{ $isTvShow ? 'text-white' : 'text-zinc-400' }}"></i>
                 <span>Series</span>
+            </a>
+
+            <a href="{{ route('browse', ['type' => 'dracin']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isDracin ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                <i data-lucide="tv-2" class="w-5 h-5 {{ $isDracin ? 'text-rose-400' : 'text-zinc-400' }}"></i>
+                <span>Dracin</span>
             </a>
 
             <a href="{{ route('browse', ['type' => 'movie']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isMovie ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
