@@ -6,13 +6,48 @@
 @section('content')
 <div class="space-y-6" x-data="{ activeTab: 'profiles' }">
 
+    @if($user->trashed())
+        <!-- Trashed Warning & Action Banner -->
+        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
+                    <i data-lucide="trash-2" class="w-5 h-5 text-rose-400"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-sm font-['Outfit']">Akun Berada di Tempat Sampah (Soft Deleted)</p>
+                    <p class="text-zinc-400 text-[11px]">Akun ini dihapus pada {{ $user->deleted_at->format('d M Y, H:i') }}. Pengguna tidak dapat login ke aplikasi.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" onsubmit="return confirm('Pulihkan akun pengguna ini?')">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Pulihkan Akun</span>
+                    </button>
+                </form>
+                <form action="{{ route('admin.users.force_delete', $user->id) }}" method="POST" onsubmit="return confirm('Hapus permanen akun ini? Seluruh data riwayat dan ulasan akan dihapus selamanya!')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="trash" class="w-4 h-4"></i>
+                        <span>Hapus Permanen</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    @endif
+
     <!-- User Header Card -->
     <div class="p-6 rounded-2xl bg-zinc-900/60 border border-white/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-14 h-14 rounded-2xl object-cover border border-amber-500/30 shrink-0 bg-zinc-800" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
+            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-14 h-14 rounded-2xl object-cover border border-amber-500/30 shrink-0 bg-zinc-800 {{ $user->trashed() ? 'grayscale' : '' }}" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
             <div>
                 <div class="flex items-center gap-2">
-                    <h2 class="text-xl font-bold text-white font-['Outfit']">{{ $user->name }}</h2>
+                    <h2 class="text-xl font-bold text-white font-['Outfit'] {{ $user->trashed() ? 'line-through text-zinc-400' : '' }}">{{ $user->name }}</h2>
+                    @if($user->trashed())
+                        <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-extrabold text-[10px] uppercase border border-rose-500/30">Terhapus</span>
+                    @endif
                     @if($user->isAdmin())
                         <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">Admin</span>
                     @endif
@@ -25,7 +60,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-            @if(!$user->isAdmin())
+            @if(!$user->trashed() && !$user->isAdmin())
                 @if($user->isBanned())
                     <form action="{{ route('admin.users.unban', $user->id) }}" method="POST" onsubmit="return confirm('Cabut suspen user ini?')">
                         @csrf

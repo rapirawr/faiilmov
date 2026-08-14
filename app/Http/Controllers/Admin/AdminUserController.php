@@ -13,7 +13,17 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::withCount(['reviews', 'watchlists', 'profiles']);
+        $status = $request->status;
+        
+        if ($status === 'trashed') {
+            $query = User::onlyTrashed();
+        } elseif ($status === 'all_with_trashed') {
+            $query = User::withTrashed();
+        } else {
+            $query = User::query();
+        }
+
+        $query->withCount(['reviews', 'watchlists', 'profiles']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -23,7 +33,7 @@ class AdminUserController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
+        if ($status && !in_array($status, ['trashed', 'all_with_trashed'])) {
             if ($request->status === 'banned') {
                 $query->where('is_banned', true);
             } elseif ($request->status === 'active') {
@@ -35,11 +45,22 @@ class AdminUserController extends Controller
 
         $users = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        // Statistical counts for the shortcut buttons
+        $stats = [
+            'total'   => User::count(),
+            'active'  => User::where('is_banned', false)->count(),
+            'banned'  => User::where('is_banned', true)->count(),
+            'admin'   => User::where('is_admin', true)->count(),
+            'trashed' => User::onlyTrashed()->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
-    public function show(User $user)
+    public function show($id)
     {
+        $user = User::withTrashed()->findOrFail($id);
+
         $user->load([
             'profiles',
             'reviews.film',
@@ -98,5 +119,67 @@ class AdminUserController extends Controller
         AdminActivityLog::log('unbanned_user', "Membuka supen/unban user '{$user->name}' ({$user->email})", 'User', $user->id);
 
         return redirect()->back()->with('success', "Status ban user '{$user->name}' berhasil dicabut.");
+    }
+
+    /**
+     * Soft delete a user.
+     */
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        if ($user->isAdmin() && !auth()->user()->isAdmin()) {
+            return redirect()->back()->with('error', 'Tidak memiliki wewenang untuk menghapus akun Administrator.');
+        }
+
+        DB::transaction(function () use ($user) {
+            // Invalidate user sessions
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            $user->delete();
+        });
+
+        AdminActivityLog::log('soft_deleted_user', "Menghapus akun (Soft Delete) '{$user->name}' ({$user->email})", 'User', $user->id);
+
+        return redirect()->back()->with('success', "Akun pengguna '{$user->name}' berhasil dipindahkan ke sampah (Soft Delete).");
+    }
+
+    /**
+     * Restore a soft-deleted user.
+     */
+    public function restore($id)
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+
+        AdminActivityLog::log('restored_user', "Memulihkan akun pengguna '{$user->name}' ({$user->email}) dari sampah", 'User', $user->id);
+
+        return redirect()->back()->with('success', "Akun pengguna '{$user->name}' berhasil dipulihkan.");
+    }
+
+    /**
+     * Permanently delete a user from the database.
+     */
+    public function forceDelete($id)
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $userId = $user->id;
+
+        DB::transaction(function () use ($user) {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            $user->forceDelete();
+        });
+
+        AdminActivityLog::log('force_deleted_user', "Menghapus akun secara permanen: '{$userName}' ({$userEmail})", 'User', $userId);
+
+        return redirect()->back()->with('success', "Akun pengguna '{$userName}' telah dihapus secara permanen dari sistem.");
     }
 }
