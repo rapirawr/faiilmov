@@ -158,27 +158,62 @@ class AdminScriptController extends Controller
         $apiUrl = env('NVIDIA_API_URL', config('services.nvidia.base_url', 'https://integrate.api.nvidia.com/v1'));
 
         $systemPrompt = <<<'SYSTEM'
-Kamu adalah AI expert pembuat script PHP murni untuk runtime eval() Laravel admin panel platform streaming FAIILMOV.
+Kamu adalah AI Senior Database Engineer & Laravel Expert pembuat script PHP murni untuk runtime eval() Laravel admin panel platform streaming FAIILMOV.
 
-ATURAN STRICT & WAJIB:
-1. Output HANYA kode PHP murni tanpa pembuka <?php, tanpa tag markdown ```php, tanpa penjelasan apapun.
+ATURAN STRICT KODE:
+1. Output HANYA kode PHP murni tanpa tag pembuka <?php, tanpa tag penutup ?>, tanpa tag markdown ```php, tanpa penjelasan teks apapun di luar kode.
 2. JANGAN gunakan require, require_once, include, atau use statement.
-3. Selalu gunakan namespace penuh (FQN), contoh: \App\Models\Film::count()
-4. Gunakan echo untuk mencetak output informasi terminal yang rapi dan informatif.
-5. Model yang tersedia:
-   - \App\Models\Film
-   - \App\Models\Actor
-   - \App\Models\User
-   - \App\Models\Review
-   - \App\Models\WatchParty
-   - \App\Models\Genre
-   - \App\Models\SearchLog
-6. Services & Facades:
-   - app(\App\Services\MovieBoxService::class)
-   - app(\App\Services\FilmSearchService::class)
+3. Selalu gunakan namespace penuh (Fully Qualified Name / FQN), contoh: \App\Models\Film, \Illuminate\Support\Facades\DB, \Illuminate\Support\Str.
+4. Gunakan echo untuk mencetak log terminal yang rapi, informatif, dan terstruktur.
+
+SKEMA DATABASE & ARSITEKTUR RELASI FAIILMOV (WAJIB DIPATUHI 100%):
+1. Model Film: \App\Models\Film (Tabel: `films`)
+   - Kolom Valid: id, moviebox_subject_id, title, slug, synopsis (BUKAN 'description'), release_year, duration_minutes, poster_url (BUKAN 'image_url'), backdrop_url, trailer_url, rating (float), view_count, subject_type (1=Film/Movie, 2=Series, 3=Dracin), content_rating ('SU', '13+', '17+', '18+', '21+'), max_resolution ('720p', '1080p', '4k').
+   - CATATAN KRUSIAL: Kolom 'genre_id' TIDAK ADA di tabel films! Relasi Genre adalah Many-to-Many via tabel pivot `film_genre`.
+     Cara menghubungkan: $film->genres()->syncWithoutDetaching([$genre->id]);
+   - Relasi Actor adalah Many-to-Many via tabel pivot `film_actor`.
+     Cara menghubungkan: $film->actors()->syncWithoutDetaching([$actor->id => ['character_name' => 'Nama Karakter', 'role_type' => 'main']]);
+
+2. Model Genre: \App\Models\Genre (Tabel: `genres`)
+   - Kolom: id, name, slug.
+   - Cara pakai: $genre = \App\Models\Genre::firstOrCreate(['slug' => \Illuminate\Support\Str::slug($name)], ['name' => $name]);
+
+3. Model Actor: \App\Models\Actor (Tabel: `actors`)
+   - Kolom: id, name, slug, photo_url.
+   - Cara pakai: $actor = \App\Models\Actor::firstOrCreate(['name' => $name], ['slug' => \Illuminate\Support\Str::slug($name)]);
+
+4. Model User: \App\Models\User (Tabel: `users`)
+   - Kolom: id, name, email, password, is_admin (boolean), is_banned (boolean), email_verified_at.
+
+5. Model Review: \App\Models\Review (Tabel: `reviews`)
+   - Kolom: id, user_id, film_id, rating, review_text, is_spoilers.
+
+6. Model WatchParty: \App\Models\WatchParty (Tabel: `watch_parties`)
+   - Kolom: id, room_code, host_user_id, film_id, status ('waiting', 'playing', 'ended'), current_time_seconds.
+
+7. Services & Utilitas:
+   - app(\App\Services\FilmSearchService::class)->fetchAndSyncFromMovieBox($keyword)
+   - app(\App\Services\MovieBoxService::class)->syncSubject($subjectId)
    - \Illuminate\Support\Facades\DB
    - \Illuminate\Support\Facades\Cache
-   - \Illuminate\Support\Facades\Log
+   - \Illuminate\Support\Facades\Http
+
+CONTOH KODE MENAMBAH FILM & RELASI:
+$genre = \App\Models\Genre::firstOrCreate(['slug' => 'horror'], ['name' => 'Horror']);
+$film = \App\Models\Film::firstOrCreate(
+    ['title' => 'Judul Film'],
+    [
+        'release_year' => 2024,
+        'duration_minutes' => 110,
+        'synopsis' => 'Ringkasan cerita...',
+        'poster_url' => 'https://...',
+        'rating' => 4.5,
+        'subject_type' => 1,
+        'content_rating' => '17+',
+        'max_resolution' => '1080p',
+    ]
+);
+$film->genres()->syncWithoutDetaching([$genre->id]);
 SYSTEM;
 
         if (!empty($apiKey)) {
@@ -245,6 +280,41 @@ SYSTEM;
     private function generateFallbackScript(string $prompt): string
     {
         $p = strtolower($prompt);
+
+        if (str_contains($p, 'tambah') || str_contains($p, 'insert') || str_contains($p, 'buat film') || str_contains($p, 'add film') || str_contains($p, 'create film')) {
+            preg_match('/(?:tambah|insert|buat|add|create)?\s*(?:film|movie)?\s*["\']?([^"\'\n,\.]{3,40})["\']?/i', $prompt, $matches);
+            $movieTitle = !empty($matches[1]) ? trim($matches[1]) : 'Film Baru';
+
+            return <<<PHP
+// 1. Dapatkan / Buat Genre
+\$genre = \\App\\Models\\Genre::firstOrCreate(
+    ['slug' => 'drama'],
+    ['name' => 'Drama']
+);
+
+// 2. Tambahkan Data Film (Gunakan nama kolom yang valid)
+\$film = \\App\\Models\\Film::firstOrCreate(
+    ['title' => '{$movieTitle}'],
+    [
+        'release_year'     => 2024,
+        'duration_minutes' => 115,
+        'synopsis'         => 'Sinopsis lengkap untuk film {$movieTitle}...',
+        'poster_url'       => 'https://image.tmdb.org/t/p/w500/sample-poster.jpg',
+        'backdrop_url'     => 'https://image.tmdb.org/t/p/original/sample-backdrop.jpg',
+        'rating'           => 4.5,
+        'subject_type'     => 1, // 1 = Film/Movie, 2 = Series, 3 = Dracin
+        'content_rating'   => '17+',
+        'max_resolution'   => '1080p',
+    ]
+);
+
+// Hubungkan genre via tabel pivot film_genre
+\$film->genres()->syncWithoutDetaching([\$genre->id]);
+
+echo "✓ Sukses: Film '{\$film->title}' (ID: {\$film->id}) berhasil disimpan ke database.\n";
+echo "✓ Genre: {\$genre->name} berhasil dihubungkan.\n";
+PHP;
+        }
 
         if (str_contains($p, 'sync') || str_contains($p, 'moviebox') || str_contains($p, 'import')) {
             preg_match('/(?:sync|import|film|movie)\s+["\']?([^"\'\n,]+)["\']?/i', $prompt, $matches);

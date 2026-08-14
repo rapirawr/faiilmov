@@ -40,26 +40,65 @@ class AdminNotificationController extends Controller
             ->take(80)
             ->get(['id', 'title', 'slug', 'poster_url', 'subject_type', 'release_year']);
 
+        // Initial sample users for custom receiver picker
+        $initialUsers = User::latest()
+            ->take(20)
+            ->get(['id', 'name', 'email', 'avatar', 'is_admin']);
+
         return view('admin.notifications.index', compact(
             'totalUsers',
             'totalNotifications',
             'unreadNotifications',
             'broadcasts',
-            'recentFilms'
+            'recentFilms',
+            'initialUsers'
         ));
     }
 
     /**
-     * Send push notification broadcast to users in batch.
+     * Live search users for custom receiver picker.
+     */
+    public function searchUsers(Request $request)
+    {
+        $q = trim($request->query('q', ''));
+        $query = User::query();
+
+        if ($q !== '') {
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'LIKE', "%{$q}%")
+                    ->orWhere('email', 'LIKE', "%{$q}%");
+            });
+        }
+
+        $users = $query->orderBy('name')
+            ->limit(25)
+            ->get(['id', 'name', 'email', 'avatar', 'is_admin'])
+            ->map(function($user) {
+                return [
+                    'id'       => $user->id,
+                    'name'     => $user->name,
+                    'email'    => $user->email,
+                    'avatar'   => $user->avatar ? asset('storage/' . $user->avatar) : null,
+                    'is_admin' => (bool)$user->is_admin,
+                ];
+            });
+
+        return response()->json($users);
+    }
+
+    /**
+     * Send push notification broadcast to users in batch or specific custom recipients.
      */
     public function send(Request $request)
     {
         $request->validate([
-            'title'   => 'nullable|string|max:150',
-            'message' => 'required|string|max:1000',
-            'type'    => 'required|in:system,announcement,new_film,maintenance,promotion,watch_party',
-            'target'  => 'required|in:all,active_30d,admin_only',
-            'url'     => 'nullable|string|max:500',
+            'title'            => 'nullable|string|max:150',
+            'message'          => 'required|string|max:1000',
+            'type'             => 'required|in:system,announcement,new_film,maintenance,promotion,watch_party',
+            'target'           => 'required|in:all,active_30d,admin_only,verified_only,custom',
+            'custom_user_ids'  => 'nullable',
+            'custom_emails'    => 'nullable|string|max:2000',
+            'url'              => 'nullable|string|max:500',
         ]);
 
         // Determine target users
@@ -68,6 +107,34 @@ class AdminNotificationController extends Controller
             $query->where('updated_at', '>=', now()->subDays(30));
         } elseif ($request->target === 'admin_only') {
             $query->where('is_admin', true);
+        } elseif ($request->target === 'verified_only') {
+            $query->whereNotNull('email_verified_at');
+        } elseif ($request->target === 'custom') {
+            $userIdsInput = $request->input('custom_user_ids', []);
+            if (is_string($userIdsInput)) {
+                $userIdsInput = array_filter(explode(',', $userIdsInput), 'is_numeric');
+            } elseif (is_array($userIdsInput)) {
+                $userIdsInput = array_filter($userIdsInput, 'is_numeric');
+            }
+
+            $customEmails = [];
+            if ($request->filled('custom_emails')) {
+                $rawEmails = preg_split('/[\s,;]+/', $request->input('custom_emails'));
+                $customEmails = array_filter(array_map('trim', $rawEmails), fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL));
+            }
+
+            if (empty($userIdsInput) && empty($customEmails)) {
+                return back()->with('error', 'Silakan pilih minimal 1 pengguna atau masukkan email penerima custom.');
+            }
+
+            $query->where(function($q) use ($userIdsInput, $customEmails) {
+                if (!empty($userIdsInput)) {
+                    $q->whereIn('id', $userIdsInput);
+                }
+                if (!empty($customEmails)) {
+                    $q->orWhereIn('email', $customEmails);
+                }
+            });
         }
 
         $userIds = $query->pluck('id');
@@ -103,10 +170,10 @@ class AdminNotificationController extends Controller
 
         AdminActivityLog::log(
             'broadcast_notification',
-            "Mengirim broadcast notifikasi ({$request->type}) ke {$recipientCount} pengguna. Judul: " . ($title ?: 'Tanpa Judul')
+            "Mengirim notifikasi ({$request->type}) ke {$recipientCount} pengguna (Target: {$request->target}). Judul: " . ($title ?: 'Tanpa Judul')
         );
 
-        return back()->with('success', "🎉 Notifikasi berhasil disiarkan ke {$recipientCount} pengguna.");
+        return back()->with('success', "🎉 Notifikasi berhasil dikirimkan ke {$recipientCount} pengguna.");
     }
 
     /**

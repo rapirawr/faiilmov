@@ -248,6 +248,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Push Notifications Broadcast Center
     Route::get('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/search-users', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'searchUsers'])->name('notifications.search_users');
     Route::post('/notifications/send', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'send'])->name('notifications.send');
     Route::post('/notifications/generate-ai', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'generateAi'])->name('notifications.generate_ai');
     Route::delete('/notifications/destroy-broadcast', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'destroyBroadcast'])->name('notifications.destroy_broadcast');
