@@ -16,11 +16,18 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthenticated.'], 401);
+            }
+            return redirect()->guest(route('login'))->with('error', 'Silakan masuk dengan akun Administrator.');
+        }
+
+        if (!Auth::user()->isAdmin()) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Akses terlarang. Anda bukan Administrator.'], 403);
             }
-            return redirect()->route('home')->with('error', 'Akses terlarang. Halaman ini hanya untuk Administrator.');
+            abort(403, 'Akses terlarang. Halaman ini hanya untuk Administrator.');
         }
 
         return $next($request);

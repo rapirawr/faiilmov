@@ -123,13 +123,23 @@
     </div>
 
     <!-- Tab 1: Watch History -->
-    <div x-show="tab === 'history'">
+    <div x-show="tab === 'history'" x-data="{ historyType: 'all' }">
         @if($watchHistories->count() > 0)
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="font-serif font-bold text-lg text-white flex items-center gap-2">
-                    <i data-lucide="play-circle" class="w-5 h-5 text-amber-400"></i>
-                    <span>Tontonan Terakhir</span>
-                </h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <h2 class="font-serif font-bold text-lg text-white flex items-center gap-2">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-amber-400"></i>
+                        <span>Tontonan Terakhir</span>
+                    </h2>
+
+                    <!-- Filter Pills: All / Movies & Series / Dracin -->
+                    <div class="flex items-center gap-1 p-1 rounded-xl bg-dark-900/90 border border-white/10 text-xs">
+                        <button @click="historyType = 'all'" :class="historyType === 'all' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-lg transition-all cursor-pointer">Semua</button>
+                        <button @click="historyType = 'movies'" :class="historyType === 'movies' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-lg transition-all cursor-pointer">Film & Series</button>
+                        <button @click="historyType = 'dracin'" :class="historyType === 'dracin' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-lg transition-all cursor-pointer">Dracin</button>
+                    </div>
+                </div>
+
                 <form action="{{ route('watch-history.clear-all') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh riwayat tontonan?')">
                     @csrf
                     @method('DELETE')
@@ -146,35 +156,61 @@
                         @continue
                     @endif
                     @php
-                        $durMin = 120;
-                        if ($item->film->subject_type === 'series') {
+                        $isDracin = ($item->film->subject_type === 'dracin' || str_starts_with($item->film->moviebox_subject_id ?? '', 'anichin:'));
+                        $durMin = 15;
+                        $anichinSource = 'dramabox';
+                        $anichinId = $item->film->id;
+
+                        if ($isDracin) {
+                            $durMin = 15;
+                            $parts = explode(':', $item->film->moviebox_subject_id ?? '');
+                            $anichinSource = $parts[1] ?? 'dramabox';
+                            $anichinId = $parts[2] ?? (string)$item->film->id;
+                            $watchUrl = route('dracin.show', ['source' => $anichinSource, 'id' => $anichinId]) . "?ep={$item->episode_number}";
+                        } elseif ($item->film->subject_type === 'series') {
                             $seasonObj = $item->film->seasons->firstWhere('season_number', $item->season_number);
                             $epObj = $seasonObj ? $seasonObj->episodes->firstWhere('episode_number', $item->episode_number) : null;
                             $durMin = $epObj ? $epObj->duration_minutes : 45;
+                            $watchUrl = route('film.watch', $item->film->slug) . "?season={$item->season_number}&episode={$item->episode_number}";
                         } else {
                             $durMin = $item->film->duration_minutes ?: 120;
+                            $watchUrl = route('film.watch', $item->film->slug);
                         }
+
                         $totalSec = max(1, $durMin * 60);
                         $progPercent = min(100, max(0, round(($item->progress_seconds / $totalSec) * 100)));
                         $formattedMin = floor($item->progress_seconds / 60);
-                        $watchUrl = route('film.watch', $item->film->slug) . ($item->film->subject_type === 'series' ? "?season={$item->season_number}&episode={$item->episode_number}" : '');
                     @endphp
 
-                    <div class="glass-panel rounded-3xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between group shadow-xl relative overflow-hidden">
+                    <div x-show="historyType === 'all' || (historyType === 'dracin' && {{ $isDracin ? 'true' : 'false' }}) || (historyType === 'movies' && {{ !$isDracin ? 'true' : 'false' }})"
+                         class="glass-panel rounded-3xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between group shadow-xl relative overflow-hidden">
                         <div>
-                            <!-- Poster & Overlay -->
-                            <a href="{{ $watchUrl }}" class="relative aspect-[16/9] block rounded-2xl overflow-hidden mb-3 bg-dark-900 shadow-md group/poster">
-                                <img src="{{ $item->film->backdrop_url ?: $item->film->poster_url }}" alt="{{ $item->film->title }}" class="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent"></div>
+                            <!-- Poster & Overlay Container -->
+                            <div class="relative aspect-[16/9] block rounded-2xl overflow-hidden mb-3 bg-dark-900 shadow-md group/poster">
+                                <a href="{{ $watchUrl }}" class="absolute inset-0 z-0">
+                                    <img src="{{ $item->film->backdrop_url ?: $item->film->poster_url }}" alt="{{ $item->film->title }}" class="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent"></div>
+                                </a>
                                 
                                 <!-- Category & Ep & Rating Badge -->
-                                <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
-                                    <span class="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
-                                        {{ $item->film->subject_type === 'series' ? 'Series' : 'Film' }}
-                                    </span>
-                                    @if($item->film->subject_type === 'series')
+                                <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 flex-wrap pointer-events-none">
+                                    @if($isDracin)
+                                        <span class="px-2.5 py-1 rounded-xl bg-white text-zinc-950 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+                                            DRACIN
+                                        </span>
+                                        <span class="px-2.5 py-1 rounded-xl bg-zinc-900/90 text-white text-[10px] font-extrabold uppercase shadow-sm border border-zinc-700">
+                                            EP {{ $item->episode_number }}
+                                        </span>
+                                    @elseif($item->film->subject_type === 'series')
+                                        <span class="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
+                                            Series
+                                        </span>
                                         <span class="px-2.5 py-1 rounded-xl bg-amber-500/80 text-zinc-950 text-[10px] font-extrabold uppercase shadow-sm">
                                             S{{ $item->season_number }} E{{ $item->episode_number }}
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 rounded-xl glass-chip text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
+                                            Film
                                         </span>
                                     @endif
                                     <span class="px-2 py-0.5 rounded-xl bg-dark-950/80 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
@@ -191,7 +227,7 @@
                                         <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </form>
-                            </a>
+                            </div>
 
                             <!-- Title & Metadata -->
                             <h3 class="font-serif font-bold text-sm text-white line-clamp-1 group-hover:text-amber-300 transition-colors mb-1">

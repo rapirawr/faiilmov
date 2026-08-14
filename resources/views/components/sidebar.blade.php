@@ -16,50 +16,64 @@
             </button>
         </div>
 
-        <!-- Primary Navigation Menu -->
+        <!-- Primary Navigation Menu (Dynamic Drag & Drop Reordered) -->
         @php
-            $isHome = request()->routeIs('home');
-            $isTvShow = request()->routeIs('browse') && request('type') === 'series';
-            $isDracin = request()->routeIs('browse') && request('type') === 'dracin';
-            $isMovie = request()->routeIs('browse') && request('type') === 'movie';
-            $isAnimation = request()->routeIs('browse') && request('genre') === 'animation';
-            $isMostWatched = request()->routeIs('browse') && request('sort') === 'rating_desc';
+            $sidebarMenus = \App\Services\NavigationService::getSidebarMenu();
+            $currentUrl = request()->fullUrl();
+            $currentPath = request()->path();
         @endphp
         <div class="space-y-2">
-            <a href="{{ route('home') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isHome ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="home" class="w-5 h-5 {{ $isHome ? 'text-white' : 'text-zinc-400' }}"></i>
-                <span>Home</span>
-            </a>
+            @foreach($sidebarMenus as $menu)
+                @php
+                    if (!($menu['is_active'] ?? true)) continue;
 
-            <a href="{{ route('browse', ['type' => 'series']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isTvShow ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="tv" class="w-5 h-5 {{ $isTvShow ? 'text-white' : 'text-zinc-400' }}"></i>
-                <span>Series</span>
-            </a>
+                    // Visibility check
+                    $visibility = $menu['visibility'] ?? 'all';
+                    if ($visibility === 'auth_only' && !Auth::check()) continue;
+                    if ($visibility === 'guest_only' && Auth::check()) continue;
 
-            <a href="{{ route('browse', ['type' => 'dracin']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isDracin ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="tv-2" class="w-5 h-5 {{ $isDracin ? 'text-rose-400' : 'text-zinc-400' }}"></i>
-                <span>Dracin</span>
-            </a>
+                    $menuUrl = $menu['url'] ?? '/';
+                    $menuRoute = $menu['route'] ?? '';
+                    $menuIcon = $menu['icon'] ?? 'compass';
+                    $menuBadge = $menu['badge'] ?? '';
+                    $menuTarget = $menu['target'] ?? '_self';
 
-            <a href="{{ route('browse', ['type' => 'movie']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isMovie ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="clapperboard" class="w-5 h-5 {{ $isMovie ? 'text-white' : 'text-zinc-400' }}"></i>
-                <span>Movie</span>
-            </a>
+                    // Active state detection
+                    $isActive = false;
+                    if ($menuUrl === '/' || $menuRoute === 'home') {
+                        $isActive = request()->routeIs('home');
+                    } elseif ($menuRoute && request()->routeIs($menuRoute)) {
+                        $isActive = true;
+                    } elseif (strpos($menuUrl, 'type=series') !== false && request()->routeIs('browse') && request('type') === 'series') {
+                        $isActive = true;
+                    } elseif (strpos($menuUrl, 'type=movie') !== false && request()->routeIs('browse') && request('type') === 'movie') {
+                        $isActive = true;
+                    } elseif (strpos($menuUrl, 'genre=animation') !== false && request()->routeIs('browse') && request('genre') === 'animation') {
+                        $isActive = true;
+                    } elseif (strpos($menuUrl, 'sort=rating_desc') !== false && request()->routeIs('browse') && request('sort') === 'rating_desc') {
+                        $isActive = true;
+                    } elseif (strpos($menuUrl, '/dracin') !== false && (request()->routeIs('dracin.*') || (request()->routeIs('browse') && request('type') === 'dracin'))) {
+                        $isActive = true;
+                    } elseif ($currentUrl === url($menuUrl) || ($menuUrl !== '/' && request()->is(ltrim($menuUrl, '/')))) {
+                        $isActive = true;
+                    }
+                @endphp
 
-            <a href="{{ route('browse', ['genre' => 'animation']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isAnimation ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="sparkles" class="w-5 h-5 {{ $isAnimation ? 'text-white' : 'text-zinc-400' }}"></i>
-                <span>Animation</span>
-            </a>
+                <a href="{{ url($menuUrl) }}" 
+                   target="{{ $menuTarget }}"
+                   class="flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isActive ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <i data-lucide="{{ $menuIcon }}" class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : ($menuIcon === 'flame' || $menuIcon === 'history' ? 'text-amber-400' : 'text-zinc-400') }}"></i>
+                        <span class="truncate">{{ $menu['label'] }}</span>
+                    </div>
 
-            <a href="{{ route('browse', ['sort' => 'rating_desc']) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ $isMostWatched ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="flame" class="w-5 h-5 {{ $isMostWatched ? 'text-amber-400' : 'text-zinc-400' }}"></i>
-                <span>Most Watched</span>
-            </a>
-
-            <a href="{{ route('changelog') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-semibold text-sm transition-all {{ request()->routeIs('changelog') ? 'bg-dark-800 text-white border border-zinc-700/70 shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5' }}">
-                <i data-lucide="history" class="w-5 h-5 text-amber-400"></i>
-                <span>Changelog</span>
-            </a>
+                    @if(!empty($menuBadge))
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono shrink-0 ml-2">
+                            {{ $menuBadge }}
+                        </span>
+                    @endif
+                </a>
+            @endforeach
 
             <!-- Gabung Room Nonton Bareng Modal Trigger -->
             <div x-data="{ joinModalOpen: false }" class="pt-2">
@@ -121,20 +135,28 @@
         </div>
     </div>
 
-    <!-- Bottom Sidebar Get App Widget Card -->
-    <div class="glass-panel p-4 rounded-3xl border border-white/10 space-y-3">
-        <span class="text-xs font-bold text-white block">Get faiilmov</span>
-        <div class="grid grid-cols-2 gap-2">
-            <a href="{{ route('download.app') }}" class="px-3 py-2 rounded-2xl bg-white text-zinc-950 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-zinc-200 transition-colors shadow-sm">
-                <i data-lucide="smartphone" class="w-3 h-3"></i>
-                <span>Mobile</span>
-            </a>
-            {{-- <a href="{{ route('browse') }}" class="px-3 py-2 rounded-2xl bg-dark-900 text-zinc-300 text-[10px] font-semibold flex items-center justify-center gap-1 border border-white/10 hover:text-white">
-                <i data-lucide="laptop" class="w-3 h-3"></i>
-                <span>macOS</span>
-            </a> --}}
+    <!-- Bottom Sidebar Get App Widget Card (Dynamic CMS) -->
+    @php
+        $sidebarWidget = \App\Services\NavigationService::getSidebarWidget();
+    @endphp
+    @if($sidebarWidget['is_active'] ?? true)
+        <div class="glass-panel p-4 rounded-3xl border border-white/10 space-y-3">
+            <span class="text-xs font-bold text-white block">{{ $sidebarWidget['title'] ?? 'Get faiilmov' }}</span>
+            <div class="grid {{ (!empty($sidebarWidget['button2_active'])) ? 'grid-cols-2' : 'grid-cols-1' }} gap-2">
+                <a href="{{ url($sidebarWidget['button_url'] ?? '/download-app') }}" class="px-3 py-2 rounded-2xl bg-white text-zinc-950 text-[10px] font-bold flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-colors shadow-sm">
+                    <i data-lucide="{{ $sidebarWidget['button_icon'] ?? 'smartphone' }}" class="w-3.5 h-3.5"></i>
+                    <span>{{ $sidebarWidget['button_text'] ?? 'Mobile' }}</span>
+                </a>
+
+                @if(!empty($sidebarWidget['button2_active']))
+                    <a href="{{ url($sidebarWidget['button2_url'] ?? '#') }}" class="px-3 py-2 rounded-2xl bg-dark-900 text-zinc-300 text-[10px] font-semibold flex items-center justify-center gap-1.5 border border-white/10 hover:text-white hover:bg-white/5 transition-colors">
+                        <i data-lucide="{{ $sidebarWidget['button2_icon'] ?? 'laptop' }}" class="w-3.5 h-3.5"></i>
+                        <span>{{ $sidebarWidget['button2_text'] ?? 'macOS' }}</span>
+                    </a>
+                @endif
+            </div>
         </div>
-    </div>
+    @endif
 
 </aside>
 

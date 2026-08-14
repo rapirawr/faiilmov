@@ -82,8 +82,52 @@
                                     {{ $rev->rating }}/10
                                 </span>
                             </td>
-                            <td class="px-4 py-3.5 text-zinc-300 max-w-xs">
-                                <p class="line-clamp-2 text-xs leading-relaxed">{{ $rev->comment }}</p>
+                            <td class="px-4 py-3.5 text-zinc-300 max-w-xs" x-data="{ viewModal: false }">
+                                <div class="cursor-pointer group/cmt" @click="viewModal = true">
+                                    <p class="line-clamp-2 text-xs leading-relaxed group-hover/cmt:text-white transition-colors">{{ $rev->comment }}</p>
+                                    @if(mb_strlen($rev->comment) > 60)
+                                        <span class="text-[10px] text-rose-400 font-semibold inline-flex items-center gap-0.5 mt-0.5">
+                                            <span>Baca selengkapnya</span>
+                                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Quick View Review Modal -->
+                                <div x-show="viewModal" x-cloak 
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                                    <div @click.away="viewModal = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                                        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                                                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-white text-sm font-['Outfit']">{{ $rev->film->title ?? 'Film' }}</h4>
+                                                    <p class="text-xs text-zinc-400">Oleh <strong class="text-zinc-200">{{ $rev->user->name ?? 'User' }}</strong> &bull; Rating: {{ $rev->rating }}/10</p>
+                                                </div>
+                                            </div>
+                                            <button @click="viewModal = false" class="p-1 rounded-lg text-zinc-400 hover:text-white">
+                                                <i data-lucide="x" class="w-5 h-5"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-200 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
+                                            {{ $rev->comment }}
+                                        </div>
+
+                                        <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-800">
+                                            <span>Ditulis pada {{ $rev->created_at->format('d M Y H:i:s') }}</span>
+                                            <button @click="viewModal = false" class="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs">Tutup</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-4 py-3.5">
                                 @if($rev->reports_count > 0)

@@ -106,4 +106,36 @@ class AdminActorController extends Controller
 
         return redirect()->route('admin.actors.index')->with('success', 'Proses sinkronisasi data aktor dari API eksternal telah dimulai di latar belakang.');
     }
+
+    public function merge(Request $request)
+    {
+        $validated = $request->validate([
+            'source_actor_id' => 'required|exists:actors,id',
+            'target_actor_id' => 'required|exists:actors,id|different:source_actor_id',
+        ]);
+
+        $source = Actor::with('films')->findOrFail($validated['source_actor_id']);
+        $target = Actor::with('films')->findOrFail($validated['target_actor_id']);
+
+        $targetFilmIds = $target->films->pluck('id')->toArray();
+
+        foreach ($source->films as $film) {
+            if (!in_array($film->id, $targetFilmIds)) {
+                $target->films()->attach($film->id, [
+                    'character_name' => $film->pivot->character_name,
+                    'role_type' => $film->pivot->role_type,
+                ]);
+            }
+        }
+
+        $sourceName = $source->name;
+        $targetName = $target->name;
+
+        $source->films()->detach();
+        $source->delete();
+
+        AdminActivityLog::log('merged_actors', "Menggabungkan aktor '{$sourceName}' ke '{$targetName}'", 'Actor', $target->id);
+
+        return redirect()->route('admin.actors.index')->with('success', "Aktor '{$sourceName}' berhasil digabungkan ke '{$targetName}'.");
+    }
 }

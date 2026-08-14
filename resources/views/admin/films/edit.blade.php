@@ -414,7 +414,7 @@ if (typeof window.castPicker !== 'function') {
                             <i data-lucide="film" class="w-3.5 h-3.5"></i>
                             <span>Form Episode Baru (Season {{ $season->season_number }})</span>
                         </h5>
-                        <form action="{{ route('admin.seasons.episodes.store', $season->id) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <form action="{{ route('admin.episodes.store', $season->id) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             @csrf
                             <div>
                                 <label class="block text-[10px] text-zinc-400 mb-1">Nomor Episode *</label>

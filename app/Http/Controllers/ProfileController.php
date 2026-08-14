@@ -136,22 +136,30 @@ class ProfileController extends Controller
         return redirect('/')->with('success', 'Akun Anda telah dihapus secara permanen.');
     }
 
-    public function destroyHistory(WatchHistory $watchHistory)
+    public function destroyHistory(Request $request, WatchHistory $watchHistory)
     {
         if ($watchHistory->user_id === Auth::id()) {
             $watchHistory->delete();
         }
 
-        return redirect()->back()->with('success', 'Riwayat tontonan berhasil dihapus.');
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Riwayat tontonan berhasil dihapus.']);
+        }
+
+        return redirect()->route('profile')->with('success', 'Riwayat tontonan berhasil dihapus.');
     }
 
-    public function clearHistory()
+    public function clearHistory(Request $request)
     {
         WatchHistory::where('user_id', Auth::id())
             ->where('profile_id', session('active_profile_id'))
             ->delete();
 
-        return redirect()->back()->with('success', 'Seluruh riwayat tontonan berhasil dibersihkan.');
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Seluruh riwayat tontonan berhasil dibersihkan.']);
+        }
+
+        return redirect()->route('profile')->with('success', 'Seluruh riwayat tontonan berhasil dibersihkan.');
     }
 
     private function compressAndSaveAvatar($file): string

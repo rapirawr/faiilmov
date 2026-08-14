@@ -4,6 +4,8 @@ import Alpine from 'alpinejs';
 import FilmCard from './components/FilmCard';
 import HeroBannerCarousel from './components/HeroBannerCarousel';
 import EpisodeSelector from './components/EpisodeSelector';
+import DracinFeed from './components/dracin/DracinFeed';
+import DracinCatalog from './components/dracin/DracinCatalog';
 
 if (!window.Alpine) {
   window.Alpine = Alpine;
@@ -28,7 +30,61 @@ function safeJsonParse(rawString, fallback = null) {
 }
 
 function initReactComponents() {
-  // 1. Mount Hero Banner Carousel
+  // 1. Mount Dracin Vertical Feed Player Page
+  const dracinContainer = document.getElementById('react-dracin-feed');
+  if (dracinContainer && !dracinContainer.dataset.mounted) {
+    try {
+      const initialSource = dracinContainer.dataset.initialSource || 'dramabox';
+      const initialId = dracinContainer.dataset.initialId || '';
+      const hasExplicitId = dracinContainer.dataset.hasExplicitId === 'true';
+      const initialEp = parseInt(dracinContainer.dataset.initialEp || '1', 10);
+      const initialFeed = safeJsonParse(dracinContainer.dataset.initialFeed, []);
+      const initialActiveDetail = safeJsonParse(dracinContainer.dataset.initialActiveDetail, null);
+      const sourcesList = safeJsonParse(dracinContainer.dataset.sourcesList, {});
+      const csrfToken = dracinContainer.dataset.csrf || '';
+
+      dracinContainer.dataset.mounted = 'true';
+      createRoot(dracinContainer).render(
+        <DracinFeed
+          initialSource={initialSource}
+          initialId={initialId}
+          hasExplicitId={hasExplicitId}
+          initialEp={initialEp}
+          initialFeed={initialFeed}
+          initialActiveDetail={initialActiveDetail}
+          sourcesList={sourcesList}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount DracinFeed', e);
+    }
+  }
+
+  // 1b. Mount Dracin Catalog Grid Page
+  const dracinCatalogContainer = document.getElementById('react-dracin-catalog');
+  if (dracinCatalogContainer && !dracinCatalogContainer.dataset.mounted) {
+    try {
+      const initialSource = dracinCatalogContainer.dataset.initialSource || 'dramabox';
+      const initialFeed = safeJsonParse(dracinCatalogContainer.dataset.initialFeed, []);
+      const sourcesList = safeJsonParse(dracinCatalogContainer.dataset.sourcesList, {});
+      const csrfToken = dracinCatalogContainer.dataset.csrf || '';
+
+      dracinCatalogContainer.dataset.mounted = 'true';
+      createRoot(dracinCatalogContainer).render(
+        <DracinCatalog
+          initialSource={initialSource}
+          initialFeed={initialFeed}
+          sourcesList={sourcesList}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount DracinCatalog', e);
+    }
+  }
+
+  // 2. Mount Hero Banner Carousel
   const heroContainer = document.getElementById('react-hero-banner');
   if (heroContainer && !heroContainer.dataset.mounted) {
     try {
@@ -42,7 +98,7 @@ function initReactComponents() {
     }
   }
 
-  // 2. Mount Episode Selector
+  // 3. Mount Episode Selector
   const epContainer = document.getElementById('react-episode-selector');
   if (epContainer && !epContainer.dataset.mounted) {
     try {
@@ -57,7 +113,7 @@ function initReactComponents() {
     }
   }
 
-  // 3. Mount Individual Film Cards
+  // 4. Mount Individual Film Cards
   const cardElements = document.querySelectorAll('.react-film-card');
   cardElements.forEach((el) => {
     if (el.dataset.mounted) return;
@@ -82,3 +138,4 @@ if (document.readyState === 'loading') {
 } else {
   initReactComponents();
 }
+

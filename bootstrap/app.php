@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.banned' => \App\Http\Middleware\CheckBannedMiddleware::class,
         ]);
         $middleware->web(append: [
+            \App\Http\Middleware\CheckMaintenanceMode::class,
             \App\Http\Middleware\CheckBannedMiddleware::class,
         ]);
     })

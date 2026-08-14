@@ -54,5 +54,20 @@ class AppServiceProvider extends ServiceProvider
             $shouldShow = !$isAuthPage && (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()?->has_seen_welcome_modal);
             $view->with('shouldShowWelcomeModal', $shouldShow);
         });
+
+        // Admin Shell View Composer for Badges & Activity
+        \Illuminate\Support\Facades\View::composer(['layouts.admin', 'admin.*'], function ($view) {
+            if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->isAdmin()) {
+                $pendingReportsCount = \App\Models\ReviewReport::where('status', 'pending')->count();
+                $activeWatchPartiesCount = \App\Models\WatchParty::where('status', 'active')->count();
+                $recentAdminLogs = \App\Models\AdminActivityLog::with('admin')->latest()->take(6)->get();
+
+                $view->with([
+                    'adminPendingReportsCount' => $pendingReportsCount,
+                    'adminActiveWatchPartiesCount' => $activeWatchPartiesCount,
+                    'adminRecentActivityLogs' => $recentAdminLogs,
+                ]);
+            }
+        });
     }
 }

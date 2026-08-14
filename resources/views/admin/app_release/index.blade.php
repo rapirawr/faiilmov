@@ -493,5 +493,4 @@ function apkUploadForm() {
     };
 }
 </script>
-@endpush
 @endsection

@@ -524,6 +524,8 @@ class Film extends Model
             $maxRes = '1080P';
         }
 
+        $existing = static::where('moviebox_subject_id', $subjectId)->first();
+
         $film = static::updateOrCreate(
             ['moviebox_subject_id' => $subjectId],
             [

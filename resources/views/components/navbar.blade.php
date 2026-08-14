@@ -225,7 +225,6 @@
     <!-- Right Action Buttons: Capsule Pill & Popovers -->
     <div class="flex items-center gap-2.5">
 
-
         <a href="{{ route('download.app') }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all text-xs font-semibold shadow-sm" title="App Mobile Flutter">
             <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
             <span>App Mobile</span>
@@ -250,11 +249,19 @@
                      },
                      async fetchRecent() {
                          try {
-                             let res = await fetch('{{ route('notifications.recent') }}');
+                             let res = await fetch('{{ route('notifications.recent') }}', {
+                                 headers: {
+                                     'Accept': 'application/json',
+                                     'X-Requested-With': 'XMLHttpRequest'
+                                 }
+                             });
                              if (res.ok) {
                                  let data = await res.json();
                                  this.unreadCount = data.unread_count;
                                  this.items = data.notifications;
+                                 this.$nextTick(() => {
+                                     if (window.lucide) lucide.createIcons();
+                                 });
                              }
                          } catch (e) {}
                      },
@@ -339,20 +346,28 @@
                             <div @click="handleClick(item)" 
                                  :class="!item.is_read ? 'bg-amber-500/5 hover:bg-amber-500/10' : 'hover:bg-white/5'"
                                  class="p-3.5 flex items-start gap-3 transition-colors cursor-pointer group">
-                                <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs mt-0.5"
+                                <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs mt-0.5 shadow-sm"
                                      :class="{
                                          'bg-amber-500/20 text-amber-400 border border-amber-500/30': item.type === 'new_film',
                                          'bg-sky-500/20 text-sky-400 border border-sky-500/30': item.type === 'review_reply',
-                                         'bg-purple-500/20 text-purple-400 border border-purple-500/30': item.type !== 'new_film' && item.type !== 'review_reply'
+                                         'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30': item.type === 'watch_party',
+                                         'bg-rose-500/20 text-rose-400 border border-rose-500/30': item.type === 'maintenance',
+                                         'bg-purple-500/20 text-purple-400 border border-purple-500/30': item.type !== 'new_film' && item.type !== 'review_reply' && item.type !== 'watch_party' && item.type !== 'maintenance'
                                      }">
                                     <template x-if="item.type === 'new_film'">
-                                        <i data-lucide="film" class="w-4 h-4"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg>
                                     </template>
                                     <template x-if="item.type === 'review_reply'">
-                                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                     </template>
-                                    <template x-if="item.type !== 'new_film' && item.type !== 'review_reply'">
-                                        <i data-lucide="bell" class="w-4 h-4"></i>
+                                    <template x-if="item.type === 'watch_party'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                                    </template>
+                                    <template x-if="item.type === 'maintenance'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                                    </template>
+                                    <template x-if="item.type !== 'new_film' && item.type !== 'review_reply' && item.type !== 'watch_party' && item.type !== 'maintenance'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                                     </template>
                                 </div>
                                 <div class="flex-1 min-w-0">

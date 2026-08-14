@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 @php
     $selectedSeasonNumber = $season ?? 0;
+    $selectedEpisodeNumber = $episode ?? 0;
     $isDracin = ($film->subject_type === 'dracin' || str_starts_with($film->moviebox_subject_id ?? '', 'anichin:'));
     $proxyActiveStream = $activeStream ? (
         $isDracin

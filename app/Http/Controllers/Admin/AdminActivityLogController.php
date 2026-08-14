@@ -21,8 +21,35 @@ class AdminActivityLogController extends Controller
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
+        if ($request->filled('category')) {
+            $cat = $request->category;
+            $query->where('action', 'like', "%{$cat}%");
+        }
 
-        return view('admin.activity_logs.index', compact('logs'));
+        if ($request->filled('timeframe')) {
+            if ($request->timeframe === 'today') {
+                $query->whereDate('created_at', today());
+            } elseif ($request->timeframe === '7d') {
+                $query->where('created_at', '>=', now()->subDays(7));
+            } elseif ($request->timeframe === '30d') {
+                $query->where('created_at', '>=', now()->subDays(30));
+            }
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
+        $admins = \App\Models\User::where('is_admin', true)->get(['id', 'name']);
+
+        return view('admin.activity_logs.index', compact('logs', 'admins'));
+    }
+
+    public function clearOldLogs(Request $request)
+    {
+        $days = (int)$request->input('days', 30);
+        $threshold = now()->subDays($days);
+        $deleted = AdminActivityLog::where('created_at', '<', $threshold)->delete();
+
+        AdminActivityLog::log('cleared_old_logs', "Membersihkan {$deleted} catatan activity log yang lebih lama dari {$days} hari.");
+
+        return redirect()->route('admin.activity_logs.index')->with('success', "Berhasil membersihkan {$deleted} log aktivitas lama.");
     }
 }

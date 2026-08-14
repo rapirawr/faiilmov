@@ -203,6 +203,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+    Route::get('/quick-search', [AdminDashboardController::class, 'quickSearch'])->name('quick_search');
 
     // Film Management
     Route::post('/films/sync-api', [AdminFilmController::class, 'syncApi'])->name('films.sync_api');
@@ -231,6 +232,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Actor Management
     Route::get('/actors/search-api', [AdminActorController::class, 'searchApi'])->name('actors.search_api');
     Route::post('/actors/sync-api', [AdminActorController::class, 'syncApi'])->name('actors.sync_api');
+    Route::post('/actors/merge', [AdminActorController::class, 'merge'])->name('actors.merge');
     Route::resource('actors', AdminActorController::class)->except(['create', 'show', 'edit']);
 
     // Review Moderation
@@ -244,6 +246,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
 
+    // Push Notifications Broadcast Center
+    Route::get('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/send', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'send'])->name('notifications.send');
+    Route::post('/notifications/generate-ai', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'generateAi'])->name('notifications.generate_ai');
+    Route::delete('/notifications/destroy-broadcast', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'destroyBroadcast'])->name('notifications.destroy_broadcast');
+
     // Watch Party Management
     Route::get('/watch-parties', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'index'])->name('watch_parties.index');
     Route::get('/watch-parties/{watchParty}', [\App\Http\Controllers\Admin\AdminWatchPartyController::class, 'show'])->name('watch_parties.show');
@@ -252,11 +260,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Activity Log
     Route::get('/activity-log', [AdminActivityLogController::class, 'index'])->name('activity_logs.index');
+    Route::delete('/activity-log/clear-old', [AdminActivityLogController::class, 'clearOldLogs'])->name('activity_logs.clear_old');
 
     // Changelog & System Updates Management
     Route::post('/changelogs/import', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'import'])->name('changelogs.import');
     Route::post('/changelogs/{changelog}/toggle-publish', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'togglePublish'])->name('changelogs.toggle_publish');
     Route::resource('changelogs', \App\Http\Controllers\Admin\AdminChangelogController::class);
+
+    // Navigation Menu Management (Drag & Drop Reorder)
+    Route::get('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'index'])->name('navigation.index');
+    Route::post('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'update'])->name('navigation.update');
+    Route::post('/navigation/reset', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'reset'])->name('navigation.reset');
 
     // Site Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
@@ -279,7 +293,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/app-release/file/{filename}', [AdminAppReleaseController::class, 'destroyFile'])->name('app_release.destroy_file');
 });
 
-// MovieBox API Proxy Routes (For Stream Player & Modal) - ADD RATE LIMITING
+// MovieBox API Proxy Routes (For Stream Player & Modal) - ADD RATE LIMITING    
 Route::prefix('moviebox')->middleware('throttle:120,1')->group(function () {
     Route::get('/search', [MovieBoxController::class, 'search']);
     Route::get('/detail/{id}', [MovieBoxController::class, 'detail']);
@@ -294,8 +308,9 @@ Route::prefix('moviebox')->middleware('throttle:120,1')->group(function () {
 });
 
 // Anichin API Proxy & Stream Routes (For Dracin Player & Feeds)
-Route::prefix('anichin')->middleware('throttle:120,1')->group(function () {
+Route::prefix('anichin')->middleware('throttle:240,1')->group(function () {
     Route::get('/hls', [\App\Http\Controllers\AnichinController::class, 'hlsStream'])->name('anichin.hls');
+    Route::get('/ts-proxy', [\App\Http\Controllers\AnichinController::class, 'tsProxy'])->name('anichin.ts_proxy');
     Route::get('/detail/{source}/{id}', [\App\Http\Controllers\AnichinController::class, 'detail']);
     Route::get('/trending/{source?}', [\App\Http\Controllers\AnichinController::class, 'trending']);
     Route::get('/foryou/{source?}', [\App\Http\Controllers\AnichinController::class, 'forYou']);
@@ -304,3 +319,14 @@ Route::prefix('anichin')->middleware('throttle:120,1')->group(function () {
     Route::get('/recommended/{source?}', [\App\Http\Controllers\AnichinController::class, 'recommended']);
     Route::get('/latest/{source?}', [\App\Http\Controllers\AnichinController::class, 'latest']);
 });
+
+// Dedicated Dracin Vertical Feed Routes
+Route::prefix('dracin')->group(function () {
+    Route::get('/', [\App\Http\Controllers\DracinController::class, 'index'])->name('dracin.index');
+    Route::get('/api/feed', [\App\Http\Controllers\DracinController::class, 'feedApi'])->name('dracin.api.feed');
+    Route::get('/api/search', [\App\Http\Controllers\DracinController::class, 'searchApi'])->name('dracin.api.search');
+    Route::get('/api/detail/{source}/{id}', [\App\Http\Controllers\DracinController::class, 'detailApi'])->name('dracin.api.detail');
+    Route::post('/api/watch-progress', [\App\Http\Controllers\DracinController::class, 'watchProgressApi'])->name('dracin.api.watch-progress');
+    Route::get('/{source}/{id}', [\App\Http\Controllers\DracinController::class, 'index'])->name('dracin.show');
+});
+

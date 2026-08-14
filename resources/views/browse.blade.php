@@ -18,16 +18,19 @@
             Semua
         </a>
         <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'series'])) }}" 
-           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'series' ? 'bg-purple-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
-            📺 Series
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 {{ request('type') === 'series' ? 'bg-purple-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            <i data-lucide="tv" class="w-3.5 h-3.5"></i>
+            <span>Series</span>
         </a>
         <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'dracin'])) }}" 
-           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'dracin' ? 'bg-rose-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
-            🌸 Dracin
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 {{ request('type') === 'dracin' ? 'bg-rose-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            <i data-lucide="tv-2" class="w-3.5 h-3.5"></i>
+            <span>Dracin</span>
         </a>
         <a href="{{ route('browse', array_merge(request()->except('type'), ['type' => 'movie'])) }}" 
-           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 {{ request('type') === 'movie' ? 'bg-blue-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
-            🎬 Movie
+           class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 {{ request('type') === 'movie' ? 'bg-blue-500 text-white shadow-md' : 'bg-dark-900 text-zinc-400 hover:text-white border border-white/10' }}">
+            <i data-lucide="clapperboard" class="w-3.5 h-3.5"></i>
+            <span>Movie</span>
         </a>
     </div>
 

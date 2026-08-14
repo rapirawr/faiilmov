@@ -108,8 +108,10 @@
         </div>
     @endif
 
-    <!-- Top Navigation Header Component -->
-    <x-navbar />
+    @unless(View::hasSection('hide_navbar'))
+        <!-- Top Navigation Header Component -->
+        <x-navbar />
+    @endunless
 
     @unless(View::hasSection('hide_sidebar'))
         <!-- Left Sidebar Navigation Component -->
@@ -117,12 +119,14 @@
     @endunless
 
     <!-- Main Content Body -->
-    <main class="pt-20 sm:pt-24 {{ View::hasSection('hide_sidebar') ? '' : 'lg:pl-64' }} flex-grow relative z-10">
+    <main class="{{ View::hasSection('hide_navbar') ? 'pt-0' : 'pt-20 sm:pt-24' }} {{ View::hasSection('hide_sidebar') ? '' : 'lg:pl-64' }} flex-grow relative z-10">
         @yield('content')
     </main>
 
-    <!-- Footer Component -->
-    <x-footer />
+    @unless(View::hasSection('hide_footer'))
+        <!-- Footer Component -->
+        <x-footer />
+    @endunless
 
     <!-- Persistent Global Cross-Page Floating Mini Player Component -->
     <x-global-mini-player />

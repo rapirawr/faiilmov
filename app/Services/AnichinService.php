@@ -61,7 +61,7 @@ class AnichinService
                 'X-API-Key' => $key,
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Accept' => 'application/json',
-            ])->withoutVerifying()->timeout(15)->get($url, $queryParams);
+            ])->withoutVerifying()->timeout(6)->get($url, $queryParams);
 
             if ($response->successful()) {
                 return $response->json();
@@ -69,8 +69,8 @@ class AnichinService
 
             Log::warning("AnichinService HTTP {$response->status()} for {$url}");
             return null;
-        } catch (Exception $e) {
-            Log::error("AnichinService Exception on {$url}: " . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::warning("AnichinService Exception on {$url}: " . $e->getMessage());
             return null;
         }
     }
@@ -104,10 +104,22 @@ class AnichinService
      */
     public function search(string $query, string $source = 'dramabox'): array
     {
-        $cacheKey = "anichin_search_{$source}_" . md5($query);
-        return Cache::remember($cacheKey, 900, function () use ($source, $query) {
-            $res = $this->request("/{$source}/search", ['query' => $query]);
-            return $res['items'] ?? $res['results'] ?? (is_array($res) ? $res : []);
+        $cleanQuery = strtolower(trim($query));
+        if (empty($cleanQuery)) {
+            return [];
+        }
+        $cacheKey = "anichin_search_{$source}_" . md5($cleanQuery);
+        return Cache::remember($cacheKey, 900, function () use ($source, $cleanQuery) {
+            $res = $this->request("/{$source}/search", ['query' => $cleanQuery]);
+            if (is_array($res)) {
+                if (isset($res['items']) && is_array($res['items'])) return $res['items'];
+                if (isset($res['results']) && is_array($res['results'])) return $res['results'];
+                if (isset($res['list']) && is_array($res['list'])) return $res['list'];
+                if (isset($res['data']) && is_array($res['data'])) return $res['data'];
+                if (isset($res['rows']) && is_array($res['rows'])) return $res['rows'];
+                if (array_is_list($res)) return $res;
+            }
+            return [];
         });
     }
 
@@ -196,33 +208,104 @@ class AnichinService
     }
 
     /**
-     * Fetch HLS Playlist / M3U8 stream content from private stream server (priv-api.anichin.bio)
+     * Universal Stream Resolver: Resolve HLS Playlist / M3U8 content for any provider
      */
-    public function getHlsStreamContent(string $source, string $id, int $ep = 1): ?string
+    public function getHlsStreamContent(string $source, string $id, int $ep = 1): ?array
     {
-        $url = rtrim($this->privApiUrl, '/') . "/api/{$source}/hls";
+        $cacheKey = "anichin_m3u8_data_{$source}_{$id}_{$ep}";
+        
+        // Return cached response ONLY if it's a valid non-empty array
+        $cached = Cache::get($cacheKey);
+        if ($cached && is_array($cached) && !empty($cached['content'])) {
+            return $cached;
+        }
+
         try {
+            // Strategy 1: Probe Episode API to get exact videoUrl / qualityList
+            $epData = $this->getEpisode($source, $id, $ep);
+            $videoUrl = $epData['videoUrl'] ?? $epData['video_url'] ?? null;
+            if (!$videoUrl && !empty($epData['qualityList'])) {
+                $videoUrl = $epData['qualityList'][0]['url'] ?? $epData['qualityList'][0]['videoUrl'] ?? null;
+            }
+
+            if ($videoUrl) {
+                // If videoUrl is a relative priv-api path (e.g. /api/dramabox/hls?id=... or /api/goodshort/hls?bookId=...)
+                if (str_starts_with($videoUrl, '/')) {
+                    $fullUrl = rtrim($this->privApiUrl, '/') . $videoUrl;
+                    $res = Http::withHeaders([
+                        'X-API-Key' => $this->privApiKey,
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    ])->withoutVerifying()->timeout(15)->get($fullUrl);
+
+                    if ($res->successful() && str_contains($res->body(), '#EXTM3U')) {
+                        $data = [
+                            'content'  => $res->body(),
+                            'base_url' => (string)$res->effectiveUri(),
+                        ];
+                        Cache::put($cacheKey, $data, 900);
+                        return $data;
+                    }
+                } elseif (str_starts_with($videoUrl, 'http')) {
+                    // Direct M3U8 CDN URL (ReelShort, DramaWave, etc.)
+                    if (str_contains($videoUrl, '.m3u8')) {
+                        $res = Http::withoutVerifying()->timeout(15)->get($videoUrl);
+                        if ($res->successful() && str_contains($res->body(), '#EXTM3U')) {
+                            $data = [
+                                'content'  => $res->body(),
+                                'base_url' => (string)$res->effectiveUri(),
+                            ];
+                            Cache::put($cacheKey, $data, 900);
+                            return $data;
+                        }
+                    } else {
+                        // Direct MP4 / TS Video URL (NetShort, etc.)
+                        $m3u8 = "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:600\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:600.000,\n{$videoUrl}\n#EXT-X-ENDLIST";
+                        $data = [
+                            'content'  => $m3u8,
+                            'base_url' => $videoUrl,
+                        ];
+                        Cache::put($cacheKey, $data, 900);
+                        return $data;
+                    }
+                }
+            }
+
+            // Strategy 2: Direct priv-api /api/{source}/hls?id=...&ep=...
+            $privUrl = rtrim($this->privApiUrl, '/') . "/api/{$source}/hls";
             $response = Http::withHeaders([
                 'X-API-Key' => $this->privApiKey,
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            ])->withoutVerifying()->timeout(15)->get($url, ['id' => $id, 'ep' => $ep]);
+            ])->withoutVerifying()->timeout(15)->get($privUrl, ['id' => $id, 'ep' => $ep]);
 
-            if ($response->successful()) {
-                return $response->body();
+            if ($response->successful() && str_contains($response->body(), '#EXTM3U')) {
+                $data = [
+                    'content'  => $response->body(),
+                    'base_url' => (string)$response->effectiveUri(),
+                ];
+                Cache::put($cacheKey, $data, 900);
+                return $data;
             }
 
-            // Fallback to public host if private endpoint returns error
-            $fallbackUrl = rtrim($this->apiUrl, '/') . "/api/{$source}/hls";
+            // Strategy 3: Fallback to public host /api/{source}/hls
+            $publicUrl = rtrim($this->apiUrl, '/') . "/api/{$source}/hls";
             $fbRes = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
-                'User-Agent' => 'Mozilla/5.0',
-            ])->withoutVerifying()->timeout(15)->get($fallbackUrl, ['id' => $id, 'ep' => $ep]);
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ])->withoutVerifying()->timeout(15)->get($publicUrl, ['id' => $id, 'ep' => $ep]);
 
-            return $fbRes->successful() ? $fbRes->body() : null;
+            if ($fbRes->successful() && str_contains($fbRes->body(), '#EXTM3U')) {
+                $data = [
+                    'content'  => $fbRes->body(),
+                    'base_url' => (string)$fbRes->effectiveUri(),
+                ];
+                Cache::put($cacheKey, $data, 900);
+                return $data;
+            }
         } catch (Exception $e) {
-            Log::error("AnichinService HLS Exception: " . $e->getMessage());
-            return null;
+            Log::error("AnichinService Universal Stream Exception: " . $e->getMessage());
         }
+
+        return null;
     }
 
     /**

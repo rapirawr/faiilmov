@@ -25,11 +25,12 @@
         </div>
     @endif
 
-    <!-- Add Actor Form Card -->
-    <div class="space-y-4">
+    <!-- Add Actor & Merge Actors Column -->
+    <div class="space-y-6">
+        <!-- Add Actor Form Card -->
         <div class="p-6 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-xl space-y-4">
             <div class="flex items-center gap-3 border-b border-zinc-800 pb-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
                     <i data-lucide="user-plus" class="w-4 h-4"></i>
                 </div>
                 <div>
@@ -43,7 +44,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nama Aktor *</label>
                     <input type="text" name="name" required placeholder="Contoh: Tom Holland, Cillian Murphy" 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
                     @error('name')
                         <p class="text-xs text-rose-400 mt-1 font-semibold">{{ $message }}</p>
                     @enderror
@@ -52,13 +53,48 @@
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">URL Foto (Link)</label>
                     <input type="url" name="photo_url" placeholder="https://..." 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
                     <p class="text-[11px] text-zinc-500 mt-1">Opsional link gambar avatar foto profil aktor.</p>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 transition-all cursor-pointer">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                     <span>Simpan Data Aktor</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Merge Duplicate Actors Card -->
+        <div class="p-6 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-xl space-y-4">
+            <div class="flex items-center gap-3 border-b border-zinc-800 pb-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                    <i data-lucide="git-merge" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white font-['Outfit']">Gabungkan Aktor Duplikat</h3>
+                    <p class="text-xs text-zinc-400">Pindahkan semua film dari aktor sumber ke aktor target, lalu hapus duplikat.</p>
+                </div>
+            </div>
+
+            <form action="{{ route('admin.actors.merge') }}" method="POST" class="space-y-4" onsubmit="return confirm('Apakah Anda yakin ingin menggabungkan kedua aktor ini? Aktor sumber akan dihapus dan semua filmnya dipindahkan ke aktor target.')">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">ID Aktor Duplikat (Sumber) *</label>
+                    <input type="number" name="source_actor_id" required placeholder="Contoh: 104" 
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+                    <p class="text-[11px] text-zinc-500 mt-1">Aktor yang akan dihapus setelah datanya digabungkan.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">ID Aktor Utama (Target) *</label>
+                    <input type="number" name="target_actor_id" required placeholder="Contoh: 24" 
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+                    <p class="text-[11px] text-zinc-500 mt-1">Aktor resmi yang akan menerima film dari aktor sumber.</p>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                    <i data-lucide="git-merge" class="w-4 h-4"></i>
+                    <span>Proses Penggabungan</span>
                 </button>
             </form>
         </div>
