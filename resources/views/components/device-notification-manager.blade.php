@@ -168,8 +168,9 @@ document.addEventListener('alpine:init', () => {
 
                 if (permission === 'granted') {
                     this.pushNativeNotification({
-                        title: '🎉 Notifikasi Perangkat Aktif!',
-                        body: 'Anda akan menerima pemberitahuan film terbaru dan update sistem secara langsung.',
+                        id: Date.now(),
+                        title: 'Faiilmov',
+                        body: 'Notifikasi perangkat aktif! Update film baru & nobar akan muncul langsung di Notification Center Anda.',
                         url: '/'
                     });
                 }
@@ -263,20 +264,23 @@ document.addEventListener('alpine:init', () => {
             const title = notif.title || 'Pemberitahuan Faiilmov';
             const body = notif.body || notif.message || '';
             const targetUrl = notif.url || '/';
+            const appIcon = '{{ asset('images/logo.png') }}';
 
             if (this.swRegistration && 'showNotification' in this.swRegistration) {
                 this.swRegistration.showNotification(title, {
                     body: body,
-                    icon: '/favicon.png',
-                    badge: '/favicon.png',
+                    icon: appIcon,
+                    badge: appIcon,
                     tag: 'faiilmov-' + (notif.id || Date.now()),
                     renotify: true,
+                    vibrate: [200, 100, 200],
                     data: { url: targetUrl }
                 });
             } else {
                 const n = new Notification(title, {
                     body: body,
-                    icon: '/favicon.png',
+                    icon: appIcon,
+                    badge: appIcon,
                     data: { url: targetUrl }
                 });
                 n.onclick = function() {
