@@ -243,9 +243,31 @@
                      unreadCount: 0, 
                      items: [], 
                      loading: false,
+                     hasDevicePermission: ('Notification' in window) && Notification.permission === 'granted',
                      init() {
                          this.fetchRecent();
-                         setInterval(() => this.fetchRecent(), 30000);
+                         setInterval(() => this.fetchRecent(), 25000);
+                         window.addEventListener('faiilmov:notification-received', (e) => {
+                             if (e.detail) {
+                                 this.unreadCount = e.detail.count || 0;
+                                 this.items = e.detail.notifications || [];
+                                 this.$nextTick(() => {
+                                     if (window.lucide) lucide.createIcons();
+                                 });
+                             }
+                         });
+                     },
+                     async requestDevicePush() {
+                         if ('Notification' in window) {
+                             const p = await Notification.requestPermission();
+                             this.hasDevicePermission = (p === 'granted');
+                             if (p === 'granted') {
+                                 new Notification('🎉 Notifikasi Perangkat Diaktifkan!', {
+                                     body: 'Pemberitahuan film dan update Faiilmov akan otomatis muncul di perangkat Anda.',
+                                     icon: '/favicon.png'
+                                 });
+                             }
+                         }
                      },
                      async fetchRecent() {
                          try {
@@ -329,6 +351,17 @@
                         </div>
                         <button @click="markAllRead()" class="text-[11px] font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer">
                             Tandai semua dibaca
+                        </button>
+                    </div>
+
+                    <!-- Device Push Notification Prompt in Dropdown (if not enabled yet) -->
+                    <div x-show="!hasDevicePermission" class="p-3 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2 text-amber-300">
+                            <i data-lucide="bell-ring" class="w-4 h-4 shrink-0"></i>
+                            <span class="text-[11px] font-medium leading-tight">Munculkan di HP / PC?</span>
+                        </div>
+                        <button type="button" @click="requestDevicePush()" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[10px] shrink-0 transition-colors shadow cursor-pointer">
+                            Aktifkan
                         </button>
                     </div>
 

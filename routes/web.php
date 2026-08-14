@@ -82,6 +82,7 @@ Route::post('/download/notify-me', [\App\Http\Controllers\DownloadAppController:
 Route::get('/privacy-policy', function() { return view('privacy-policy'); })->name('privacy-policy');
 Route::get('/syarat-ketentuan', function() { return view('terms-of-service'); })->name('terms-of-service');
 Route::get('/changelog', [\App\Http\Controllers\ChangelogController::class, 'index'])->name('changelog');
+Route::get('/notifications/recent', [\App\Http\Controllers\NotificationController::class, 'recent'])->name('notifications.recent');
 
 // Search Routes - ADD RATE LIMITING
 Route::middleware('throttle:search')->group(function () {
@@ -185,9 +186,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/profiles/{profile}/pin', [ProfileSwitchController::class, 'updatePin'])->name('profiles.update-pin');
     Route::delete('/profiles/{profile}', [ProfileSwitchController::class, 'destroy'])->name('profiles.destroy');
 
-    // Notifications
+    // Notifications (Authenticated Actions)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');

@@ -134,6 +134,9 @@
     <!-- Reusable Welcome / Benefit Info Modal Component -->
     <x-welcome-modal />
 
+    <!-- Real-time Device Push Notification & In-App Toast Manager -->
+    <x-device-notification-manager />
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
