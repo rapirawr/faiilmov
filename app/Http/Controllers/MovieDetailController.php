@@ -183,6 +183,7 @@ class MovieDetailController extends Controller
 
         $resourcesData = [];
         $activeStream = null;
+        $audioSubjectId = $request->query('audio_subject_id', $film->moviebox_subject_id);
 
         if ($film->moviebox_subject_id) {
             if (str_starts_with($film->moviebox_subject_id, 'anichin:')) {
@@ -198,13 +199,21 @@ class MovieDetailController extends Controller
                 ], false);
             } else {
                 try {
-                    $resourcesData = $this->movieBox->getResources($film->moviebox_subject_id, $season, $episode, 1, $resParam);
+                    $targetSubjectId = $audioSubjectId ?: $film->moviebox_subject_id;
+                    $resourcesData = $this->movieBox->getResources($targetSubjectId, $season, $episode, 1, $resParam);
                 } catch (Exception $e) {
                 }
             }
         }
 
         $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
+        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
+
+        if (!empty($audioTracks)) {
+            foreach ($audioTracks as &$t) {
+                $t['is_current'] = ((string)$t['subjectId'] === (string)($audioSubjectId ?: $film->moviebox_subject_id));
+            }
+        }
 
         if (empty($activeStream) && !empty($resourceList)) {
             $h264Item = null;
@@ -250,13 +259,14 @@ class MovieDetailController extends Controller
             }
         }
 
+        $effectiveSubjectId = $audioSubjectId ?: $film->moviebox_subject_id;
         $isDracin = ($film->subject_type === 'dracin' || str_starts_with($film->moviebox_subject_id ?? '', 'anichin:'));
         $proxyActiveStream = $activeStream ? (
             $isDracin
                 ? $activeStream
-                : url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $film->moviebox_subject_id . '&title=' . urlencode($film->title) . '&se=' . $season . '&ep=' . $episode
+                : url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $effectiveSubjectId . '&title=' . urlencode($film->title) . '&se=' . $season . '&ep=' . $episode
         ) : '';
-        $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $season, $episode) : [];
+        $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($effectiveSubjectId, $season, $episode) : [];
 
         if (Auth::check()) {
             WatchHistory::firstOrCreate(
@@ -269,23 +279,25 @@ class MovieDetailController extends Controller
             )->touch();
         }
 
-        // If AJAX request, return JSON for seamless episode switching without full page reload
+        // If AJAX request, return JSON for seamless episode & audio switching without full page reload
         if ($request->wantsJson() || $request->ajax()) {
             $nextUrl = null;
             if ($nextEpisode) {
                 $nextSeasonNum = $nextEpisode->season->season_number;
-                $nextUrl = route('film.watch', $film->slug) . "?season={$nextSeasonNum}&episode={$nextEpisode->episode_number}";
+                $nextUrl = route('film.watch', $film->slug) . "?season={$nextSeasonNum}&episode={$nextEpisode->episode_number}&audio_subject_id={$effectiveSubjectId}";
             }
 
             return response()->json([
-                'success'           => true,
-                'season'            => $season,
-                'episode'           => $episode,
-                'activeStream'      => $activeStream,
-                'proxyActiveStream' => $proxyActiveStream,
-                'resourceList'      => $resourceList,
-                'subtitles'         => $subtitles,
-                'nextEpisode'       => $nextEpisode ? [
+                'success'              => true,
+                'season'               => $season,
+                'episode'              => $episode,
+                'activeStream'         => $activeStream,
+                'proxyActiveStream'    => $proxyActiveStream,
+                'resourceList'         => $resourceList,
+                'subtitles'            => $subtitles,
+                'audioTracks'          => $audioTracks,
+                'activeAudioSubjectId' => $effectiveSubjectId,
+                'nextEpisode'          => $nextEpisode ? [
                     'season_number'  => $nextEpisode->season->season_number,
                     'episode_number' => $nextEpisode->episode_number,
                     'title'          => $nextEpisode->title,
@@ -302,6 +314,8 @@ class MovieDetailController extends Controller
             'activeStream',
             'proxyActiveStream',
             'subtitles',
+            'audioTracks',
+            'effectiveSubjectId',
             'season',
             'episode',
             'activeEpisode',

@@ -212,6 +212,87 @@ class MovieBoxService
     }
 
     /**
+     * Get available audio dubs/tracks for a subject from MovieBox API
+     */
+    public function getAudioDubs(string $subjectId): array
+    {
+        if (str_starts_with($subjectId, 'anichin:')) {
+            return [];
+        }
+
+        $cacheKey = 'mb_dubs_' . $subjectId;
+        return Cache::remember($cacheKey, 7200, function () use ($subjectId) {
+            try {
+                $details = $this->getDetails($subjectId);
+                $dubs = $details['dubs'] ?? [];
+                if (!is_array($dubs) || empty($dubs)) {
+                    return [];
+                }
+
+                $langNames = [
+                    'ko'    => 'Korean',
+                    'en'    => 'English',
+                    'esla'  => 'Spanish (Latin America)',
+                    'es'    => 'Spanish',
+                    'ptbr'  => 'Portuguese (BR)',
+                    'pt'    => 'Portuguese',
+                    'id'    => 'Indonesian',
+                    'ja'    => 'Japanese',
+                    'zh'    => 'Chinese',
+                    'th'    => 'Thai',
+                    'hi'    => 'Hindi',
+                    'fr'    => 'French',
+                    'de'    => 'German',
+                    'ru'    => 'Russian',
+                    'it'    => 'Italian',
+                    'vi'    => 'Vietnamese',
+                    'tl'    => 'Tagalog',
+                    'ms'    => 'Malay',
+                    'ar'    => 'Arabic',
+                    'tr'    => 'Turkish',
+                ];
+
+                $result = [];
+                foreach ($dubs as $dub) {
+                    if (empty($dub['subjectId'])) continue;
+                    $rawCode = strtolower(trim($dub['lanCode'] ?? ''));
+                    $rawName = trim($dub['lanName'] ?? '');
+                    $isOriginal = !empty($dub['original']);
+
+                    // Create friendly display label
+                    $cleanName = $rawName;
+                    if ($isOriginal) {
+                        $langLabel = $langNames[$rawCode] ?? strtoupper($rawCode);
+                        $cleanName = 'Original (' . $langLabel . ')';
+                    } elseif (isset($langNames[$rawCode])) {
+                        $cleanName = $langNames[$rawCode] . ' Dub';
+                    }
+
+                    $badge = strtoupper(substr($rawCode, 0, 3));
+                    if ($rawCode === 'ptbr') $badge = 'PT';
+                    if ($rawCode === 'esla') $badge = 'ES';
+                    if ($isOriginal) $badge = strtoupper($rawCode ?: 'ORI');
+
+                    $result[] = [
+                        'subjectId'  => (string)$dub['subjectId'],
+                        'lanName'    => $rawName,
+                        'label'      => $cleanName,
+                        'lanCode'    => $rawCode,
+                        'badge'      => $badge,
+                        'original'   => $isOriginal,
+                        'is_current' => ((string)$dub['subjectId'] === (string)$subjectId),
+                    ];
+                }
+
+                return $result;
+            } catch (Exception $e) {
+                Log::debug("Get audio dubs error for {$subjectId}: " . $e->getMessage());
+                return [];
+            }
+        });
+    }
+
+    /**
      * Get external captions from MovieBox API for a subject and resourceId
      */
     public function getExtCaptions(string $subjectId, string $resourceId): array

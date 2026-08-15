@@ -10,7 +10,7 @@
         "laravel/framework": "^13.8",
         "laravel/socialite": "^5.29",
         "laravel/tinker": "^3.0",
-        "minishlink/web-push": "^8.0",
+        "minishlink/web-push": "^9.0",
         "pusher/pusher-php-server": "^7.3"
     },
     "require-dev": {

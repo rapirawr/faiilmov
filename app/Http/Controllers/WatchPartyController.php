@@ -215,6 +215,7 @@ class WatchPartyController extends Controller
         } catch (Exception $e) {}
 
         $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $watchParty->season_number, $watchParty->episode_number) : [];
+        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
 
         return view('watch-party', compact(
             'watchParty',
@@ -225,6 +226,7 @@ class WatchPartyController extends Controller
             'activeStream',
             'proxyActiveStream',
             'subtitles',
+            'audioTracks',
             'activeParticipants',
             'initialMessages'
         ));

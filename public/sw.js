@@ -1,4 +1,6 @@
 // Faiilmov Progressive Web App & Push Notification Service Worker
+importScripts("https://js.pusher.com/beams/service-worker.js");
+
 const CACHE_NAME = 'faiilmov-sw-v1';
 
 self.addEventListener('install', (event) => {

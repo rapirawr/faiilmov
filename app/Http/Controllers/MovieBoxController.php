@@ -96,6 +96,20 @@ class MovieBoxController extends Controller
     }
 
     /**
+     * Get audio tracks / dubs for a subject
+     * GET /moviebox/audios/{id}
+     */
+    public function audios(Request $request, string $id): JsonResponse
+    {
+        try {
+            $data = $this->movieBox->getAudioDubs($id);
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get homepage feed
      * GET /moviebox/homepage?tabId=0&page=1
      */

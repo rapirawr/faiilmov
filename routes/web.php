@@ -303,6 +303,7 @@ Route::prefix('moviebox')->middleware('throttle:120,1')->group(function () {
     Route::get('/detail/{id}', [MovieBoxController::class, 'detail']);
     Route::get('/resources/{id}', [MovieBoxController::class, 'resources']);
     Route::get('/subtitles/{id}', [MovieBoxController::class, 'subtitles']);
+    Route::get('/audios/{id}', [MovieBoxController::class, 'audios']);
     Route::get('/homepage', [MovieBoxController::class, 'homepage']);
     
     Route::middleware('throttle:60,1')->group(function () {

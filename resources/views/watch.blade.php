@@ -89,6 +89,8 @@
         activeStream: @json($proxyActiveStream),
         qualities: @json($processedQualities),
         subtitles: @json($subtitles ?? []),
+        audioTracks: @json($audioTracks ?? []),
+        activeAudioSubjectId: @json($effectiveSubjectId ?? $film->moviebox_subject_id),
         seasons: @json($seasonsData),
         nextEpisode: @json($nextEpData)
      })'>
@@ -352,7 +354,7 @@
                             
                             <!-- Subtitle / Caption Selector Dropdown -->
                             <div class="relative" @click.outside="subtitleDropdownOpen = false">
-                                <button @click.stop="subtitleDropdownOpen = !subtitleDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                <button @click.stop="subtitleDropdownOpen = !subtitleDropdownOpen; audioDropdownOpen = false; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
                                         :class="activeSubtitle !== 'off' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
                                         class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
                                         title="Subtitle / Teks">
@@ -422,9 +424,106 @@
                                 </div>
                             </div>
 
+                            <!-- Audio Track Selector Dropdown -->
+                            <div class="relative" @click.outside="audioDropdownOpen = false">
+                                <button @click.stop="audioDropdownOpen = !audioDropdownOpen; subtitleDropdownOpen = false; speedDropdownOpen = false; qualityDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                        :class="audioTracks.length > 1 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
+                                        class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
+                                        title="Pilihan Audio & Bahasa Suara">
+                                    <i data-lucide="headphones" class="w-3.5 h-3.5"></i>
+                                    <span x-text="audioTrackBadgeText"></span>
+                                </button>
+
+                                <div x-show="audioDropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-150 scale-95 opacity-0"
+                                     x-transition:enter-end="scale-100 opacity-100"
+                                     class="absolute top-full right-0 mt-2 w-64 glass-panel p-1.5 rounded-2xl border border-white/20 shadow-2xl z-50 max-w-[85vw]"
+                                     style="display: none;">
+                                    <div class="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="headphones" class="w-3 h-3"></i>
+                                            <span>Trek Audio / Bahasa</span>
+                                        </span>
+                                        <template x-if="audioTracks.length > 0">
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-white/10 text-zinc-300 font-bold" x-text="audioTracks.length + ' Trek'"></span>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Multiple Audio Tracks List -->
+                                    <template x-if="audioTracks.length > 0">
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5 mt-0.5">
+                                            <template x-for="(track, idx) in audioTracks" :key="track.subjectId || track.id || idx">
+                                                <button @click.stop="setAudioTrack(track)" 
+                                                        :class="isTrackActive(track, idx) ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-white/10 hover:text-white'"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                                    <span class="flex items-center gap-2 truncate">
+                                                        <span class="px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-extrabold uppercase tracking-wide shrink-0" 
+                                                              :class="isTrackActive(track, idx) ? 'bg-zinc-950/20 text-zinc-950' : ''"
+                                                              x-text="getTrackLangBadge(track)"></span>
+                                                        <span class="truncate" x-text="track.label || track.lanName || track.name || ('Audio ' + (idx + 1))"></span>
+                                                    </span>
+                                                    <i x-show="isTrackActive(track, idx)" data-lucide="check" class="w-3 h-3 text-zinc-950 shrink-0 ml-1"></i>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Single / Default Audio Track State -->
+                                    <template x-if="audioTracks.length === 0">
+                                        <div class="space-y-1 mt-0.5">
+                                            <button @click.stop="audioDropdownOpen = false" 
+                                                    class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs bg-white text-zinc-950 font-bold flex items-center justify-between cursor-pointer">
+                                                <span class="flex items-center gap-2 truncate">
+                                                    <span class="px-1.5 py-0.5 rounded-md bg-zinc-950/20 text-zinc-950 text-[9px] font-extrabold uppercase tracking-wide shrink-0">ORI</span>
+                                                    <span class="truncate">Audio Utama (Original / Stereo)</span>
+                                                </span>
+                                                <i data-lucide="check" class="w-3 h-3 text-zinc-950 shrink-0 ml-1"></i>
+                                            </button>
+                                            <div class="px-2 py-1 text-[10px] text-zinc-400 italic flex items-center gap-1.5">
+                                                <i data-lucide="info" class="w-3 h-3 text-zinc-500 shrink-0"></i>
+                                                <span>1 Trek audio bawaan video</span>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Audio Equalizer & Enhancement Profile Section -->
+                                    <div class="pt-1.5 mt-1.5 border-t border-white/10">
+                                        <div class="text-[9px] font-bold text-zinc-400 px-2 pt-0.5 pb-1 uppercase tracking-wider flex items-center gap-1">
+                                            <i data-lucide="sliders" class="w-2.5 h-2.5"></i>
+                                            <span>Peningkat Suara</span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-1 p-0.5">
+                                            <button @click.stop="setAudioProfile('normal')" 
+                                                    :class="audioProfile === 'normal' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'text-zinc-400 hover:text-white border-white/5 bg-white/5'"
+                                                    class="px-2 py-1 rounded-lg text-[10px] border transition-all text-center truncate cursor-pointer">
+                                                Standar
+                                            </button>
+                                            <button @click.stop="setAudioProfile('vocal')" 
+                                                    :class="audioProfile === 'vocal' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'text-zinc-400 hover:text-white border-white/5 bg-white/5'"
+                                                    class="px-2 py-1 rounded-lg text-[10px] border transition-all text-center truncate cursor-pointer"
+                                                    title="Meningkatkan kejernihan percakapan dialog">
+                                                Jernih Dialog
+                                            </button>
+                                            <button @click.stop="setAudioProfile('bass')" 
+                                                    :class="audioProfile === 'bass' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'text-zinc-400 hover:text-white border-white/5 bg-white/5'"
+                                                    class="px-2 py-1 rounded-lg text-[10px] border transition-all text-center truncate cursor-pointer"
+                                                    title="Meningkatkan frekuensi bass sinematik">
+                                                Bass Sinema
+                                            </button>
+                                            <button @click.stop="setAudioProfile('night')" 
+                                                    :class="audioProfile === 'night' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'text-zinc-400 hover:text-white border-white/5 bg-white/5'"
+                                                    class="px-2 py-1 rounded-lg text-[10px] border transition-all text-center truncate cursor-pointer"
+                                                    title="Meredam lonjakan efek suara mendadak di malam hari">
+                                                Mode Malam
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Resolution / Quality Selector Dropdown -->
                             <div class="relative" @click.outside="qualityDropdownOpen = false" x-show="qualities.length > 0">
-                                <button @click.stop="qualityDropdownOpen = !qualityDropdownOpen; speedDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                <button @click.stop="qualityDropdownOpen = !qualityDropdownOpen; audioDropdownOpen = false; speedDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
                                         class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
                                     <span x-text="activeQuality"></span>
                                     <i data-lucide="chevron-down" class="w-3 h-3 text-zinc-400"></i>
@@ -452,7 +551,7 @@
 
                             <!-- Playback Speed Selector Dropdown -->
                             <div class="relative" @click.outside="speedDropdownOpen = false">
-                                <button @click.stop="speedDropdownOpen = !speedDropdownOpen; qualityDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
+                                <button @click.stop="speedDropdownOpen = !speedDropdownOpen; audioDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false; aspectRatioDropdownOpen = false" 
                                         class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold text-zinc-200 hover:text-white hover:border-white/30 transition-all cursor-pointer flex items-center gap-1">
                                     <span x-text="playbackSpeed + 'x'"></span>
                                 </button>
@@ -476,7 +575,7 @@
 
                             <!-- Display Mode / Aspect Ratio Selector Dropdown -->
                             <div class="relative" @click.outside="aspectRatioDropdownOpen = false">
-                                <button @click.stop="aspectRatioDropdownOpen = !aspectRatioDropdownOpen; speedDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false" 
+                                <button @click.stop="aspectRatioDropdownOpen = !aspectRatioDropdownOpen; audioDropdownOpen = false; speedDropdownOpen = false; qualityDropdownOpen = false; subtitleDropdownOpen = false" 
                                         :class="aspectRatioMode !== 'contain' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'text-zinc-200 hover:text-white hover:border-white/30'"
                                         class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl glass-chip text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5"
                                         title="Gaya Layar (Fit, Cover, Stretch, Zoom)">
@@ -970,13 +1069,51 @@
             speedDropdownOpen: false,
             qualityDropdownOpen: false,
             subtitleDropdownOpen: false,
+            audioDropdownOpen: false,
             aspectRatioDropdownOpen: false,
             aspectRatioMode: localStorage.getItem('faii_player_aspect_mode') || 'contain',
             subtitles: config.subtitles || [],
             activeSubtitle: 'off',
+            audioTracks: config.audioTracks || [],
+            activeAudioSubjectId: config.activeAudioSubjectId || '{{ $film->moviebox_subject_id }}',
+            activeAudioTrack: config.activeAudioSubjectId || -1,
+            audioProfile: localStorage.getItem('faiilmov_player_audio_profile') || 'normal',
+            audioCtx: null,
+            audioSourceNode: null,
+            audioFilterNode: null,
+            audioCompressorNode: null,
+            audioGainNode: null,
             clickTimer: null,
             isMiniPlayer: false,
             isMiniDismissed: false,
+
+            get audioTrackBadgeText() {
+                if (this.audioTracks.length > 1) {
+                    const t = this.audioTracks.find(item => 
+                        (item.subjectId && (item.subjectId === this.activeAudioSubjectId || item.subjectId === this.activeAudioTrack)) ||
+                        ((item.id ?? item.index) === this.activeAudioTrack) ||
+                        item.is_current
+                    );
+                    if (t) {
+                        const badge = t.badge || (t.lanCode || t.lang || t.name || '').substring(0, 3).toUpperCase();
+                        return badge || 'Audio';
+                    }
+                }
+                return 'Audio';
+            },
+
+            getTrackLangBadge(track) {
+                if (track.badge) return track.badge;
+                const code = (track.lanCode || track.lang || track.language || track.name || track.label || 'ID').trim();
+                return code.length <= 3 ? code.toUpperCase() : code.substring(0, 2).toUpperCase();
+            },
+
+            isTrackActive(track, idx) {
+                if (track.subjectId) {
+                    return (track.subjectId === this.activeAudioSubjectId || track.subjectId === this.activeAudioTrack || (!this.activeAudioSubjectId && track.is_current));
+                }
+                return this.activeAudioTrack === (track.id ?? idx);
+            },
 
             setAspectRatioMode(mode) {
                 this.aspectRatioMode = mode;
@@ -1123,6 +1260,11 @@
                     });
 
                     video.addEventListener('waiting', () => { this.isBuffering = true; });
+                    video.addEventListener('loadedmetadata', () => {
+                        if (video.audioTracks && video.audioTracks.length > 0) {
+                            this.syncNativeAudioTracks(video.audioTracks);
+                        }
+                    });
                     video.addEventListener('canplay', () => { 
                         this.isBuffering = false;
                         // Update duration from real video metadata when stream is ready
@@ -1213,6 +1355,11 @@
                         }
                     }
 
+                    // Audio Dubs Auto-Fetch
+                    if (this.audioTracks.length === 0) {
+                        this.fetchAudioTracks();
+                    }
+
                     lucide.createIcons();
                 });
             },
@@ -1239,6 +1386,28 @@
                 }
             },
 
+            async fetchAudioTracks() {
+                const mbSubjectId = '{{ $film->moviebox_subject_id }}';
+                if (!mbSubjectId || mbSubjectId.startsWith('anichin:')) return;
+                try {
+                    const res = await fetch(`/moviebox/audios/${mbSubjectId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            this.audioTracks = data;
+                            const currentTrack = data.find(t => t.is_current) || data.find(t => t.original) || data[0];
+                            if (currentTrack && (!this.activeAudioSubjectId || this.activeAudioTrack === -1)) {
+                                this.activeAudioSubjectId = currentTrack.subjectId;
+                                this.activeAudioTrack = currentTrack.subjectId;
+                            }
+                            if (window.lucide) this.$nextTick(() => lucide.createIcons());
+                        }
+                    }
+                } catch (e) {
+                    console.error('Fetch audio tracks error:', e);
+                }
+            },
+
             async switchEpisode(seasonNum, episodeNum) {
                 this.isBuffering = true;
                 this.failedStreams = new Set();
@@ -1250,7 +1419,8 @@
                 this.cancelAutoPlay();
                 this.isIntroSkipped = false;
 
-                const url = `/film/${this.slug}/watch?season=${seasonNum}&episode=${episodeNum}`;
+                const audioParam = this.activeAudioSubjectId ? `&audio_subject_id=${this.activeAudioSubjectId}` : '';
+                const url = `/film/${this.slug}/watch?season=${seasonNum}&episode=${episodeNum}${audioParam}`;
                 window.history.pushState(null, '', url);
 
                 try {
@@ -1681,10 +1851,214 @@
             },
 
             startHideTimer() {
-                if (this.isPlaying && !this.subtitleDropdownOpen && !this.qualityDropdownOpen && !this.speedDropdownOpen && !this.aspectRatioDropdownOpen) {
+                if (this.isPlaying && !this.subtitleDropdownOpen && !this.audioDropdownOpen && !this.qualityDropdownOpen && !this.speedDropdownOpen && !this.aspectRatioDropdownOpen) {
                     this.hideTimer = setTimeout(() => {
                         this.showControls = false;
                     }, 2500);
+                }
+            },
+
+            syncHlsAudioTracks(tracks) {
+                if (!tracks || !Array.isArray(tracks)) return;
+                this.audioTracks = tracks.map((t, i) => ({
+                    id: t.id !== undefined ? t.id : i,
+                    name: t.name || t.label || `Audio ${i + 1}`,
+                    label: t.name || t.label || `Audio ${i + 1}`,
+                    lang: t.lang || t.language || '',
+                    default: !!t.default,
+                }));
+                if (this.hlsInstance && this.hlsInstance.audioTrack !== undefined && this.hlsInstance.audioTrack !== -1) {
+                    this.activeAudioTrack = this.hlsInstance.audioTrack;
+                } else if (this.audioTracks.length > 0 && this.activeAudioTrack === -1) {
+                    const def = this.audioTracks.find(t => t.default) || this.audioTracks[0];
+                    this.activeAudioTrack = def.id;
+                }
+                if (window.lucide) this.$nextTick(() => lucide.createIcons());
+            },
+
+            syncNativeAudioTracks(tracks) {
+                if (!tracks || !tracks.length) return;
+                const list = [];
+                for (let i = 0; i < tracks.length; i++) {
+                    const t = tracks[i];
+                    list.push({
+                        id: i,
+                        name: t.label || `Audio ${i + 1}`,
+                        label: t.label || `Audio ${i + 1}`,
+                        lang: t.language || '',
+                        enabled: t.enabled
+                    });
+                    if (t.enabled) {
+                        this.activeAudioTrack = i;
+                    }
+                }
+                this.audioTracks = list;
+                if (window.lucide) this.$nextTick(() => lucide.createIcons());
+            },
+
+            async setAudioTrack(track) {
+                // If track is a MovieBox audio dub with a subjectId
+                if (typeof track === 'object' && track.subjectId) {
+                    if (this.activeAudioSubjectId === track.subjectId) {
+                        this.audioDropdownOpen = false;
+                        return;
+                    }
+                    this.isBuffering = true;
+                    this.activeAudioSubjectId = track.subjectId;
+                    this.activeAudioTrack = track.subjectId;
+                    this.audioDropdownOpen = false;
+
+                    const currTime = this.$refs.video ? this.$refs.video.currentTime : 0;
+                    const wasPlaying = this.isPlaying;
+
+                    const url = `/film/${this.slug}/watch?season=${this.currentSeason}&episode=${this.currentEpisode}&audio_subject_id=${track.subjectId}`;
+                    window.history.pushState(null, '', url);
+
+                    try {
+                        const res = await fetch(url, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.activeStream = data.proxyActiveStream;
+                            const rawList = (data.resourceList || []).sort((a, b) => {
+                                const codecA = (a.codecName || '').toLowerCase();
+                                const codecB = (b.codecName || '').toLowerCase();
+                                const isH264A = codecA === 'h264' || codecA === 'avc';
+                                const isH264B = codecB === 'h264' || codecB === 'avc';
+                                if (isH264A && !isH264B) return -1;
+                                if (!isH264A && isH264B) return 1;
+                                return 0;
+                            });
+
+                            const seenRes = new Set();
+                            const parsedQualities = [];
+
+                            for (const r of rawList) {
+                                const rawUrl = r.resourceLink || r.url || r.playUrl || '';
+                                if (!rawUrl) continue;
+                                const resNum = parseInt((r.resolution || '1080').toString().replace(/[^0-9]/g, '')) || 1080;
+                                if (seenRes.has(resNum)) continue;
+                                seenRes.add(resNum);
+
+                                parsedQualities.push({
+                                    quality: resNum + 'p',
+                                    res_num: resNum,
+                                    codec: (r.codecName || 'H264').toUpperCase(),
+                                    size: r.size ? (r.size / 1048576).toFixed(1) + ' MB' : '',
+                                    url: '/moviebox/proxy-stream?url=' + encodeURIComponent(rawUrl) + '&id=' + track.subjectId + '&title=' + encodeURIComponent('{{ $film->title }}') + '&se=' + this.currentSeason + '&ep=' + this.currentEpisode
+                                });
+                            }
+
+                            parsedQualities.sort((a, b) => b.res_num - a.res_num);
+                            this.qualities = parsedQualities;
+                            this.activeQuality = this.qualities.length ? this.qualities[0].quality : '1080p';
+
+                            if (data.audioTracks && data.audioTracks.length > 0) {
+                                this.audioTracks = data.audioTracks;
+                            }
+
+                            this.$nextTick(() => {
+                                if (this.$refs.video) {
+                                    this.$refs.video.src = this.activeStream;
+                                    this.$refs.video.currentTime = currTime;
+                                    if (wasPlaying) this.safePlay();
+                                }
+                                if (window.lucide) lucide.createIcons();
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Audio dub switch error:', e);
+                    } finally {
+                        this.isBuffering = false;
+                    }
+                    return;
+                }
+
+                // If track is an HLS audio track index or native HTML5 audioTrack ID
+                const trackId = (typeof track === 'object' ? (track.id ?? track.index) : track);
+                this.activeAudioTrack = trackId;
+                if (this.hlsInstance && typeof this.hlsInstance.audioTrack !== 'undefined') {
+                    this.hlsInstance.audioTrack = trackId;
+                } else {
+                    const video = this.$refs.video;
+                    if (video && video.audioTracks && video.audioTracks.length > 0) {
+                        for (let i = 0; i < video.audioTracks.length; i++) {
+                            video.audioTracks[i].enabled = (i === trackId);
+                        }
+                    }
+                }
+                this.audioDropdownOpen = false;
+                if (window.lucide) this.$nextTick(() => lucide.createIcons());
+            },
+
+            setAudioProfile(mode) {
+                this.audioProfile = mode;
+                localStorage.setItem('faiilmov_player_audio_profile', mode);
+                this.initWebAudio();
+                this.applyAudioProfile();
+                if (window.lucide) this.$nextTick(() => lucide.createIcons());
+            },
+
+            initWebAudio() {
+                const video = this.$refs.video;
+                if (!video || this.audioCtx) return;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    this.audioCtx = new AudioContext();
+                    this.audioSourceNode = this.audioCtx.createMediaElementSource(video);
+                    this.audioFilterNode = this.audioCtx.createBiquadFilter();
+                    this.audioCompressorNode = this.audioCtx.createDynamicsCompressor();
+                    this.audioGainNode = this.audioCtx.createGain();
+
+                    // Connect chain: source -> filter -> compressor -> gain -> destination
+                    this.audioSourceNode.connect(this.audioFilterNode);
+                    this.audioFilterNode.connect(this.audioCompressorNode);
+                    this.audioCompressorNode.connect(this.audioGainNode);
+                    this.audioGainNode.connect(this.audioCtx.destination);
+
+                    this.applyAudioProfile();
+                } catch (err) {
+                    console.warn('Web Audio API init bypassed:', err);
+                }
+            },
+
+            applyAudioProfile() {
+                if (!this.audioCtx || !this.audioFilterNode) return;
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume().catch(() => {});
+                }
+
+                if (this.audioProfile === 'vocal') {
+                    this.audioFilterNode.type = 'peaking';
+                    this.audioFilterNode.frequency.value = 2500;
+                    this.audioFilterNode.Q.value = 1.2;
+                    this.audioFilterNode.gain.value = 6.0;
+                    if (this.audioGainNode) this.audioGainNode.gain.value = 1.1;
+                } else if (this.audioProfile === 'bass') {
+                    this.audioFilterNode.type = 'lowshelf';
+                    this.audioFilterNode.frequency.value = 180;
+                    this.audioFilterNode.gain.value = 5.5;
+                    if (this.audioGainNode) this.audioGainNode.gain.value = 1.0;
+                } else if (this.audioProfile === 'night') {
+                    this.audioFilterNode.type = 'allpass';
+                    if (this.audioCompressorNode) {
+                        this.audioCompressorNode.threshold.value = -30;
+                        this.audioCompressorNode.knee.value = 30;
+                        this.audioCompressorNode.ratio.value = 12;
+                        this.audioCompressorNode.attack.value = 0.003;
+                        this.audioCompressorNode.release.value = 0.25;
+                    }
+                    if (this.audioGainNode) this.audioGainNode.gain.value = 1.0;
+                } else {
+                    this.audioFilterNode.type = 'allpass';
+                    this.audioFilterNode.gain.value = 0;
+                    if (this.audioGainNode) this.audioGainNode.gain.value = 1.0;
                 }
             },
 
@@ -1706,8 +2080,20 @@
                             this.hlsInstance = hls;
                             hls.loadSource(url);
                             hls.attachMedia(video);
+                            hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (event, data) => {
+                                if (data && data.audioTracks) {
+                                    this.syncHlsAudioTracks(data.audioTracks);
+                                }
+                            });
+                            hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (event, data) => {
+                                this.activeAudioTrack = data.id;
+                                if (window.lucide) this.$nextTick(() => lucide.createIcons());
+                            });
                             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                                 this.isBuffering = false;
+                                if (this.hlsInstance && this.hlsInstance.audioTracks && this.hlsInstance.audioTracks.length > 0) {
+                                    this.syncHlsAudioTracks(this.hlsInstance.audioTracks);
+                                }
                                 this.safePlay();
                             });
                             hls.on(Hls.Events.ERROR, (event, data) => {
