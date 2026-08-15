@@ -518,7 +518,7 @@ if (typeof window.castPicker !== 'function') {
         <div class="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <h3 class="text-sm font-bold text-white font-['Outfit'] flex items-center gap-2">
-                    <i data-lucide="disc" class="w-4 h-4 text-amber-400"></i>
+                    <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>
                     <span>Soundtrack & Lagu Film (OST)</span>
                 </h3>
                 <p class="text-xs text-zinc-400 mt-0.5">Kelola daftar lagu resmi film ini secara manual atau cari cepat dari iTunes Music API.</p>
@@ -529,14 +529,14 @@ if (typeof window.castPicker !== 'function') {
                         @click="mode = 'manual'" 
                         :class="mode === 'manual' ? 'bg-amber-500 text-zinc-950 font-bold shadow' : 'text-zinc-400 hover:text-white'"
                         class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer">
-                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
                     <span>Tambah Manual</span>
                 </button>
                 <button type="button" 
                         @click="mode = 'itunes'; if(searchResults.length === 0) searchItunes();" 
                         :class="mode === 'itunes' ? 'bg-amber-500 text-zinc-950 font-bold shadow' : 'text-zinc-400 hover:text-white'"
                         class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                     <span>Cari di iTunes</span>
                 </button>
             </div>
@@ -546,7 +546,7 @@ if (typeof window.castPicker !== 'function') {
         <div x-show="mode === 'manual'" x-transition class="p-6 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-5">
             <div class="flex items-center justify-between border-b border-white/10 pb-3">
                 <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="music" class="w-4 h-4"></i>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <span>Form Input Lagu Manual</span>
                 </h4>
                 <span class="text-[11px] text-zinc-400">Lagu yang ditambahkan akan langsung tampil di halaman detail film & mobile app</span>
@@ -652,7 +652,7 @@ if (typeof window.castPicker !== 'function') {
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="resetForm()" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold">Reset</button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                         <span>Tambahkan Lagu</span>
                     </button>
                 </div>
@@ -664,7 +664,7 @@ if (typeof window.castPicker !== 'function') {
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                         <span>Cari & Impor Langsung dari iTunes API</span>
                     </h4>
                     <p class="text-xs text-zinc-400 mt-0.5">Cari katalog lagu resmi dan tambahkan ke database film hanya dengan 1 klik.</p>
@@ -674,7 +674,7 @@ if (typeof window.castPicker !== 'function') {
                     <button type="button" 
                             @click="searchQuery = '{{ addslashes($film->title) }} soundtrack'; searchItunes()" 
                             class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         <span>Cari OST Film Ini</span>
                     </button>
                     <button type="button" 
@@ -682,12 +682,8 @@ if (typeof window.castPicker !== 'function') {
                             @click="importAllSearchResults()" 
                             :disabled="isBatchImporting"
                             class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow shrink-0">
-                        <template x-if="isBatchImporting">
-                            <div class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                        </template>
-                        <template x-if="!isBatchImporting">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        </template>
+                        <div x-show="isBatchImporting" class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                        <svg x-show="!isBatchImporting" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         <span>Impor Semua (<span x-text="searchResults.length"></span>)</span>
                     </button>
                 </div>
@@ -696,7 +692,9 @@ if (typeof window.castPicker !== 'function') {
             <!-- Search Bar -->
             <div class="flex items-center gap-2">
                 <div class="relative flex-1">
-                    <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </div>
                     <input type="text" 
                            x-model="searchQuery" 
                            @keydown.enter.prevent="searchItunes()"
@@ -707,30 +705,22 @@ if (typeof window.castPicker !== 'function') {
                         @click="searchItunes()" 
                         :disabled="isSearching"
                         class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md">
-                    <template x-if="isSearching">
-                        <div class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    </template>
-                    <template x-if="!isSearching">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </template>
+                    <div x-show="isSearching" class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    <svg x-show="!isSearching" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <span>Cari</span>
                 </button>
             </div>
 
             <!-- Search Results -->
             <div class="space-y-2 pt-2">
-                <template x-if="isSearching">
-                    <div class="text-center py-8 text-zinc-400 space-y-2">
-                        <div class="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p class="text-xs">Mencari lagu di iTunes...</p>
-                    </div>
-                </template>
+                <div x-show="isSearching" class="text-center py-8 text-zinc-400 space-y-2">
+                    <div class="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="text-xs">Mencari lagu di iTunes...</p>
+                </div>
 
-                <template x-if="!isSearching && searchResults.length === 0">
-                    <div class="text-center py-6 text-zinc-500 text-xs">
-                        Tidak ada hasil pencarian. Masukkan kata kunci dan tekan tombol Cari di atas.
-                    </div>
-                </template>
+                <div x-show="!isSearching && searchResults.length === 0" class="text-center py-6 text-zinc-500 text-xs">
+                    Tidak ada hasil pencarian. Masukkan kata kunci dan tekan tombol Cari di atas.
+                </div>
 
                 <div x-show="!isSearching && searchResults.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
                     <template x-for="(st, idx) in searchResults" :key="idx">
@@ -748,15 +738,15 @@ if (typeof window.castPicker !== 'function') {
 
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <!-- Preview Audio Button -->
-                                <template x-if="st.preview_audio_url">
-                                    <button type="button" 
-                                            @click="togglePlay(st.preview_audio_url)" 
-                                            :class="currentAudioUrl === st.preview_audio_url && isPlaying ? 'bg-amber-500 text-black' : 'bg-white/10 hover:bg-white/20 text-white'"
-                                            class="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
-                                            title="Putar Cuplikan Audio">
-                                        <i :data-lucide="currentAudioUrl === st.preview_audio_url && isPlaying ? 'pause' : 'play'" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                </template>
+                                <button type="button" 
+                                        x-show="st.preview_audio_url"
+                                        @click="togglePlay(st.preview_audio_url)" 
+                                        :class="currentAudioUrl === st.preview_audio_url && isPlaying ? 'bg-amber-500 text-black' : 'bg-white/10 hover:bg-white/20 text-white'"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                                        title="Putar Cuplikan Audio">
+                                    <svg x-show="!(currentAudioUrl === st.preview_audio_url && isPlaying)" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                    <svg x-show="currentAudioUrl === st.preview_audio_url && isPlaying" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                </button>
 
                                 <!-- 1-Click Import Button -->
                                 <button type="button" 
@@ -765,7 +755,8 @@ if (typeof window.castPicker !== 'function') {
                                         :class="isTrackImported(st) ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-default' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/30 cursor-pointer'"
                                         class="px-3 py-1.5 rounded-lg font-bold text-xs border flex items-center gap-1 transition-all"
                                         :title="isTrackImported(st) ? 'Lagu sudah ada di database film ini' : 'Impor lagu ini ke film'">
-                                    <i :data-lucide="isTrackImported(st) ? 'check' : 'plus'" class="w-3.5 h-3.5"></i>
+                                    <svg x-show="isTrackImported(st)" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <svg x-show="!isTrackImported(st)" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                                     <span x-text="isTrackImported(st) ? 'Terimpor' : 'Impor'"></span>
                                 </button>
                             </div>
@@ -806,7 +797,7 @@ if (typeof window.castPicker !== 'function') {
                                     <h5 class="text-xs font-bold text-white truncate" x-text="track.track_name"></h5>
                                     <template x-if="track.track_view_url">
                                         <a :href="track.track_view_url" target="_blank" class="text-emerald-400 hover:text-emerald-300" title="Buka di Spotify / Web">
-                                            <i data-lucide="external-link" class="w-3 h-3"></i>
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                         </a>
                                     </template>
                                 </div>
@@ -820,22 +811,22 @@ if (typeof window.castPicker !== 'function') {
                         <!-- Actions & Player Controls -->
                         <div class="flex items-center gap-2 shrink-0">
                             <!-- Play Audio Preview -->
-                            <template x-if="track.preview_audio_url">
-                                <button type="button" 
-                                        @click="togglePlay(track.preview_audio_url)" 
-                                        :class="currentAudioUrl === track.preview_audio_url && isPlaying ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white/5 hover:bg-white/15 text-white border border-white/10'"
-                                        class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
-                                        title="Putar Audio Preview">
-                                    <i :data-lucide="currentAudioUrl === track.preview_audio_url && isPlaying ? 'pause' : 'play'" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </template>
+                            <button type="button" 
+                                    x-show="track.preview_audio_url"
+                                    @click="togglePlay(track.preview_audio_url)" 
+                                    :class="currentAudioUrl === track.preview_audio_url && isPlaying ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white/5 hover:bg-white/15 text-white border border-white/10'"
+                                    class="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+                                    title="Putar Audio Preview">
+                                <svg x-show="!(currentAudioUrl === track.preview_audio_url && isPlaying)" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                <svg x-show="currentAudioUrl === track.preview_audio_url && isPlaying" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                            </button>
 
                             <!-- Edit Track Modal Button -->
                             <button type="button" 
                                     @click="openEditModal(track)"
                                     class="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white border border-white/10 transition-all cursor-pointer"
                                     title="Edit Lagu">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                             </button>
 
                             <!-- Delete Track Form Button -->
@@ -845,7 +836,7 @@ if (typeof window.castPicker !== 'function') {
                                 <button type="submit" 
                                         class="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer"
                                         title="Hapus Lagu">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                 </button>
                             </form>
                         </div>
@@ -855,7 +846,7 @@ if (typeof window.castPicker !== 'function') {
                 <!-- Smart Empty State with 1-Click Auto Import Callout -->
                 <div x-show="soundtracks.length === 0" class="p-8 rounded-2xl bg-zinc-950 border border-amber-500/20 text-center space-y-3">
                     <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
-                        <i data-lucide="disc" class="w-6 h-6 animate-spin"></i>
+                        <svg class="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>
                     </div>
                     <div class="space-y-1">
                         <h5 class="text-sm font-bold text-white">Database Lagu Manual Masih Kosong (0 Lagu)</h5>
@@ -869,12 +860,8 @@ if (typeof window.castPicker !== 'function') {
                                 @click="importAllFromItunes()" 
                                 :disabled="isBatchImporting"
                                 class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 cursor-pointer transition-all">
-                            <template x-if="isBatchImporting">
-                                <div class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                            </template>
-                            <template x-if="!isBatchImporting">
-                                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                            </template>
+                            <div x-show="isBatchImporting" class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                            <svg x-show="!isBatchImporting" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                             <span>⚡ Impor Semua Lagu iTunes ke Database Sekarang</span>
                         </button>
                     </div>
@@ -890,11 +877,11 @@ if (typeof window.castPicker !== 'function') {
             <div @click.outside="editModalOpen = false" class="w-full max-w-lg bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl p-6 space-y-4">
                 <div class="flex items-center justify-between border-b border-white/10 pb-3">
                     <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i data-lucide="edit" class="w-4 h-4 text-amber-400"></i>
+                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                         <span>Edit Lagu: <span x-text="editForm.track_name" class="text-amber-400"></span></span>
                     </h4>
                     <button type="button" @click="editModalOpen = false" class="p-1 text-zinc-400 hover:text-white rounded-lg">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
 
@@ -1030,7 +1017,6 @@ if (typeof window.soundtrackManager !== 'function') {
                 if (this.currentAudioUrl === url && this.isPlaying) {
                     if (this.audioObj) this.audioObj.pause();
                     this.isPlaying = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     return;
                 }
 
@@ -1044,15 +1030,11 @@ if (typeof window.soundtrackManager !== 'function') {
                 this.audioObj.play().catch(e => {
                     console.error('Audio play error:', e);
                     this.isPlaying = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 });
 
                 this.audioObj.onended = () => {
                     this.isPlaying = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 };
-
-                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
             },
 
             async searchItunes() {
@@ -1073,7 +1055,6 @@ if (typeof window.soundtrackManager !== 'function') {
                     console.error('Search itunes error:', err);
                 } finally {
                     this.isSearching = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 }
             },
 
@@ -1117,8 +1098,6 @@ if (typeof window.soundtrackManager !== 'function') {
                     }
                 } catch (err) {
                     console.error(err);
-                } finally {
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 }
             },
 
@@ -1148,7 +1127,6 @@ if (typeof window.soundtrackManager !== 'function') {
                     console.error(err);
                 } finally {
                     this.isBatchImporting = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 }
             },
 
@@ -1177,7 +1155,6 @@ if (typeof window.soundtrackManager !== 'function') {
                     console.error(err);
                 } finally {
                     this.isBatchImporting = false;
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 }
             },
 
@@ -1193,7 +1170,6 @@ if (typeof window.soundtrackManager !== 'function') {
                     order: track.order || 1
                 };
                 this.editModalOpen = true;
-                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
             }
         };
     };
