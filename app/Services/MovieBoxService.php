@@ -142,7 +142,7 @@ class MovieBoxService
         }
 
         return Cache::remember($cacheKey, 7200, function () use ($subjectId, $season, $episode, $page, $resolution, $perPage, $includeCaptions) {
-            $resolutionsToFetch = $resolution ? [$resolution] : ['1080', '720', '480', '360'];
+            $resolutionsToFetch = $resolution ? [$resolution] : ['2160', '1080', '720', '480', '360'];
             $combinedList = [];
             $firstResponse = null;
 
@@ -284,6 +284,13 @@ class MovieBoxService
                     ];
                 }
 
+                // Always prioritize Original audio first
+                usort($result, function ($a, $b) {
+                    if (!empty($a['original']) && empty($b['original'])) return -1;
+                    if (empty($a['original']) && !empty($b['original'])) return 1;
+                    return 0;
+                });
+
                 return $result;
             } catch (Exception $e) {
                 Log::debug("Get audio dubs error for {$subjectId}: " . $e->getMessage());
@@ -343,16 +350,44 @@ class MovieBoxService
             }
 
             $allCaptionLists = [];
+            $allSubjectIds = [(string)$subjectId];
 
-            // 1. Fetch external captions for each unique resourceId from MovieBox API
-            $seenResourceIds = [];
-            foreach ($resourceList as $res) {
-                $rId = (string)($res['resourceId'] ?? $res['id'] ?? $res['resId'] ?? '');
-                if ($rId !== '' && !isset($seenResourceIds[$rId])) {
-                    $seenResourceIds[$rId] = true;
-                    $extCaps = $this->getExtCaptions($subjectId, $rId);
-                    if (!empty($extCaps) && is_array($extCaps)) {
-                        $allCaptionLists[] = $extCaps;
+            // If subject belongs to a dub group (e.g. English dub or original), gather all related subject IDs
+            try {
+                $details = $this->getDetails($subjectId);
+                if (!empty($details['dubs']) && is_array($details['dubs'])) {
+                    foreach ($details['dubs'] as $dubItem) {
+                        if (!empty($dubItem['subjectId'])) {
+                            $allSubjectIds[] = (string)$dubItem['subjectId'];
+                        }
+                    }
+                }
+            } catch (Exception $e) {}
+
+            $allSubjectIds = array_unique($allSubjectIds);
+
+            // Fetch external captions for each subjectId and unique resourceId
+            foreach ($allSubjectIds as $curSubId) {
+                if ($curSubId === (string)$subjectId) {
+                    $curResList = $resourceList;
+                } else {
+                    try {
+                        $otherResData = $this->getResources($curSubId, $season, $episode, 1, null, 20, false, false);
+                        $curResList = $otherResData['list'] ?? [];
+                    } catch (Exception $e) {
+                        $curResList = [];
+                    }
+                }
+
+                $seenResourceIds = [];
+                foreach ($curResList as $res) {
+                    $rId = (string)($res['resourceId'] ?? $res['id'] ?? $res['resId'] ?? '');
+                    if ($rId !== '' && !isset($seenResourceIds[$rId])) {
+                        $seenResourceIds[$rId] = true;
+                        $extCaps = $this->getExtCaptions($curSubId, $rId);
+                        if (!empty($extCaps) && is_array($extCaps)) {
+                            $allCaptionLists[] = $extCaps;
+                        }
                     }
                 }
             }
@@ -444,10 +479,9 @@ class MovieBoxService
                     };
 
                     $label = $labelMap[$rawLangCode] ?? ($langName !== 'Subtitle' ? ucfirst($langName) : strtoupper($srcLang));
-                    $key = $srcLang . '_' . md5($rawUrl);
 
-                    if (isset($seenLangs[$key])) continue;
-                    $seenLangs[$key] = true;
+                    if (isset($seenLangs[$srcLang])) continue;
+                    $seenLangs[$srcLang] = true;
 
                     $captions[] = [
                         'id'      => is_array($cap) && isset($cap['id']) ? (string)$cap['id'] : md5($rawUrl),
