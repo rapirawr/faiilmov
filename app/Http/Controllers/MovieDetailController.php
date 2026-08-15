@@ -183,7 +183,21 @@ class MovieDetailController extends Controller
 
         $resourcesData = [];
         $activeStream = null;
-        $audioSubjectId = $request->query('audio_subject_id', $film->moviebox_subject_id);
+        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
+
+        // Determine active audio subject ID: prioritize explicit request param, or fallback to Original Audio track
+        if ($request->has('audio_subject_id') && !empty($request->query('audio_subject_id'))) {
+            $audioSubjectId = (string)$request->query('audio_subject_id');
+        } else {
+            $origTrack = collect($audioTracks)->firstWhere('original', true);
+            $audioSubjectId = $origTrack ? (string)$origTrack['subjectId'] : (string)$film->moviebox_subject_id;
+        }
+
+        if (!empty($audioTracks)) {
+            foreach ($audioTracks as &$t) {
+                $t['is_current'] = ((string)$t['subjectId'] === (string)$audioSubjectId);
+            }
+        }
 
         if ($film->moviebox_subject_id) {
             if (str_starts_with($film->moviebox_subject_id, 'anichin:')) {
@@ -207,13 +221,6 @@ class MovieDetailController extends Controller
         }
 
         $resourceList = $resourcesData['list'] ?? (is_array($resourcesData) ? $resourcesData : []);
-        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
-
-        if (!empty($audioTracks)) {
-            foreach ($audioTracks as &$t) {
-                $t['is_current'] = ((string)$t['subjectId'] === (string)($audioSubjectId ?: $film->moviebox_subject_id));
-            }
-        }
 
         if (empty($activeStream) && !empty($resourceList)) {
             $h264Item = null;

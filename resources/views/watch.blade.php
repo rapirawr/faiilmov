@@ -153,7 +153,6 @@
              @mousemove="resetHideTimer()" 
              @mouseleave="startHideTimer()"
              @contextmenu.prevent
-             @wheel.prevent="handleWheelVolume($event)"
              :class="isMiniPlayer ? 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-96 aspect-video z-[999] rounded-2xl shadow-2xl border border-white/25 glass-panel ring-2 ring-white/20 transition-all duration-300 overflow-hidden' : 'relative aspect-video w-full rounded-none sm:rounded-3xl overflow-hidden bg-black border-0 sm:border border-white/10 shadow-2xl group select-none'"
              :style="!showControls && isPlaying ? 'cursor: none !important;' : ''">
             
@@ -1395,7 +1394,7 @@
                         const data = await res.json();
                         if (Array.isArray(data) && data.length > 0) {
                             this.audioTracks = data;
-                            const currentTrack = data.find(t => t.is_current) || data.find(t => t.original) || data[0];
+                            const currentTrack = data.find(t => t.original) || data.find(t => t.is_current) || data[0];
                             if (currentTrack && (!this.activeAudioSubjectId || this.activeAudioTrack === -1)) {
                                 this.activeAudioSubjectId = currentTrack.subjectId;
                                 this.activeAudioTrack = currentTrack.subjectId;
@@ -1733,15 +1732,6 @@
                 if (!this.$refs.video) return;
                 this.isMuted = !this.isMuted;
                 this.$refs.video.muted = this.isMuted;
-            },
-
-            handleWheelVolume(e) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    this.setVolume(Math.min(1, this.volume + 0.05));
-                } else {
-                    this.setVolume(Math.max(0, this.volume - 0.05));
-                }
             },
 
             setPlaybackSpeed(spd) {

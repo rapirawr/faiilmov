@@ -154,12 +154,23 @@ class WatchPartyController extends Controller
             $isHost = (bool)$participant->is_host;
         }
 
+        // Fetch audio tracks and default to Original audio
+        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
+        $origTrack = collect($audioTracks)->firstWhere('original', true);
+        $effectiveSubjectId = $origTrack ? (string)$origTrack['subjectId'] : (string)$film->moviebox_subject_id;
+
+        if (!empty($audioTracks)) {
+            foreach ($audioTracks as &$t) {
+                $t['is_current'] = ((string)$t['subjectId'] === (string)$effectiveSubjectId);
+            }
+        }
+
         // Fetch stream resources
         $resourcesData = [];
-        if ($film->moviebox_subject_id) {
+        if ($effectiveSubjectId) {
             try {
                 $resourcesData = $this->movieBox->getResources(
-                    $film->moviebox_subject_id,
+                    $effectiveSubjectId,
                     $watchParty->season_number,
                     $watchParty->episode_number,
                     1
@@ -183,7 +194,7 @@ class WatchPartyController extends Controller
             $activeStream = $selectedItem['resourceLink'] ?? $selectedItem['url'] ?? $selectedItem['playUrl'] ?? null;
         }
 
-        $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) : '';
+        $proxyActiveStream = $activeStream ? url('/moviebox/proxy-stream') . '?url=' . urlencode($activeStream) . '&id=' . $effectiveSubjectId : '';
 
         // Fetch initial saved chat messages from DB
         $initialMessages = WatchPartyMessage::where('watch_party_id', $watchParty->id)
@@ -214,8 +225,7 @@ class WatchPartyController extends Controller
             ))->toOthers();
         } catch (Exception $e) {}
 
-        $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($film->moviebox_subject_id, $watchParty->season_number, $watchParty->episode_number) : [];
-        $audioTracks = $film->moviebox_subject_id ? $this->movieBox->getAudioDubs($film->moviebox_subject_id) : [];
+        $subtitles = $film->moviebox_subject_id ? $this->movieBox->getCaptions($effectiveSubjectId, $watchParty->season_number, $watchParty->episode_number) : [];
 
         return view('watch-party', compact(
             'watchParty',
@@ -227,6 +237,7 @@ class WatchPartyController extends Controller
             'proxyActiveStream',
             'subtitles',
             'audioTracks',
+            'effectiveSubjectId',
             'activeParticipants',
             'initialMessages'
         ));
