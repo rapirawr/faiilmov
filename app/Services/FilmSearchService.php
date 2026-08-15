@@ -76,22 +76,57 @@ class FilmSearchService
         }
 
         try {
-            $apiData = $this->movieBox->search($cleanQ, 1);
-            if (!empty($apiData)) {
-                $subjects = Film::extractSearchSubjects($apiData);
-                if (!empty($subjects)) {
-                    Film::syncFromApiBatch($subjects);
-                    // Cache successful sync for 10 minutes
-                    Cache::put($cacheKey, true, 600);
-                    return;
+            $searchTerms = $this->expandSearchTerms($cleanQ);
+            $syncedAny = false;
+
+            foreach ($searchTerms as $term) {
+                $apiData = $this->movieBox->search($term, 1);
+                if (!empty($apiData)) {
+                    $subjects = Film::extractSearchSubjects($apiData);
+                    if (!empty($subjects)) {
+                        Film::syncFromApiBatch($subjects);
+                        $syncedAny = true;
+                    }
                 }
             }
+
+            if ($syncedAny) {
+                Cache::put($cacheKey, true, 600);
+                return;
+            }
+
             // Short 15s throttle if no subjects found to allow quick retries
             Cache::put($cacheKey, true, 15);
         } catch (\Exception $e) {
             Log::debug("Live MovieBox sync search failed for '{$cleanQ}': " . $e->getMessage());
             Cache::put($cacheKey, true, 15);
         }
+    }
+
+    /**
+     * Expand query with synonyms and localized title mappings (e.g. "402 Rumah Sakit Angker Korea" -> "Gonjiam")
+     */
+    public function expandSearchTerms(string $query): array
+    {
+        $lower = strtolower(trim($query));
+        $terms = [$query];
+
+        $mappings = [
+            '402 rumah sakit angker korea' => ['Gonjiam: Haunted Asylum', 'Gonjiam', '402', 'Haunted Asylum'],
+            '402 rumah sakit'               => ['Gonjiam: Haunted Asylum', '402', 'Asylum'],
+            'rumah sakit angker'           => ['Gonjiam: Haunted Asylum', 'Asylum', 'Haunted Hospital'],
+            'rumah sakit korea'            => ['Gonjiam: Haunted Asylum', 'Doctor on the Edge', 'Hospital Playlist', 'Hospital'],
+            'rumah sakit'                  => ['Hospital', 'Asylum', 'Medical'],
+            'angker'                       => ['Haunted', 'Horror', 'Asylum'],
+        ];
+
+        foreach ($mappings as $key => $expansions) {
+            if (str_contains($lower, $key) || str_contains($key, $lower)) {
+                $terms = array_merge($terms, $expansions);
+            }
+        }
+
+        return array_values(array_unique($terms));
     }
 
     public function getAiInterpretation(string $query): ?array
@@ -184,6 +219,7 @@ class FilmSearchService
         $cleanQ = $this->sanitize($query);
         $normalizedQ = str_replace(['and', 'dan', '&', '-', ' ', ':', '.', "'", '"', '!', '?'], '', strtolower($cleanQ));
         $sqlNormalizeTitle = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(title, 'and', ''), 'dan', ''), '&', ''), '-', ''), ' ', ''), ':', ''), '.', ''), '!', ''), '?', ''))";
+        $expandedTerms = $this->expandSearchTerms($cleanQ);
 
         $filmQuery = Film::forActiveProfile()->with('genres')
             ->selectRaw("films.*, 
@@ -203,9 +239,14 @@ class FilmSearchService
                     '%' . $normalizedQ . '%',
                 ]
             )
-            ->where(function ($sub) use ($cleanQ, $normalizedQ, $sqlNormalizeTitle) {
+            ->where(function ($sub) use ($cleanQ, $normalizedQ, $sqlNormalizeTitle, $expandedTerms) {
                 $sub->where('title', 'LIKE', '%' . $cleanQ . '%')
                     ->orWhereRaw("{$sqlNormalizeTitle} LIKE ?", ['%' . $normalizedQ . '%']);
+
+                foreach ($expandedTerms as $term) {
+                    $sub->orWhere('title', 'LIKE', '%' . $term . '%')
+                        ->orWhere('synopsis', 'LIKE', '%' . $term . '%');
+                }
 
                 // Tokenize words for multi-word queries (e.g. "spider man")
                 $words = array_values(array_filter(explode(' ', strtolower($cleanQ)), fn($w) => strlen($w) >= 2));
