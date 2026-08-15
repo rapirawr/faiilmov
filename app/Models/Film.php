@@ -276,6 +276,11 @@ class Film extends Model
         return $this->hasManyThrough(Episode::class, Season::class);
     }
 
+    public function soundtracks()
+    {
+        return $this->hasMany(Soundtrack::class)->orderBy('order', 'asc')->orderBy('id', 'asc');
+    }
+
     public function watchHistories()
     {
         return $this->hasMany(WatchHistory::class);

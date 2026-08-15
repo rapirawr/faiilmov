@@ -144,7 +144,7 @@ class AdminFilmController extends Controller
 
     public function edit(Film $film)
     {
-        $film->load(['genres', 'actors', 'seasons.episodes']);
+        $film->load(['genres', 'actors', 'seasons.episodes', 'soundtracks']);
         $genres = Genre::orderBy('name')->get();
         return view('admin.films.edit', compact('film', 'genres'));
     }

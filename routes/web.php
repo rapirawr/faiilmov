@@ -54,25 +54,37 @@ Route::get('/soundtrack/download', function (\Illuminate\Http\Request $request) 
     $title = $request->query('title', 'soundtrack');
     $artist = $request->query('artist', 'artist');
 
-    if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+    if (!$url) {
         abort(400, 'URL audio tidak valid.');
     }
 
     $cleanFilename = \Illuminate\Support\Str::slug($title . '-' . $artist) . '.mp3';
 
-    try {
-        $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
-        if ($response->successful()) {
-            return response($response->body(), 200, [
-                'Content-Type' => 'audio/mpeg',
-                'Content-Disposition' => 'attachment; filename="' . $cleanFilename . '"',
-                'Content-Length' => strlen($response->body()),
-            ]);
+    // Check if local storage file
+    if (str_starts_with($url, '/storage/')) {
+        $relativePath = str_replace('/storage/', '', $url);
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->download($relativePath, $cleanFilename);
         }
-    } catch (\Exception $e) {
     }
 
-    return redirect($url);
+    if (filter_var($url, FILTER_VALIDATE_URL)) {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
+            if ($response->successful()) {
+                return response($response->body(), 200, [
+                    'Content-Type' => 'audio/mpeg',
+                    'Content-Disposition' => 'attachment; filename="' . $cleanFilename . '"',
+                    'Content-Length' => strlen($response->body()),
+                ]);
+            }
+        } catch (\Exception $e) {
+        }
+
+        return redirect($url);
+    }
+
+    abort(404, 'File audio tidak ditemukan.');
 })->name('soundtrack.download');
 
 Route::get('/download', [\App\Http\Controllers\DownloadAppController::class, 'index'])->name('download.app');
@@ -215,6 +227,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/seasons/{season}/episodes', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'storeEpisode'])->name('episodes.store');
     Route::put('/episodes/{episode}', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'updateEpisode'])->name('episodes.update');
     Route::delete('/episodes/{episode}', [\App\Http\Controllers\Admin\AdminEpisodeController::class, 'destroyEpisode'])->name('episodes.destroy');
+
+    // Film Soundtrack & OST Management
+    Route::get('/soundtracks/search-api', [\App\Http\Controllers\Admin\AdminSoundtrackController::class, 'searchApi'])->name('soundtracks.search_api');
+    Route::post('/films/{film}/soundtracks', [\App\Http\Controllers\Admin\AdminSoundtrackController::class, 'store'])->name('films.soundtracks.store');
+    Route::post('/films/{film}/soundtracks/import-batch', [\App\Http\Controllers\Admin\AdminSoundtrackController::class, 'importBatch'])->name('films.soundtracks.import_batch');
+    Route::put('/soundtracks/{soundtrack}', [\App\Http\Controllers\Admin\AdminSoundtrackController::class, 'update'])->name('soundtracks.update');
+    Route::delete('/soundtracks/{soundtrack}', [\App\Http\Controllers\Admin\AdminSoundtrackController::class, 'destroy'])->name('soundtracks.destroy');
 
     // Genre Management
     Route::resource('genres', AdminGenreController::class)->except(['create', 'show', 'edit']);
