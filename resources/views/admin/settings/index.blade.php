@@ -308,7 +308,7 @@
                                     
                                     <!-- Poster Image -->
                                     <div class="relative w-full aspect-[2/3] overflow-hidden bg-zinc-950">
-                                        <img src="{{ $f->poster_url }}" alt="{{ $f->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                        <img src="{{ $f->poster_url }}" alt="{{ $f->title }}" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         
                                         <!-- Selection Badge Overlay -->
                                         <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-white text-zinc-950 font-extrabold flex items-center justify-center shadow-lg transition-all transform scale-0 peer-checked:scale-100">

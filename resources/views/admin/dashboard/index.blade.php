@@ -212,7 +212,7 @@
                                 <tr class="hover:bg-zinc-800/30 transition-colors group">
                                     <td class="py-3 flex items-center gap-3">
                                         <span class="font-mono text-zinc-500 font-bold w-4 text-[11px]">{{ $idx + 1 }}</span>
-                                        <img src="{{ $film->poster_url }}" class="w-8 h-11 object-cover rounded-lg shrink-0 bg-zinc-950 border border-zinc-800">
+                                        <img src="{{ $film->poster_url }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded-lg shrink-0 bg-zinc-950 border border-zinc-800">
                                         <div class="min-w-0">
                                             <p class="font-bold text-white text-xs truncate max-w-[240px]">{{ $film->title }}</p>
                                             <p class="text-[11px] text-zinc-400 font-mono mt-0.5">{{ $film->release_year }} &bull; {{ $film->content_rating ?: 'SU' }}</p>

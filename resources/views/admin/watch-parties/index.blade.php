@@ -83,7 +83,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3.5 flex items-center gap-3">
-                                <img src="{{ $party->film->poster_url ?? '' }}" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-950">
+                                <img src="{{ $party->film->poster_url ?? '' }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-950">
                                 <div class="min-w-0">
                                     <p class="font-bold text-white text-xs line-clamp-1">{{ $party->film->title ?? 'Film Dihapus' }}</p>
                                     @if($party->season_number)

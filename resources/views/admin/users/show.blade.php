@@ -162,7 +162,7 @@
                     @forelse($user->watchHistories as $h)
                         <tr class="hover:bg-white/5 transition-colors">
                             <td class="px-4 py-3 flex items-center gap-3">
-                                <img src="{{ $h->film->poster_url ?? '' }}" class="w-7 h-10 object-cover rounded shrink-0">
+                                <img src="{{ $h->film->poster_url ?? '' }}" referrerpolicy="no-referrer" class="w-7 h-10 object-cover rounded shrink-0">
                                 <span class="font-bold text-white text-xs">{{ $h->film->title ?? 'Film Dihapus' }}</span>
                             </td>
                             <td class="px-4 py-3 font-mono text-amber-400 font-bold">
@@ -186,7 +186,7 @@
     <div x-show="activeTab === 'watchlist'" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
         @forelse($user->watchlists as $w)
             <div class="p-2 rounded-xl bg-zinc-900/60 border border-white/10 space-y-1.5">
-                <img src="{{ $w->film->poster_url ?? '' }}" class="w-full h-36 object-cover rounded-lg">
+                <img src="{{ $w->film->poster_url ?? '' }}" referrerpolicy="no-referrer" class="w-full h-36 object-cover rounded-lg">
                 <p class="font-bold text-white text-xs truncate">{{ $w->film->title ?? 'Film Dihapus' }}</p>
             </div>
         @empty

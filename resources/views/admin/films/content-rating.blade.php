@@ -96,7 +96,7 @@
                         @forelse($films as $film)
                             <tr class="hover:bg-white/5 transition-colors">
                                 <td class="px-4 py-3 flex items-center gap-3">
-                                    <img src="{{ $film->poster_url }}" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-900 border border-white/10">
+                                    <img src="{{ $film->poster_url }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-900 border border-white/10">
                                     <div>
                                         <p class="font-bold text-white text-xs line-clamp-1">{{ $film->title }}</p>
                                         <p class="text-[10px] text-zinc-400">{{ Str::limit($film->synopsis, 60) }}</p>

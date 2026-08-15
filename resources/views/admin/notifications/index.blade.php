@@ -541,6 +541,7 @@
                             @if($f->poster_url)
                                 <img src="{{ $f->poster_url }}" 
                                      alt="{{ $f->title }}" 
+                                     referrerpolicy="no-referrer"
                                      class="w-full h-full object-cover"
                                      onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
                                 <div class="hidden w-full h-full flex items-center justify-center text-zinc-600">

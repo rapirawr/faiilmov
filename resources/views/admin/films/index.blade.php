@@ -367,7 +367,7 @@
                             <td class="px-4 py-3.5">
                                 <div class="flex items-center gap-3">
                                     <div class="relative w-9 h-13 rounded-lg overflow-hidden shrink-0 bg-zinc-950 border border-white/10 group-hover:border-amber-400/40 transition-colors">
-                                        <img src="{{ $film->poster_url }}" alt="{{ $film->title }}" loading="lazy" class="w-full h-full object-cover">
+                                        <img src="{{ $film->poster_url }}" alt="{{ $film->title }}" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">
                                     </div>
                                     <div class="min-w-0">
                                         <a href="{{ route('film.show', $film->slug) }}" target="_blank" class="font-bold text-white text-xs hover:text-amber-400 transition-colors line-clamp-1 flex items-center gap-1.5" title="Buka Detail di Website">
@@ -533,7 +533,7 @@
                             @foreach($trashedFilms as $tf)
                                 <tr class="hover:bg-white/5 transition-colors">
                                     <td class="px-3 py-3 flex items-center gap-3">
-                                        <img src="{{ $tf->poster_url }}" class="w-8 h-11 object-cover rounded shrink-0">
+                                        <img src="{{ $tf->poster_url }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0">
                                         <div>
                                             <p class="font-bold text-white text-xs line-clamp-1">{{ $tf->title }}</p>
                                             <p class="text-[10px] text-zinc-400">{{ $tf->release_year }}</p>
