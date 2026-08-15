@@ -91,8 +91,7 @@ Route::middleware('throttle:search')->group(function () {
 });
 
 // Nonton Bareng (Watch Party) Routes - ADD RATE LIMITING
-// Requires email verification to CREATE a room (joining is open to all)
-Route::middleware(['throttle:watch-party-create', 'auth', 'verified'])->post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');
+Route::middleware(['throttle:watch-party-create', 'auth'])->post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');
 
 Route::prefix('watch-party/{roomCode}')->name('watch-party.')->group(function () {
     Route::get('/', [\App\Http\Controllers\WatchPartyController::class, 'show'])->name('show');
@@ -146,15 +145,6 @@ use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\Admin\AdminAppReleaseController;
 
-// Email Verification Routes (Authenticated)
-Route::middleware('auth')->group(function () {
-    Route::get('/email/verify', [AuthController::class, 'verificationNotice'])->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationVerify'])
-        ->middleware('signed')->name('verification.verify');
-    Route::post('/email/verification-notification', [AuthController::class, 'verificationResend'])
-        ->middleware('throttle:6,1')->name('verification.send');
-});
-
 // Auth Routes (Authenticated Users)
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -165,8 +155,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/watchlist', [ProfileController::class, 'clearWatchlist'])->name('profile.clear-watchlist');
     Route::delete('/profile/delete-account', [ProfileController::class, 'deleteAccount'])->name('profile.delete-account');
 
-    // Review — requires email verification
-    Route::middleware(['throttle:review', 'verified'])->group(function () {
+    // Review
+    Route::middleware(['throttle:review'])->group(function () {
         Route::post('/film/{film}/review', [ReviewController::class, 'store'])->name('review.store');
         Route::post('/film/{film}/review/{review}/report', [AdminReviewController::class, 'storeReport'])->name('review.report');
     });

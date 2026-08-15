@@ -40,6 +40,14 @@
     <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
+    <!-- Pusher / Echo Global Config -->
+    <script>
+        window.PUSHER_CONFIG = {
+            key: '{{ config('broadcasting.connections.pusher.key', '84a6e3fa24e4374c43b5') }}',
+            cluster: '{{ config('broadcasting.connections.pusher.options.cluster', 'ap1') }}'
+        };
+    </script>
+
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #09090b; }

@@ -1373,12 +1373,21 @@
                         }
                     });
 
-                    video.addEventListener('waiting', () => { this.isBuffering = true; });
+                    video.addEventListener('waiting', () => { 
+                        if (this.isPlaying && !video.paused) {
+                            this.isBuffering = true;
+                            if (this.bufferingTimer) clearTimeout(this.bufferingTimer);
+                            this.bufferingTimer = setTimeout(() => { this.isBuffering = false; }, 3500);
+                        }
+                    });
                     video.addEventListener('loadedmetadata', () => {
+                        this.isBuffering = false;
                         if (video.audioTracks && video.audioTracks.length > 0) {
                             this.syncNativeAudioTracks(video.audioTracks);
                         }
                     });
+                    video.addEventListener('canplay', () => { this.isBuffering = false; });
+                    video.addEventListener('canplaythrough', () => { this.isBuffering = false; });
                     video.addEventListener('playing', () => { 
                         this.isBuffering = false; 
                         this.isPlaying = true;
@@ -1388,6 +1397,7 @@
                         }
                     });
                     video.addEventListener('pause', () => { 
+                        this.isBuffering = false; 
                         this.isPlaying = false; 
                         this.showControls = true;
                         if (!this.isSyncingFromServer && this.isHost) {
@@ -1395,11 +1405,16 @@
                         }
                     });
                     video.addEventListener('seeked', () => {
+                        this.isBuffering = false;
                         if (!this.isSyncingFromServer && this.isHost) {
                             this.sendHostPlaybackState('seek');
                         }
                     });
+                    video.addEventListener('error', () => {
+                        this.isBuffering = false;
+                    });
                     video.addEventListener('ended', () => {
+                        this.isBuffering = false;
                         this.isPlaying = false;
                         this.showControls = true;
                     });
@@ -1509,7 +1524,9 @@
             },
 
             initBroadcastListeners() {
-                if (window.Echo) {
+                const setupChannel = () => {
+                    if (!window.Echo) return;
+
                     if (window.Echo.connector && window.Echo.connector.pusher) {
                         const pusher = window.Echo.connector.pusher;
                         pusher.connection.bind('disconnected', () => { this.isDisconnected = true; });
@@ -1517,38 +1534,62 @@
                         pusher.connection.bind('connected', () => { this.isDisconnected = false; this.isReconnecting = false; });
                     }
 
-                    window.Echo.channel('watch-party.' + this.roomCode)
-                        .listen('.PlaybackStateChanged', (e) => {
-                            if (!this.isHost) {
-                                this.applySync(e);
-                            }
-                        })
-                        .listen('.PlaybackUpdated', (e) => {
-                            if (!this.isHost) {
-                                this.applySync(e);
-                            }
-                        })
-                        .listen('.MessageSent', (e) => {
-                            if (!this.chatMessages.some(m => m.id && m.id === e.id)) {
-                                this.chatMessages.push({
-                                    id: e.id,
-                                    isSystem: e.isSystem,
-                                    senderName: e.senderName,
-                                    message: e.message,
-                                    time: e.time
-                                });
-                                this.scrollChatToBottom();
-                            }
-                        })
-                        .listen('.ReactionSent', (e) => {
-                            this.spawnFloatingEmoji(e.emoji, e.senderName);
-                        })
-                        .listen('.ParticipantJoined', (e) => {
-                            this.participants = e.participants || this.participants;
-                        })
-                        .listen('.ParticipantLeft', (e) => {
-                            this.participants = e.participants || this.participants;
-                        });
+                    const ch = window.Echo.channel('watch-party.' + this.roomCode);
+
+                    const handlePlayback = (e) => {
+                        if (!this.isHost && e) {
+                            this.applySync(e);
+                        }
+                    };
+
+                    ch.listen('.PlaybackStateChanged', handlePlayback)
+                      .listen('PlaybackStateChanged', handlePlayback)
+                      .listen('.PlaybackUpdated', handlePlayback)
+                      .listen('PlaybackUpdated', handlePlayback)
+                      .listen('.MessageSent', (e) => { this.handleIncomingMessage(e); })
+                      .listen('MessageSent', (e) => { this.handleIncomingMessage(e); })
+                      .listen('.ReactionSent', (e) => { this.spawnFloatingEmoji(e.emoji, e.senderName); })
+                      .listen('ReactionSent', (e) => { this.spawnFloatingEmoji(e.emoji, e.senderName); })
+                      .listen('.ParticipantJoined', (e) => {
+                          if (e && e.participants) this.participants = e.participants;
+                      })
+                      .listen('ParticipantJoined', (e) => {
+                          if (e && e.participants) this.participants = e.participants;
+                      })
+                      .listen('.ParticipantLeft', (e) => {
+                          if (e && e.participants) this.participants = e.participants;
+                      })
+                      .listen('ParticipantLeft', (e) => {
+                          if (e && e.participants) this.participants = e.participants;
+                      });
+                };
+
+                if (window.Echo) {
+                    setupChannel();
+                } else if (typeof window.initEcho === 'function') {
+                    const echo = window.initEcho();
+                    if (echo) setupChannel();
+                }
+
+                window.addEventListener('faiilmov:ws-connected', () => {
+                    this.isDisconnected = false;
+                    this.isReconnecting = false;
+                    setupChannel();
+                });
+            },
+
+            handleIncomingMessage(e) {
+                if (!e) return;
+                const msgId = e.id || ('ws-' + Date.now() + '-' + Math.random());
+                if (!this.chatMessages.some(m => (m.id && m.id === e.id) || (m.time === e.time && m.message === e.message && m.senderName === e.senderName))) {
+                    this.chatMessages.push({
+                        id: msgId,
+                        isSystem: Boolean(e.isSystem),
+                        senderName: e.senderName || 'Peserta',
+                        message: e.message || '',
+                        time: e.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.scrollChatToBottom();
                 }
             },
 
@@ -1556,6 +1597,9 @@
                 this.isReconnecting = true;
                 if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
                     window.Echo.connector.pusher.connect();
+                } else if (typeof window.initEcho === 'function') {
+                    window.initEcho();
+                    this.initBroadcastListeners();
                 }
                 setTimeout(() => {
                     this.isReconnecting = false;
@@ -1602,29 +1646,29 @@
                 if (!this.$refs.video || this.isHost) return;
                 const video = this.$refs.video;
 
+                this.isBuffering = false;
+
                 const nowSec = Date.now() / 1000;
                 const serverTs = state.server_timestamp || state.serverTimestamp || nowSec;
                 const latency = Math.max(0, nowSec - serverTs);
 
                 let videoPos = 0;
-                if (state.timestamp_video !== undefined) videoPos = state.timestamp_video;
-                else if (state.timestampVideo !== undefined) videoPos = state.timestampVideo;
-                else if (state.position !== undefined) videoPos = state.position;
+                if (state.timestamp_video !== undefined) videoPos = parseFloat(state.timestamp_video);
+                else if (state.timestampVideo !== undefined) videoPos = parseFloat(state.timestampVideo);
+                else if (state.position !== undefined) videoPos = parseFloat(state.position);
 
                 let isPlaying = false;
-                if (state.is_playing !== undefined) isPlaying = state.is_playing;
-                else if (state.isPlaying !== undefined) isPlaying = state.isPlaying;
+                if (state.is_playing !== undefined) isPlaying = Boolean(state.is_playing);
+                else if (state.isPlaying !== undefined) isPlaying = Boolean(state.isPlaying);
 
                 let targetSpeed = 1.0;
-                if (state.playback_rate !== undefined) targetSpeed = state.playback_rate;
-                else if (state.playbackRate !== undefined) targetSpeed = state.playbackRate;
-                else if (state.speed !== undefined) targetSpeed = state.speed;
+                if (state.playback_rate !== undefined) targetSpeed = parseFloat(state.playback_rate);
+                else if (state.playbackRate !== undefined) targetSpeed = parseFloat(state.playbackRate);
+                else if (state.speed !== undefined) targetSpeed = parseFloat(state.speed);
 
                 const action = state.action || state.current_action || (isPlaying ? 'play' : 'pause');
                 const targetPos = isPlaying ? (videoPos + (latency * targetSpeed)) : videoPos;
                 const diff = Math.abs(video.currentTime - targetPos);
-
-                console.log(`[WatchParty Sync] action: ${action}, targetPos: ${targetPos.toFixed(2)}s, currentPos: ${video.currentTime.toFixed(2)}s, diff: ${diff.toFixed(2)}s, latency: ${latency.toFixed(3)}s`);
 
                 if (action === 'episode_change' && (state.season_number || state.seasonNumber)) {
                     const se = state.season_number || state.seasonNumber;
@@ -1642,44 +1686,50 @@
                     }
                 }
 
-                if (diff > 1.5) {
-                    if ((nowSec - this.lastHardSeekTime) > 2.5) {
+                // Time synchronization
+                if (action === 'seek' || diff > 1.2) {
+                    if ((nowSec - this.lastHardSeekTime) > 1.0) {
                         this.isSyncingFromServer = true;
                         this.lastHardSeekTime = nowSec;
                         video.currentTime = targetPos;
-                        console.log(`[WatchParty Sync] Hard Seek performed to ${targetPos.toFixed(2)}s`);
-                        setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                        setTimeout(() => { this.isSyncingFromServer = false; }, 350);
                     }
-                } else if (diff >= 0.5 && diff <= 1.5 && isPlaying) {
-                    const adjustFactor = video.currentTime < targetPos ? 1.05 : 0.95;
+                } else if (diff >= 0.35 && diff <= 1.2 && isPlaying) {
+                    const adjustFactor = video.currentTime < targetPos ? 1.06 : 0.94;
                     video.playbackRate = targetSpeed * adjustFactor;
-                    console.log(`[WatchParty Sync] Soft Rate Adjust applied: ${video.playbackRate.toFixed(2)}x`);
                     setTimeout(() => {
                         if (this.$refs.video) this.$refs.video.playbackRate = targetSpeed;
-                    }, 1500);
-                } else if (diff < 0.5) {
+                    }, 1200);
+                } else if (diff < 0.35) {
                     if (video.playbackRate !== targetSpeed) {
                         video.playbackRate = targetSpeed;
                     }
                 }
 
+                // Play / Pause state synchronization
                 if (isPlaying && video.paused) {
                     this.isSyncingFromServer = true;
-                    video.play().catch(() => {});
-                    setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            video.muted = true;
+                            video.play().catch(() => {});
+                        });
+                    }
+                    setTimeout(() => { this.isSyncingFromServer = false; }, 350);
                 } else if (!isPlaying && !video.paused) {
                     this.isSyncingFromServer = true;
                     video.pause();
-                    setTimeout(() => { this.isSyncingFromServer = false; }, 450);
+                    setTimeout(() => { this.isSyncingFromServer = false; }, 350);
                 }
 
                 this.playbackSpeed = targetSpeed;
             },
 
             startHostPositionSync() {
-                const hostSyncInterval = 6000;
+                const hostSyncInterval = 3500;
                 setInterval(() => {
-                    if (this.isHost && this.$refs.video) {
+                    if (this.isHost && this.$refs.video && !this.$refs.video.paused) {
                         this.sendHostPlaybackState('heartbeat');
                     }
                 }, hostSyncInterval);
@@ -1689,12 +1739,18 @@
                 if (!this.isHost || !this.$refs.video) return;
                 const video = this.$refs.video;
 
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                };
+                if (window.Echo && typeof window.Echo.socketId === 'function') {
+                    const sId = window.Echo.socketId();
+                    if (sId) headers['X-Socket-ID'] = sId;
+                }
+
                 fetch(`/watch-party/${this.roomCode}/playback`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         action: action,
                         position: video.currentTime,

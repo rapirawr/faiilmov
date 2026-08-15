@@ -39,6 +39,12 @@
             ]
         ];
     }
+    
+    // Normalize and decode pre-escaped HTML entities so Blade does not double-escape in tags
+    $finalTitle = html_entity_decode(strip_tags((string)$finalTitle), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $finalDescription = html_entity_decode(strip_tags((string)$finalDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $finalKeywords = html_entity_decode(strip_tags((string)$finalKeywords), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
     $finalRobots = $robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 @endphp
 

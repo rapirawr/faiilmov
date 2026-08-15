@@ -19,15 +19,12 @@ window.Pusher = Pusher;
  * @returns {Echo|null} Echo instance, or null if Pusher is not configured.
  */
 export function initEcho() {
-    const appKey     = import.meta.env.VITE_PUSHER_APP_KEY;
-    const appCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1';
+    const appKey     = window.PUSHER_CONFIG?.key || import.meta.env.VITE_PUSHER_APP_KEY || '84a6e3fa24e4374c43b5';
+    const appCluster = window.PUSHER_CONFIG?.cluster || import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1';
 
     // If Pusher credentials are not set, skip WebSocket initialization
-    // and let the existing polling mechanism handle synchronization.
     if (!appKey) {
-        if (import.meta.env.DEV) {
-            console.warn('[Faiilmov Echo] Pusher not configured. Watch Party will use DB polling fallback.');
-        }
+        console.warn('[Faiilmov Echo] Pusher not configured. Watch Party will use DB polling fallback.');
         return null;
     }
 

@@ -1,11 +1,20 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Alpine from 'alpinejs';
+import { initEcho } from './echo';
 import FilmCard from './components/FilmCard';
 import HeroBannerCarousel from './components/HeroBannerCarousel';
 import EpisodeSelector from './components/EpisodeSelector';
 import DracinFeed from './components/dracin/DracinFeed';
 import DracinCatalog from './components/dracin/DracinCatalog';
+
+// Make initEcho available globally and auto-initialize Echo
+window.initEcho = initEcho;
+try {
+  initEcho();
+} catch (e) {
+  console.warn('[Faiilmov] Echo auto-init deferred:', e);
+}
 
 if (!window.Alpine) {
   window.Alpine = Alpine;

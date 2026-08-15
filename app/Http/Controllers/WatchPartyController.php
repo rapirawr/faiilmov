@@ -296,7 +296,7 @@ class WatchPartyController extends Controller
                 $participant->display_name,
                 $watchParty->season_number,
                 $watchParty->episode_number
-            ))->toOthers();
+            ));
 
             broadcast(new WatchPartyPlaybackUpdated(
                 $watchParty->room_code,
@@ -305,7 +305,7 @@ class WatchPartyController extends Controller
                 $isPlaying,
                 $speed,
                 $participant->display_name
-            ))->toOthers();
+            ));
         } catch (\Throwable $e) {}
 
         return response()->json([

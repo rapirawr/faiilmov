@@ -63,16 +63,14 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name'              => $validated['name'],
+            'email'             => $validated['email'],
+            'password'          => Hash::make($validated['password']),
+            'email_verified_at' => now(),
         ]);
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
-
-        // Send email verification notification
-        $user->sendEmailVerificationNotification();
 
         Log::info('New user registered', [
             'user_id' => $user->id,
@@ -81,7 +79,7 @@ class AuthController extends Controller
         ]);
 
         return redirect('/')
-            ->with('success', 'Selamat datang di faiilmov! Akun Anda berhasil dibuat. Silakan cek email Anda untuk melakukan verifikasi.');
+            ->with('success', 'Selamat datang di faiilmov! Akun Anda berhasil dibuat.');
     }
 
     public function logout(Request $request)
@@ -185,60 +183,5 @@ class AuthController extends Controller
                 ->with('success', 'Password berhasil direset. Silakan masuk dengan password baru Anda.');
         }
 
-        return back()->withErrors(['email' => __($status)])->withInput($request->only('email'));
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // EMAIL VERIFICATION
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Show the email verification notice page.
-     */
-    public function verificationNotice()
-    {
-        if (auth()->user()->hasVerifiedEmail()) {
-            return redirect()->intended('/');
-        }
-
-        return view('auth.verify-email');
-    }
-
-    /**
-     * Handle email verification via signed URL.
-     */
-    public function verificationVerify(Request $request, $id, $hash)
-    {
-        $user = \App\Models\User::findOrFail($id);
-
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            abort(403, 'Link verifikasi tidak valid.');
-        }
-
-        if ($user->hasVerifiedEmail()) {
-            return redirect('/')->with('info', 'Email Anda sudah terverifikasi sebelumnya.');
-        }
-
-        if ($user->markEmailAsVerified()) {
-            event(new \Illuminate\Auth\Events\Verified($user));
-            Log::info('Email verified', ['user_id' => $user->id, 'email' => $user->email]);
-        }
-
-        return redirect('/')->with('success', 'Email berhasil diverifikasi! Selamat menikmati faiilmov.');
-    }
-
-    /**
-     * Resend the email verification notification.
-     * Rate-limited via route: throttle:6,1
-     */
-    public function verificationResend(Request $request)
-    {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect('/')->with('info', 'Email Anda sudah terverifikasi.');
-        }
-
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('status', 'verification-link-sent');
     }
 }
