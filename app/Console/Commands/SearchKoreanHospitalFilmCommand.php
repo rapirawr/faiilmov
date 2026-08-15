@@ -91,6 +91,8 @@ class SearchKoreanHospitalFilmCommand extends Command
             $t = strtolower($film->title);
             $s = strtolower($film->synopsis ?? '');
 
+            if (str_contains($t, '402 rumah sakit angker korea')) $score += 500;
+            if (str_contains($t, 'rumah sakit angker')) $score += 300;
             if (str_contains($t, 'gonjiam')) $score += 200;
             if (str_contains($t, 'haunted asylum')) $score += 180;
             if (str_contains($t, 'asylum')) $score += 150;
@@ -149,6 +151,8 @@ class SearchKoreanHospitalFilmCommand extends Command
             ->sortByDesc(function ($film) {
                 $score = $film->relevance_score ?? 0;
                 $t = strtolower($film->title);
+                if (str_contains($t, '402 rumah sakit angker korea')) $score += 500;
+                if (str_contains($t, 'rumah sakit angker')) $score += 300;
                 if (str_contains($t, 'gonjiam')) $score += 200;
                 if (str_contains($t, 'haunted asylum')) $score += 180;
                 if (str_contains($t, 'asylum')) $score += 150;
