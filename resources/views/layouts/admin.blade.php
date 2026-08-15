@@ -73,12 +73,10 @@
             <div class="flex flex-col flex-1 min-h-0">
                 <!-- Brand Header -->
                 <div class="p-4 pb-3 border-b border-zinc-800/80 flex items-center justify-between">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-zinc-950 font-black text-xl shadow shrink-0">
-                            <span class="tracking-tighter">E<span class="text-[7px] block font-mono font-bold leading-none -mt-1 text-zinc-600">FILM</span></span>
-                        </div>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
+                        <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 shrink-0">
                         <div>
-                            <h1 class="font-extrabold text-sm tracking-wider text-white uppercase font-['Outfit']">FAIILMOV</h1>
+                            <h1 class="font-extrabold text-sm tracking-wider text-white uppercase font-['Outfit'] group-hover:text-amber-400 transition-colors">FAIILMOV</h1>
                             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">ADMIN PANEL</p>
                         </div>
                     </a>
