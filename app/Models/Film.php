@@ -481,7 +481,19 @@ class Film extends Model
             return null;
         }
 
-        $slug = Str::slug($cleanTitle) . '-' . substr(md5($subjectId), 0, 6);
+        $existing = static::where('moviebox_subject_id', $subjectId)->first();
+
+        if ($existing) {
+            $slug = $existing->slug;
+        } else {
+            $baseSlug = Str::slug($cleanTitle) . '-' . substr(md5($subjectId), 0, 6);
+            $slug = $baseSlug;
+            $count = 1;
+            while (static::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $count++;
+            }
+        }
+
         $releaseYear = isset($data['releaseDate']) ? (int)substr($data['releaseDate'], 0, 4) : 2024;
         $duration = isset($data['durationSeconds']) ? (int)round($data['durationSeconds'] / 60) : 120;
 
@@ -528,8 +540,6 @@ class Film extends Model
         } else {
             $maxRes = '1080P';
         }
-
-        $existing = static::where('moviebox_subject_id', $subjectId)->first();
 
         $film = static::updateOrCreate(
             ['moviebox_subject_id' => $subjectId],
