@@ -19,14 +19,14 @@ class ImdbService
     ) {}
 
     /**
-     * Extract IMDb ID (e.g. tt1375666) from input link or string
+     * Extract IMDb ID (e.g. tt21357150) from input link or string
      */
     public function extractImdbId(string $input): ?string
     {
         $clean = trim($input);
 
-        // Matches https://www.imdb.com/title/tt1375666/... or tt1375666
-        if (preg_match('/(tt\d{5,11})/i', $clean, $m)) {
+        // Matches https://www.imdb.com/title/tt21357150/... or tt21357150
+        if (preg_match('/(tt\d{5,12})/i', $clean, $m)) {
             return strtolower($m[1]);
         }
 
@@ -39,7 +39,7 @@ class ImdbService
     }
 
     /**
-     * Fetch complete film metadata, cast, and OST from IMDb link
+     * Fetch complete film metadata, cast, and OST from IMDb link with multi-source fallback
      */
     public function fetchFilmData(string $imdbInput): ?array
     {
@@ -54,88 +54,232 @@ class ImdbService
             return null;
         }
 
-        $cacheKey = "imdb_fetch_data_v3_" . $imdbId;
+        $cacheKey = "imdb_fetch_data_v4_" . $imdbId;
 
         return Cache::remember($cacheKey, 3600, function () use ($imdbId) {
             try {
-                $html = $this->fetchImdbPage("https://www.imdb.com/title/{$imdbId}/");
-                if (empty($html)) {
+                $data = null;
+
+                // 1. Primary Source: Cinemeta Open Meta API (Fast, reliable, bypasses DNS blocks)
+                $data = $this->fetchFromCinemeta($imdbId);
+
+                // 2. Secondary Source: IMDb SG CDN Suggestion API
+                if (!$data) {
+                    $data = $this->fetchFromImdbSgCdn($imdbId);
+                }
+
+                // 3. Tertiary Source: Direct IMDb Web Scraper (HTML / JSON-LD / NEXT_DATA)
+                if (!$data) {
+                    $data = $this->fetchFromImdbDirect($imdbId);
+                }
+
+                if (!$data || empty($data['title'])) {
                     return null;
                 }
 
-                $jsonLd = $this->extractJsonLd($html);
-                $nextData = $this->extractNextData($html);
+                // 4. Enrich & Fetch Soundtracks (OST)
+                $data['soundtracks'] = $this->fetchSoundtracks($imdbId, $data['title'], $data['release_year']);
 
-                // 1. Title
-                $title = $this->extractTitle($jsonLd, $nextData, $html);
-                if (empty($title)) {
-                    return null;
-                }
+                // 5. Try matching with MovieBox for stream subject ID
+                $data['moviebox_subject_id'] = $this->findMovieBoxSubjectId($data['title'], $data['release_year'], $data['subject_type']);
 
-                // 2. Release Year & Date
-                $releaseYear = $this->extractReleaseYear($jsonLd, $nextData, $html);
-                $availableFrom = null;
-
-                // 3. Duration in Minutes
-                $duration = $this->extractDuration($jsonLd, $nextData, $html);
-
-                // 4. Rating (Scale 0.0 - 5.0)
-                $rating = $this->extractRating($jsonLd, $nextData, $html);
-
-                // 5. Content Rating
-                $contentRating = $this->extractContentRating($jsonLd, $nextData, $html);
-
-                // 6. Subject Type (movie, series, dracin)
-                $subjectType = $this->extractSubjectType($jsonLd, $nextData, $html, $title);
-
-                // 7. Synopsis
-                $synopsis = $this->extractSynopsis($jsonLd, $nextData, $html);
-
-                // 8. Poster URL
-                $posterUrl = $this->extractPosterUrl($jsonLd, $nextData, $html);
-
-                // 9. Backdrop URL
-                $backdropUrl = $this->extractBackdropUrl($jsonLd, $nextData, $html);
-
-                // 10. Trailer URL
-                $trailerUrl = $this->extractTrailerUrl($jsonLd, $nextData, $html, $title, $releaseYear);
-
-                // 11. Genres
-                $genres = $this->extractGenres($jsonLd, $nextData, $html);
-
-                // 12. Cast & Actors
-                $actors = $this->extractActors($jsonLd, $nextData, $html);
-
-                // 13. Soundtracks (OST) - Fetch from IMDb soundtrack page & enrich via iTunes
-                $soundtracks = $this->fetchSoundtracks($imdbId, $title, $releaseYear);
-
-                // 14. Try matching with MovieBox for stream subject ID
-                $movieboxSubjectId = $this->findMovieBoxSubjectId($title, $releaseYear, $subjectType);
-
-                return [
-                    'imdb_id' => $imdbId,
-                    'title' => $title,
-                    'synopsis' => $synopsis,
-                    'release_year' => $releaseYear,
-                    'duration_minutes' => $duration,
-                    'rating' => $rating,
-                    'content_rating' => $contentRating,
-                    'subject_type' => $subjectType,
-                    'max_resolution' => '1080P',
-                    'poster_url' => $posterUrl,
-                    'backdrop_url' => $backdropUrl,
-                    'trailer_url' => $trailerUrl,
-                    'available_from' => $availableFrom,
-                    'moviebox_subject_id' => $movieboxSubjectId,
-                    'genres' => $genres,
-                    'actors' => $actors,
-                    'soundtracks' => $soundtracks,
-                ];
+                return $data;
             } catch (Exception $e) {
                 Log::error("ImdbService fetch failed for {$imdbId}: " . $e->getMessage());
                 return null;
             }
         });
+    }
+
+    /**
+     * Source 1: Cinemeta Open Metadata API
+     */
+    protected function fetchFromCinemeta(string $imdbId): ?array
+    {
+        foreach (['movie', 'series'] as $type) {
+            try {
+                $url = "https://v3-cinemeta.strem.io/meta/{$type}/{$imdbId}.json";
+                $res = Http::timeout(6)->get($url);
+
+                if ($res->successful() && !empty($res->json()['meta'])) {
+                    $meta = $res->json()['meta'];
+                    $title = trim($meta['name'] ?? '');
+
+                    if (!empty($title)) {
+                        $releaseYear = (int)($meta['year'] ?? (isset($meta['released']) ? substr($meta['released'], 0, 4) : date('Y')));
+                        $synopsis = trim($meta['description'] ?? '');
+                        if ($synopsis === 'Plot under wraps.') {
+                            $synopsis = "Film {$title} ({$releaseYear}). Plot resmi akan segera diperbarui.";
+                        }
+
+                        $poster = $meta['poster'] ?? '';
+                        $backdrop = $meta['background'] ?? $poster;
+
+                        $rawGenres = $meta['genres'] ?? ($meta['genre'] ?? []);
+                        $genres = is_array($rawGenres) ? array_values(array_unique(array_filter($rawGenres))) : [];
+
+                        $actors = [];
+                        foreach (($meta['cast'] ?? []) as $index => $castName) {
+                            $cName = trim($castName);
+                            if (empty($cName)) continue;
+                            $actors[] = [
+                                'name' => $cName,
+                                'photo_url' => $this->fetchActorPhoto($cName),
+                                'character_name' => 'Cast',
+                                'role_type' => $index < 3 ? 'main' : 'regular',
+                            ];
+                        }
+
+                        $rating = !empty($meta['imdbRating']) ? round((float)$meta['imdbRating'] / 2, 1) : 4.5;
+                        $duration = !empty($meta['runtime']) ? (int)preg_replace('/\D/', '', $meta['runtime']) : 120;
+                        if ($duration <= 0) $duration = 120;
+
+                        // Subject type detection
+                        $subjectType = ($type === 'series') ? 'series' : 'movie';
+                        $country = strtolower($meta['country'] ?? '');
+                        if (str_contains($country, 'china') || str_contains($country, 'taiwan') || preg_match('/[\x{4e00}-\x{9fa5}]/u', $title)) {
+                            $subjectType = 'dracin';
+                        }
+
+                        return [
+                            'imdb_id' => $imdbId,
+                            'title' => $title,
+                            'synopsis' => $synopsis,
+                            'release_year' => $releaseYear > 0 ? $releaseYear : (int)date('Y'),
+                            'duration_minutes' => $duration,
+                            'rating' => $rating,
+                            'content_rating' => '13+',
+                            'subject_type' => $subjectType,
+                            'max_resolution' => '1080P',
+                            'poster_url' => $poster ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600',
+                            'backdrop_url' => $backdrop ?: $poster,
+                            'trailer_url' => "https://www.youtube.com/results?search_query=" . urlencode("{$title} {$releaseYear} official trailer"),
+                            'available_from' => null,
+                            'genres' => $genres,
+                            'actors' => $actors,
+                        ];
+                    }
+                }
+            } catch (Exception $e) {
+                // Try next
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Source 2: IMDb SG CDN Suggestion API
+     */
+    protected function fetchFromImdbSgCdn(string $imdbId): ?array
+    {
+        try {
+            $url = "https://v3.sg.media-imdb.com/suggestion/t/{$imdbId}.json";
+            $res = Http::timeout(5)->get($url);
+
+            if ($res->successful() && !empty($res->json()['d'])) {
+                foreach ($res->json()['d'] as $item) {
+                    if (($item['id'] ?? '') === $imdbId) {
+                        $title = trim($item['l'] ?? '');
+                        if (empty($title)) continue;
+
+                        $releaseYear = (int)($item['y'] ?? date('Y'));
+                        $poster = $item['i']['imageUrl'] ?? '';
+                        $castStr = $item['s'] ?? '';
+                        $actors = [];
+                        if (!empty($castStr)) {
+                            foreach (explode(',', $castStr) as $index => $cName) {
+                                $trimName = trim($cName);
+                                if (empty($trimName)) continue;
+                                $actors[] = [
+                                    'name' => $trimName,
+                                    'photo_url' => $this->fetchActorPhoto($trimName),
+                                    'character_name' => 'Cast',
+                                    'role_type' => $index < 2 ? 'main' : 'regular',
+                                ];
+                            }
+                        }
+
+                        $type = ($item['qid'] ?? '') === 'tvSeries' ? 'series' : 'movie';
+
+                        return [
+                            'imdb_id' => $imdbId,
+                            'title' => $title,
+                            'synopsis' => "Film {$title} ({$releaseYear}).",
+                            'release_year' => $releaseYear,
+                            'duration_minutes' => 120,
+                            'rating' => 4.5,
+                            'content_rating' => '13+',
+                            'subject_type' => $type,
+                            'max_resolution' => '1080P',
+                            'poster_url' => $poster ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600',
+                            'backdrop_url' => $poster,
+                            'trailer_url' => "https://www.youtube.com/results?search_query=" . urlencode("{$title} {$releaseYear} official trailer"),
+                            'available_from' => null,
+                            'genres' => ['Action', 'Adventure'],
+                            'actors' => $actors,
+                        ];
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Ignore
+        }
+
+        return null;
+    }
+
+    /**
+     * Source 3: Direct IMDb Web Scraper (HTML / JSON-LD / NEXT_DATA)
+     */
+    protected function fetchFromImdbDirect(string $imdbId): ?array
+    {
+        try {
+            $html = $this->fetchImdbPage("https://www.imdb.com/title/{$imdbId}/");
+            if (empty($html)) {
+                return null;
+            }
+
+            $jsonLd = $this->extractJsonLd($html);
+            $nextData = $this->extractNextData($html);
+
+            $title = $this->extractTitle($jsonLd, $nextData, $html);
+            if (empty($title)) {
+                return null;
+            }
+
+            $releaseYear = $this->extractReleaseYear($jsonLd, $nextData, $html);
+            $duration = $this->extractDuration($jsonLd, $nextData, $html);
+            $rating = $this->extractRating($jsonLd, $nextData, $html);
+            $contentRating = $this->extractContentRating($jsonLd, $nextData, $html);
+            $subjectType = $this->extractSubjectType($jsonLd, $nextData, $html, $title);
+            $synopsis = $this->extractSynopsis($jsonLd, $nextData, $html);
+            $posterUrl = $this->extractPosterUrl($jsonLd, $nextData, $html);
+            $backdropUrl = $this->extractBackdropUrl($jsonLd, $nextData, $html);
+            $trailerUrl = $this->extractTrailerUrl($jsonLd, $nextData, $html, $title, $releaseYear);
+            $genres = $this->extractGenres($jsonLd, $nextData, $html);
+            $actors = $this->extractActors($jsonLd, $nextData, $html);
+
+            return [
+                'imdb_id' => $imdbId,
+                'title' => $title,
+                'synopsis' => $synopsis,
+                'release_year' => $releaseYear,
+                'duration_minutes' => $duration,
+                'rating' => $rating,
+                'content_rating' => $contentRating,
+                'subject_type' => $subjectType,
+                'max_resolution' => '1080P',
+                'poster_url' => $posterUrl,
+                'backdrop_url' => $backdropUrl,
+                'trailer_url' => $trailerUrl,
+                'available_from' => null,
+                'genres' => $genres,
+                'actors' => $actors,
+            ];
+        } catch (Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -147,22 +291,14 @@ class ImdbService
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language' => 'en-US,en;q=0.9,id;q=0.8',
-                'Sec-Ch-Ua' => '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-                'Sec-Ch-Ua-Mobile' => '?0',
-                'Sec-Ch-Ua-Platform' => '"Windows"',
-                'Sec-Fetch-Dest' => 'document',
-                'Sec-Fetch-Mode' => 'navigate',
-                'Sec-Fetch-Site' => 'none',
-                'Sec-Fetch-User' => '?1',
-                'Upgrade-Insecure-Requests' => '1',
-            ])->timeout(12)->get($url);
+                'Accept-Language' => 'en-US,en;q=0.9',
+            ])->timeout(6)->get($url);
 
             if ($response->successful()) {
                 return $response->body();
             }
         } catch (Exception $e) {
-            Log::warning("IMDb page fetch request failed for {$url}: " . $e->getMessage());
+            // Ignore
         }
 
         return null;
@@ -185,7 +321,7 @@ class ImdbService
             $url = "https://v3.sg.media-imdb.com/suggestion/{$prefix}/{$encoded}.json";
             $res = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            ])->timeout(6)->get($url);
+            ])->timeout(5)->get($url);
 
             if ($res->successful() && !empty($res->json()['d'])) {
                 foreach ($res->json()['d'] as $item) {
@@ -281,7 +417,7 @@ class ImdbService
         }
 
         if (!empty($jsonLd['duration'])) {
-            $durationStr = $jsonLd['duration']; // e.g. PT2H28M, PT148M
+            $durationStr = $jsonLd['duration'];
             $hours = 0;
             $mins = 0;
             if (preg_match('/(\d+)H/i', $durationStr, $m)) {
@@ -313,7 +449,6 @@ class ImdbService
         }
 
         if ($rawRating !== null && $rawRating > 0) {
-            // IMDb is out of 10.0 -> convert to our 5.0 scale (e.g. 8.8 -> 4.4)
             return round($rawRating / 2, 1);
         }
 
@@ -364,7 +499,6 @@ class ImdbService
         );
 
         $lowerHtml = strtolower($html);
-        $lowerTitle = strtolower($title);
 
         $isChinese = (
             str_contains($lowerHtml, 'china') ||
@@ -432,7 +566,6 @@ class ImdbService
      */
     protected function extractBackdropUrl(array $jsonLd, array $nextData, string $html): ?string
     {
-        // Check mainColumnData for image gallery or titleMainImages
         if (!empty($nextData['props']['pageProps']['mainColumnData']['titleMainImages']['edges'])) {
             foreach ($nextData['props']['pageProps']['mainColumnData']['titleMainImages']['edges'] as $edge) {
                 $node = $edge['node'] ?? [];
@@ -442,7 +575,6 @@ class ImdbService
             }
         }
 
-        // Fallback to high res poster
         $poster = $this->extractPosterUrl($jsonLd, $nextData, $html);
         return $poster ?: null;
     }
@@ -452,7 +584,6 @@ class ImdbService
      */
     protected function extractTrailerUrl(array $jsonLd, array $nextData, string $html, string $title, int $year): ?string
     {
-        // 1. Check direct playback URL from IMDb
         if (!empty($nextData['props']['pageProps']['aboveTheFoldData']['primaryVideos']['edges'][0]['node']['playbackURLs'])) {
             $playbackUrls = $nextData['props']['pageProps']['aboveTheFoldData']['primaryVideos']['edges'][0]['node']['playbackURLs'];
             foreach ($playbackUrls as $pUrl) {
@@ -462,12 +593,10 @@ class ImdbService
             }
         }
 
-        // 2. Check JSON-LD trailer embedUrl
         if (!empty($jsonLd['trailer']['embedUrl'])) {
             return $jsonLd['trailer']['embedUrl'];
         }
 
-        // 3. Fallback to YouTube Trailer Search URL
         $ytQuery = urlencode("{$title} {$year} official trailer");
         return "https://www.youtube.com/results?search_query={$ytQuery}";
     }
@@ -494,9 +623,7 @@ class ImdbService
             }
         }
 
-        // Filter and deduplicate
         $genres = array_unique(array_filter($genres));
-
         return array_values($genres);
     }
 
@@ -507,7 +634,6 @@ class ImdbService
     {
         $actors = [];
 
-        // Try from NEXT_DATA cast
         if (!empty($nextData['props']['pageProps']['aboveTheFoldData']['castPageTitle']['edges'])) {
             $edges = $nextData['props']['pageProps']['aboveTheFoldData']['castPageTitle']['edges'];
             foreach ($edges as $index => $edge) {
@@ -517,9 +643,10 @@ class ImdbService
                 $charName = $node['characters'][0]['name'] ?? null;
 
                 if ($name) {
+                    $trimName = trim($name);
                     $actors[] = [
-                        'name' => trim($name),
-                        'photo_url' => $photo,
+                        'name' => $trimName,
+                        'photo_url' => $photo ?: $this->fetchActorPhoto($trimName),
                         'character_name' => $charName ? trim($charName) : null,
                         'role_type' => $index < 3 ? 'main' : 'regular',
                     ];
@@ -527,15 +654,15 @@ class ImdbService
             }
         }
 
-        // Fallback from JSON-LD actors
         if (empty($actors) && !empty($jsonLd['actor'])) {
             $rawActors = is_array($jsonLd['actor']) ? $jsonLd['actor'] : [$jsonLd['actor']];
             foreach ($rawActors as $index => $act) {
                 $name = is_array($act) ? ($act['name'] ?? null) : $act;
                 if ($name) {
+                    $trimName = trim($name);
                     $actors[] = [
-                        'name' => trim($name),
-                        'photo_url' => null,
+                        'name' => $trimName,
+                        'photo_url' => $this->fetchActorPhoto($trimName),
                         'character_name' => null,
                         'role_type' => $index < 3 ? 'main' : 'regular',
                     ];
@@ -548,9 +675,9 @@ class ImdbService
 
     /**
      * Fetch Soundtracks (OST):
-     * 1. Scrapes track titles from IMDb soundtrack page: https://www.imdb.com/title/{imdbId}/soundtrack/
+     * 1. Scrapes track titles from IMDb soundtrack page (if available)
      * 2. Enriches each track using iTunes Search API to get playable 30s preview MP3, artwork, Spotify link
-     * 3. Fallback: Searches iTunes API for '{Title} Soundtrack' if IMDb soundtrack list is empty
+     * 3. Fallback: Searches iTunes API for '{Title} Soundtrack', '{Title} Theme', '{Title} OST'
      */
     public function fetchSoundtracks(string $imdbId, string $filmTitle, int $releaseYear): array
     {
@@ -558,7 +685,6 @@ class ImdbService
         $stHtml = $this->fetchImdbPage("https://www.imdb.com/title/{$imdbId}/soundtrack/");
 
         if (!empty($stHtml)) {
-            // Check Next.js soundtrack items
             $stNext = $this->extractNextData($stHtml);
             $stProps = $stNext['props']['pageProps']['contentData']['section']['items'] ?? [];
 
@@ -568,7 +694,6 @@ class ImdbService
                     $rawText = $item['text'] ?? '';
                     $cleanTrack = trim(preg_replace('/^"|"$/', '', $rawTitle));
 
-                    // Extract performer/artist
                     $artist = 'Various Artists';
                     if (preg_match('/Performed by\s+([^,\n\r\.\<\(]+)/i', $rawText, $m)) {
                         $artist = trim($m[1]);
@@ -585,7 +710,6 @@ class ImdbService
                 }
             }
 
-            // If empty, extract via regex from HTML content
             if (empty($tracks)) {
                 if (preg_match_all('/<div class="ipc-html-content-inner-div">(.*?)<\/div>/s', $stHtml, $matches)) {
                     foreach ($matches[1] as $block) {
@@ -609,13 +733,10 @@ class ImdbService
             }
         }
 
-        // Limit tracks to top 15
         $tracks = array_slice($tracks, 0, 15);
-
         $enrichedTracks = [];
         $order = 1;
 
-        // Enrich extracted tracks with iTunes Music API audio previews & artworks
         foreach ($tracks as $t) {
             $query = "{$filmTitle} {$t['track_name']}";
             $itunesResults = $this->soundtrackService->searchItunesApi($query, 1);
@@ -644,11 +765,14 @@ class ImdbService
             }
         }
 
-        // If no tracks found from IMDb soundtrack page, fallback to iTunes Soundtrack search
+        // If no tracks found from IMDb soundtrack page, search iTunes API directly
         if (empty($enrichedTracks)) {
             $itunesSoundtracks = $this->soundtrackService->searchItunesApi("{$filmTitle} soundtrack", 10);
             if (empty($itunesSoundtracks)) {
-                $itunesSoundtracks = $this->soundtrackService->searchItunesApi("{$filmTitle} OST", 8);
+                $itunesSoundtracks = $this->soundtrackService->searchItunesApi("{$filmTitle} theme", 8);
+            }
+            if (empty($itunesSoundtracks)) {
+                $itunesSoundtracks = $this->soundtrackService->searchItunesApi("{$filmTitle} OST", 6);
             }
 
             foreach ($itunesSoundtracks as $st) {
@@ -695,7 +819,6 @@ class ImdbService
                         $sId = (string)($subj['subjectId'] ?? $subj['id'] ?? '');
 
                         if (!empty($sId)) {
-                            // Exact title match or match within 1 year
                             if ($sTitle === $cleanTitleLower || str_contains($sTitle, $cleanTitleLower)) {
                                 if ($year <= 0 || $sYear === 0 || abs($year - $sYear) <= 1) {
                                     return $sId;
@@ -704,7 +827,6 @@ class ImdbService
                         }
                     }
 
-                    // If close match not verified, return the top result subject ID if titles closely resemble
                     $topSubj = $subjects[0];
                     $topTitle = strtolower(trim($topSubj['title'] ?? $topSubj['subjectName'] ?? ''));
                     if (similar_text($cleanTitleLower, $topTitle) > (strlen($cleanTitleLower) * 0.7)) {
@@ -717,5 +839,67 @@ class ImdbService
         }
 
         return null;
+    }
+
+    /**
+     * Fetch real actor portrait photo from IMDb CDN, Wikipedia API, or local database
+     */
+    public function fetchActorPhoto(string $actorName): ?string
+    {
+        $cleanName = trim($actorName);
+        if (strlen($cleanName) < 2) {
+            return null;
+        }
+
+        // 1. Check local Actor database
+        try {
+            $local = Actor::where('name', $cleanName)->first();
+            if ($local && !empty($local->getRawOriginal('photo_url')) && !str_contains($local->getRawOriginal('photo_url'), 'unsplash.com')) {
+                return $local->getRawOriginal('photo_url');
+            }
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
+        $cacheKey = 'actor_photo_v3_' . md5(strtolower($cleanName));
+
+        return Cache::remember($cacheKey, 86400 * 30, function () use ($cleanName) {
+            // 2. Try IMDb Suggestion CDN
+            try {
+                $clean = preg_replace('/[^\w\s]/u', '', $cleanName);
+                $prefix = strtolower(substr($clean, 0, 1));
+                $query = urlencode(strtolower(str_replace(' ', '_', $clean)));
+                $url = "https://v3.sg.media-imdb.com/suggestion/{$prefix}/{$query}.json";
+
+                $res = Http::timeout(3)->get($url);
+                if ($res->successful() && !empty($res->json()['d'])) {
+                    foreach ($res->json()['d'] as $item) {
+                        if (!empty($item['id']) && str_starts_with($item['id'], 'nm') && !empty($item['i']['imageUrl'])) {
+                            return $item['i']['imageUrl'];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+
+            // 3. Try Wikipedia PageImage API
+            try {
+                $wikiUrl = "https://en.wikipedia.org/w/api.php?action=query&titles=" . urlencode($cleanName) . "&prop=pageimages&format=json&pithumbsize=300";
+                $wikiRes = Http::timeout(3)->get($wikiUrl);
+                if ($wikiRes->successful()) {
+                    $pages = $wikiRes->json()['query']['pages'] ?? [];
+                    foreach ($pages as $p) {
+                        if (!empty($p['thumbnail']['source'])) {
+                            return $p['thumbnail']['source'];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+
+            return null;
+        });
     }
 }

@@ -958,7 +958,11 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                 <template x-for="(act, idx) in (imdbData.actors || []).slice(0, 8)" :key="idx">
                                     <div class="p-2 rounded-xl bg-zinc-950 border border-white/10 flex items-center gap-2.5">
-                                        <img :src="act.photo_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150'" class="w-8 h-8 rounded-lg object-cover bg-zinc-900 border border-white/10 shrink-0">
+                                        <img :src="act.photo_url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'" 
+                                             referrerpolicy="no-referrer"
+                                             loading="lazy"
+                                             class="w-8 h-8 rounded-lg object-cover bg-zinc-900 border border-white/10 shrink-0"
+                                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">
                                         <div class="min-w-0">
                                             <p class="font-bold text-white text-[11px] truncate" x-text="act.name"></p>
                                             <p class="text-[10px] text-zinc-400 truncate" x-text="act.character_name || 'Cast'"></p>
