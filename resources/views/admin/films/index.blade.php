@@ -13,8 +13,25 @@
 
 <script>
 (function() {
+    const STORAGE_KEY = 'admin_selected_film_ids';
     const PAGE_IDS = [{{ $films->pluck('id')->implode(',') }}];
-    let selectedIds = new Set();
+
+    function getStoredIds() {
+        try {
+            const raw = sessionStorage.getItem(STORAGE_KEY);
+            return raw ? new Set(JSON.parse(raw).map(Number)) : new Set();
+        } catch (e) {
+            return new Set();
+        }
+    }
+
+    function saveStoredIds(set) {
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
+        } catch (e) {}
+    }
+
+    let selectedIds = getStoredIds();
 
     function updateUI() {
         const count = selectedIds.size;
@@ -33,13 +50,15 @@
         }
         if (countEl) countEl.textContent = count;
 
-        // Update header checkbox state
+        // Update header checkbox state based on current page items
         const headerChk = document.getElementById('chk-all');
+        const pageCount = PAGE_IDS.length;
+        const pageSelectedCount = PAGE_IDS.filter(id => selectedIds.has(id)).length;
         if (headerChk) {
-            if (PAGE_IDS.length > 0 && PAGE_IDS.every(id => selectedIds.has(id))) {
+            if (pageCount > 0 && pageSelectedCount === pageCount) {
                 headerChk.indeterminate = false;
                 headerChk.checked = true;
-            } else if (count > 0) {
+            } else if (pageSelectedCount > 0) {
                 headerChk.indeterminate = true;
                 headerChk.checked = false;
             } else {
@@ -48,7 +67,12 @@
             }
         }
 
-        // Update visual state of custom checkboxes
+        // Update checkboxes & visual state on current page
+        document.querySelectorAll('.film-chk').forEach(chk => {
+            const id = parseInt(chk.value);
+            chk.checked = selectedIds.has(id);
+        });
+
         document.querySelectorAll('.film-chk-visual').forEach(el => {
             const id = parseInt(el.dataset.id);
             const isChecked = selectedIds.has(id);
@@ -66,14 +90,15 @@
 
         // Update visual for header checkbox
         const headerVisual = document.getElementById('chk-all-visual');
-        const allChecked = PAGE_IDS.length > 0 && PAGE_IDS.every(id => selectedIds.has(id));
+        const allChecked = pageCount > 0 && pageSelectedCount === pageCount;
+        const someChecked = pageSelectedCount > 0 && !allChecked;
         if (headerVisual) {
-            headerVisual.classList.toggle('bg-amber-400', allChecked);
-            headerVisual.classList.toggle('border-amber-400', allChecked);
-            headerVisual.classList.toggle('bg-zinc-950', !allChecked);
-            headerVisual.classList.toggle('border-white/20', !allChecked);
+            headerVisual.classList.toggle('bg-amber-400', allChecked || someChecked);
+            headerVisual.classList.toggle('border-amber-400', allChecked || someChecked);
+            headerVisual.classList.toggle('bg-zinc-950', !allChecked && !someChecked);
+            headerVisual.classList.toggle('border-white/20', !allChecked && !someChecked);
             const svg = headerVisual.querySelector('svg');
-            if (svg) svg.style.display = allChecked ? 'block' : 'none';
+            if (svg) svg.style.display = (allChecked || someChecked) ? 'block' : 'none';
         }
 
         // Update hidden inputs for bulk form
@@ -92,37 +117,45 @@
 
     function clearAll() {
         selectedIds.clear();
+        saveStoredIds(selectedIds);
         updateUI();
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        selectedIds.clear();
-
         const headerChk = document.getElementById('chk-all');
         if (headerChk) {
-            headerChk.checked = false;
             headerChk.addEventListener('change', function () {
                 if (this.checked) {
                     PAGE_IDS.forEach(id => selectedIds.add(id));
                 } else {
                     PAGE_IDS.forEach(id => selectedIds.delete(id));
                 }
+                saveStoredIds(selectedIds);
                 updateUI();
             });
         }
 
         document.querySelectorAll('.film-chk').forEach(chk => {
-            chk.checked = false;
+            const id = parseInt(chk.value);
+            chk.checked = selectedIds.has(id);
             chk.addEventListener('change', function () {
-                const id = parseInt(this.value);
-                if (this.checked) selectedIds.add(id);
-                else selectedIds.delete(id);
+                const val = parseInt(this.value);
+                if (this.checked) selectedIds.add(val);
+                else selectedIds.delete(val);
+                saveStoredIds(selectedIds);
                 updateUI();
             });
         });
 
         const clearBtn = document.getElementById('bulk-clear');
         if (clearBtn) clearBtn.addEventListener('click', clearAll);
+
+        const bulkForm = document.getElementById('bulk-delete-form');
+        if (bulkForm) {
+            bulkForm.addEventListener('submit', function() {
+                sessionStorage.removeItem(STORAGE_KEY);
+            });
+        }
 
         updateUI();
     });
