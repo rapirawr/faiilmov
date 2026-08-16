@@ -242,21 +242,38 @@
                         <button type="button" 
                                 @click="toggleTranslate()"
                                 :disabled="isTranslating"
-                                :class="isTranslated ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400' : 'glass-chip text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30'"
-                                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50">
-                            <i data-lucide="loader-2" x-show="isTranslating" class="w-3.5 h-3.5 animate-spin"></i>
-                            <i data-lucide="languages" x-show="!isTranslating" class="w-3.5 h-3.5"></i>
+                                :class="isTranslated ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm disabled:opacity-50 group">
+                            <template x-if="isTranslating">
+                                <svg class="animate-spin w-3.5 h-3.5 text-amber-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!isTranslating">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0" :class="isTranslated ? 'text-zinc-950' : 'text-amber-400'">
+                                    <path d="m5 8 6 6"/>
+                                    <path d="m4 14 6-6 2-3"/>
+                                    <path d="M2 5h12"/>
+                                    <path d="M7 2h1"/>
+                                    <path d="m22 22-5-10-5 10"/>
+                                    <path d="M14 18h6"/>
+                                </svg>
+                            </template>
                             <span x-text="isTranslating ? 'Menerjemahkan...' : (isTranslated ? 'Tampilkan Asli' : 'Terjemahkan (ID)')"></span>
                         </button>
 
                         <!-- AI Summary Toggle Button -->
                         <button type="button" 
                                 @click="toggleAiSummary()"
-                                :class="showAiSummary ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 font-extrabold shadow-lg shadow-amber-500/20' : 'bg-gradient-to-r from-amber-500/10 to-purple-500/10 hover:from-amber-500/20 hover:to-purple-500/20 text-amber-300 border border-amber-500/30'"
-                                class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="showAiSummary ? 'text-zinc-950' : 'text-amber-400'"></i>
+                                :class="showAiSummary ? 'bg-amber-500 text-zinc-950 font-extrabold shadow-lg shadow-amber-500/25 border-amber-400' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 hover:border-amber-400/50'"
+                                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-sm group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" :class="showAiSummary ? 'text-zinc-950 fill-zinc-950' : 'text-amber-400 fill-amber-400'">
+                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            </svg>
                             <span>Ringkasan AI</span>
-                            <span x-show="!showAiSummary" class="text-[9px] font-extrabold uppercase px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 ml-0.5">TL;DR</span>
+                            <span :class="showAiSummary ? 'bg-zinc-950/20 text-zinc-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'" 
+                                  class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none tracking-wide">TL;DR</span>
                         </button>
                     </div>
                 </div>
