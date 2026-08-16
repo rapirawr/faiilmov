@@ -1255,6 +1255,7 @@
             clickTimer: null,
             isMiniPlayer: false,
             isMiniDismissed: false,
+            adblockBlocked: false,
 
             get audioTrackBadgeText() {
                 if (this.audioTracks.length > 1) {
@@ -1524,10 +1525,21 @@
                         }
                     }
 
-                    // Audio Dubs Auto-Fetch
-                    if (this.audioTracks.length === 0) {
-                        this.fetchAudioTracks();
-                    }
+                    // Anti-Adblock Integration Listener
+                    window.addEventListener('faiilmov:adblock-status', (e) => {
+                        this.adblockBlocked = !!e.detail?.blocked;
+                        if (this.adblockBlocked) {
+                            if (this.$refs.video) {
+                                this.$refs.video.pause();
+                                this.$refs.video.muted = true;
+                            }
+                            this.isPlaying = false;
+                        } else {
+                            if (this.$refs.video) {
+                                this.$refs.video.muted = this.isMuted;
+                            }
+                        }
+                    });
 
                     lucide.createIcons();
                 });
@@ -1771,6 +1783,12 @@
             },
 
             safePlay() {
+                if (this.adblockBlocked) {
+                    if (this.$refs.video) this.$refs.video.pause();
+                    this.isPlaying = false;
+                    return;
+                }
+
                 const video = this.$refs.video;
                 if (!video) return;
                 const promise = video.play();
@@ -1798,6 +1816,12 @@
             },
 
             togglePlay() {
+                if (this.adblockBlocked) {
+                    if (this.$refs.video) this.$refs.video.pause();
+                    this.isPlaying = false;
+                    return;
+                }
+
                 const video = this.$refs.video;
                 if (!video) return;
 
