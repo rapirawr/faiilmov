@@ -45,21 +45,6 @@
         </div>
     </div>
 
-    <!-- Alert Success / Error -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <i data-lucide="check-circle" class="w-4 h-4 shrink-0"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold flex items-center gap-2">
-            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
-
     <!-- Stat Cards Bar -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
         <a href="{{ route('admin.film-requests.index', ['all' => 1]) }}" class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all hover:scale-[1.02] group {{ request('all') ? 'border-amber-500/40 bg-amber-500/5' : 'border-white/10' }}">

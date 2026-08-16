@@ -6,25 +6,6 @@
 @section('content')
 <div class="space-y-6" x-data="changelogIndexImporter">
 
-    <!-- Flash Alerts System -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-between text-sm shadow-sm">
-            <div class="flex items-center gap-3">
-                <i data-lucide="check-circle-2" class="w-5 h-5 shrink-0 text-emerald-400"></i>
-                <span class="font-semibold">{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-between text-sm shadow-sm">
-            <div class="flex items-center gap-3">
-                <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-rose-400"></i>
-                <span class="font-semibold">{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
-
     <!-- Top Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         

@@ -6,25 +6,6 @@
 @section('content')
 <div class="max-w-5xl mx-auto space-y-6">
 
-    <!-- Flash Alerts System -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-between text-sm shadow-sm">
-            <div class="flex items-center gap-3">
-                <i data-lucide="check-circle-2" class="w-5 h-5 shrink-0 text-emerald-400"></i>
-                <span class="font-semibold">{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-between text-sm shadow-sm">
-            <div class="flex items-center gap-3">
-                <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-rose-400"></i>
-                <span class="font-semibold">{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
-
     <!-- Status Banner: Versi Rilis Aktif (Standardized Semantic Badges) -->
     <div class="p-6 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-xl space-y-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
