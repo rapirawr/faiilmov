@@ -139,8 +139,10 @@
     <!-- Persistent Global Cross-Page Floating Mini Player Component -->
     <x-global-mini-player />
 
-    <!-- Reusable Welcome / Benefit Info Modal Component -->
-    <x-welcome-modal />
+    @unless(View::hasSection('hide_welcome_modal') || View::hasSection('hide_navbar'))
+        <!-- Reusable Welcome / Benefit Info Modal Component -->
+        <x-welcome-modal />
+    @endunless
 
     <!-- Real-time Device Push Notification & In-App Toast Manager -->
     <x-device-notification-manager />

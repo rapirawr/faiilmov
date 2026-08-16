@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('title', ($title ?? 'Akses Ditolak') . ' — faiilmov')
+@section('hide_navbar', true)
+@section('hide_sidebar', true)
+@section('hide_footer', true)
+@section('hide_welcome_modal', true)
 
 @section('content')
 <div class="min-h-[75vh] flex items-center justify-center px-4 py-12 relative z-10">

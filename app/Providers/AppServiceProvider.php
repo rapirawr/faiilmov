@@ -52,10 +52,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perDay(5)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Shared Welcome Modal Visibility Logic (Disabled on auth pages)
+        // Shared Welcome Modal Visibility Logic (Disabled on auth pages & error pages)
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
+            $viewName = $view->getName();
+            $isErrorPage = str_starts_with($viewName, 'errors.') || request()->is('errors*');
             $isAuthPage = request()->is('login*', 'register*', 'password*', 'auth*') || request()->routeIs('login', 'register', 'password.*');
-            $shouldShow = !$isAuthPage && (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()?->has_seen_welcome_modal);
+            $shouldShow = !$isErrorPage && !$isAuthPage && (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()?->has_seen_welcome_modal);
             $view->with('shouldShowWelcomeModal', $shouldShow);
         });
 

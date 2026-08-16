@@ -4,6 +4,7 @@
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)
+@section('hide_welcome_modal', true)
 
 @section('content')
 <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative z-10 overflow-hidden">
