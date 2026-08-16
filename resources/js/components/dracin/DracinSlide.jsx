@@ -219,7 +219,7 @@ export default function DracinSlide({
   };
 
   const handleContainerClick = () => {
-    togglePlay();
+    setShowControls(prev => !prev);
   };
 
   const handleProgressBarClick = (e) => {

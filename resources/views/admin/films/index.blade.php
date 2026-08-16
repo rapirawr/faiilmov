@@ -247,44 +247,86 @@
             </div>
 
             <!-- Type Filter Dropdown -->
-            <select name="type" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="">Semua Tipe</option>
-                <option value="movie" {{ request('type') === 'movie' ? 'selected' : '' }}>🎬 Movie</option>
-                <option value="series" {{ request('type') === 'series' ? 'selected' : '' }}>📺 Series</option>
-                <option value="dracin" {{ request('type') === 'dracin' ? 'selected' : '' }}>🌸 Dracin</option>
-            </select>
+            <div class="w-36">
+                <x-custom-dropdown 
+                    name="type" 
+                    :value="request('type', '')" 
+                    :options="[
+                        '' => 'Semua Tipe',
+                        'movie' => '🎬 Movie',
+                        'series' => '📺 Series',
+                        'dracin' => '🌸 Dracin',
+                    ]" 
+                    placeholder="Semua Tipe" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Coming Soon Status Filter Dropdown -->
-            <select name="coming_soon" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="">Semua Status Rilis</option>
-                <option value="yes" {{ request('coming_soon') === 'yes' ? 'selected' : '' }}>⏳ Coming Soon</option>
-                <option value="no" {{ request('coming_soon') === 'no' ? 'selected' : '' }}>✅ Sudah Rilis</option>
-            </select>
+            <div class="w-44">
+                <x-custom-dropdown 
+                    name="coming_soon" 
+                    :value="request('coming_soon', '')" 
+                    :options="[
+                        '' => 'Semua Status Rilis',
+                        'yes' => '⏳ Coming Soon',
+                        'no' => '✅ Sudah Rilis',
+                    ]" 
+                    placeholder="Semua Status" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Content Rating Filter Dropdown -->
-            <select name="content_rating" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="">Semua Usia</option>
-                <option value="SU" {{ request('content_rating') === 'SU' ? 'selected' : '' }}>🟢 SU (Semua Umur)</option>
-                <option value="13+" {{ request('content_rating') === '13+' ? 'selected' : '' }}>🔵 13+</option>
-                <option value="16+" {{ request('content_rating') === '16+' ? 'selected' : '' }}>🟠 16+</option>
-                <option value="18+" {{ request('content_rating') === '18+' ? 'selected' : '' }}>🔴 18+</option>
-                <option value="UNRATED" {{ request('content_rating') === 'UNRATED' ? 'selected' : '' }}>⚪ Unrated (Kosong)</option>
-            </select>
+            <div class="w-44">
+                <x-custom-dropdown 
+                    name="content_rating" 
+                    :value="request('content_rating', '')" 
+                    :options="[
+                        '' => 'Semua Usia',
+                        'SU' => '🟢 SU (Semua Umur)',
+                        '13+' => '🔵 13+',
+                        '16+' => '🟠 16+',
+                        '18+' => '🔴 18+',
+                        'UNRATED' => '⚪ Unrated',
+                    ]" 
+                    placeholder="Semua Usia" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Genre Filter Dropdown -->
-            <select name="genre" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer max-w-[140px]">
-                <option value="">Semua Genre</option>
-                @foreach($genres as $g)
-                    <option value="{{ $g->id }}" {{ request('genre') == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
-                @endforeach
-            </select>
+            @php
+                $adminGenreOpts = ['' => 'Semua Genre'];
+                foreach($genres as $g) {
+                    $adminGenreOpts[(string)$g->id] = $g->name;
+                }
+            @endphp
+            <div class="w-40">
+                <x-custom-dropdown 
+                    name="genre" 
+                    :value="request('genre', '')" 
+                    :options="$adminGenreOpts" 
+                    placeholder="Semua Genre" 
+                    :searchable="count($genres) > 8"
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Sort Dropdown -->
-            <select name="sort" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="latest" {{ request('sort') === 'latest' ? 'selected' : '' }}>Terbaru</option>
-                <option value="rating" {{ request('sort') === 'rating' ? 'selected' : '' }}>Rating Tertinggi</option>
-                <option value="views" {{ request('sort') === 'views' ? 'selected' : '' }}>View Banyak</option>
-            </select>
+            <div class="w-40">
+                <x-custom-dropdown 
+                    name="sort" 
+                    :value="request('sort', 'latest')" 
+                    :options="[
+                        'latest' => '🕒 Terbaru',
+                        'rating' => '⭐ Rating Tertinggi',
+                        'views' => '👁️ View Terbanyak',
+                    ]" 
+                    placeholder="Urutkan" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Reset Filter Button -->
             @if(request()->hasAny(['search', 'type', 'content_rating', 'genre', 'sort']))

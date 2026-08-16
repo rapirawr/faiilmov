@@ -115,6 +115,8 @@
     <!-- Content Sections Container -->
     <div class="px-4 sm:px-8 space-y-10">
 
+
+
         <!-- CONTINUE WATCHING Section -->
         @if(isset($continueWatching) && is_countable($continueWatching) && count($continueWatching) > 0)
             <section x-data="{
@@ -260,6 +262,10 @@
             </section>
         @endif
 
+        @if(isset($featureBanners) && $featureBanners->isNotEmpty())
+            <div id="react-feature-banner" data-banners="{{ json_encode($featureBanners->values()) }}"></div>
+        @endif
+
         <!-- 1. Popular Series Row -->
         @if(isset($popularSeries) && is_countable($popularSeries) && count($popularSeries) > 0)
             <section x-data="{
@@ -365,6 +371,8 @@
                 </div>
             </section>
         @endif
+
+
 
         <!-- 3. Curved Bridge Filter Bar & Full Catalog Grid Section -->
         <section id="catalog-section" x-data="catalogAjax()" class="space-y-6 pt-4 relative">

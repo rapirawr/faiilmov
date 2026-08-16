@@ -35,11 +35,19 @@
                        class="w-full bg-transparent text-xs text-white placeholder-zinc-500 border-none outline-none focus:ring-0">
             </div>
 
-            <select name="status" onchange="this.form.submit()" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="">Semua Status</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>🟢 Aktif (Sedang Berjalan)</option>
-                <option value="ended" {{ request('status') === 'ended' ? 'selected' : '' }}>⚪ Selesai / Ditutup</option>
-            </select>
+            <div class="w-56">
+                <x-custom-dropdown 
+                    name="status" 
+                    :value="request('status', '')" 
+                    :options="[
+                        '' => 'Semua Status Ruangan',
+                        'active' => '🟢 Aktif (Sedang Berjalan)',
+                        'ended' => '⚪ Selesai / Ditutup',
+                    ]" 
+                    placeholder="Semua Status" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             @if(request()->hasAny(['search', 'status']))
                 <a href="{{ route('admin.watch_parties.index') }}" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors" title="Reset Filter">

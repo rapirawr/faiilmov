@@ -54,33 +54,53 @@
             <!-- Genre Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Genre</label>
-                <select name="genre" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
-                    <option value="">Semua Genre</option>
-                    @foreach($genres as $g)
-                        <option value="{{ $g->slug }}" {{ request('genre') == $g->slug ? 'selected' : '' }}>{{ $g->name }}</option>
-                    @endforeach
-                </select>
+                @php
+                    $genreOptions = ['' => 'Semua Genre'];
+                    foreach($genres as $g) {
+                        $genreOptions[$g->slug] = $g->name;
+                    }
+                @endphp
+                <x-custom-dropdown 
+                    name="genre" 
+                    :value="request('genre', '')" 
+                    :options="$genreOptions" 
+                    placeholder="Semua Genre" 
+                    variant="glass"
+                    :searchable="count($genres) > 8"
+                />
             </div>
 
             <!-- Min Rating Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Minimal Rating</label>
-                <select name="min_rating" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
-                    <option value="">Semua Rating</option>
-                    <option value="4.5" {{ request('min_rating') == '4.5' ? 'selected' : '' }}>⭐ 4.5 ke atas</option>
-                    <option value="4.0" {{ request('min_rating') == '4.0' ? 'selected' : '' }}>⭐ 4.0 ke atas</option>
-                    <option value="3.0" {{ request('min_rating') == '3.0' ? 'selected' : '' }}>⭐ 3.0 ke atas</option>
-                </select>
+                <x-custom-dropdown 
+                    name="min_rating" 
+                    :value="request('min_rating', '')" 
+                    :options="[
+                        '' => 'Semua Rating',
+                        '4.5' => '⭐ 4.5 ke atas',
+                        '4.0' => '⭐ 4.0 ke atas',
+                        '3.0' => '⭐ 3.0 ke atas',
+                    ]" 
+                    placeholder="Semua Rating" 
+                    variant="glass"
+                />
             </div>
 
             <!-- Sorting Select -->
             <div>
                 <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Urutkan</label>
-                <select name="sort" class="w-full bg-dark-950/70 backdrop-blur-md text-xs text-white px-3 py-2.5 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30 truncate">
-                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
-                    <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>Rating Tertinggi</option>
-                    <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Judul (A-Z)</option>
-                </select>
+                <x-custom-dropdown 
+                    name="sort" 
+                    :value="request('sort', 'latest')" 
+                    :options="[
+                        'latest' => 'Terbaru',
+                        'rating_desc' => 'Rating Tertinggi',
+                        'title_asc' => 'Judul (A-Z)',
+                    ]" 
+                    placeholder="Urutkan" 
+                    variant="glass"
+                />
             </div>
 
             <!-- Submit Filter Button -->
@@ -177,6 +197,25 @@
         </div>
     @endif
 
+    <!-- Request Film CTA Card (Shown when results are sparse < 5 or empty) -->
+    @if($films->count() < 5)
+        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl my-6">
+            <div class="flex items-center gap-4 text-left">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-serif font-bold text-base text-white">Gak nemu film atau series yang kamu cari?</h3>
+                    <p class="text-xs text-zinc-400 mt-1">Kirim request film, dan sistem otomatis kami akan mencarikannya untukmu!</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.openFilmRequestModal({ title: '{{ addslashes(request('q', '')) }}', type: '{{ request('type', 'movie') }}' })" class="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center gap-2 transition-all shadow-lg shrink-0 cursor-pointer">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Request Film Sekarang</span>
+            </button>
+        </div>
+    @endif
+
     <!-- Separate Section: AI Recommendations based on Mood / Genre -->
     @if(isset($aiRecommendations) && $aiRecommendations->count() > 0)
         <div class="mt-14 pt-8 border-t border-white/10">
@@ -196,6 +235,9 @@
             </div>
         </div>
     @endif
+
+    <!-- React Film Request Modal Container -->
+    <div id="react-film-request-modal" data-csrf="{{ csrf_token() }}"></div>
 
 </div>
 @endsection

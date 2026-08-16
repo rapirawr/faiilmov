@@ -2100,15 +2100,17 @@
             },
 
             handleSingleClick(e) {
-                if (!this.isHost) return;
                 if (this.clickTimer) {
                     clearTimeout(this.clickTimer);
                     this.clickTimer = null;
                 } else {
                     this.clickTimer = setTimeout(() => {
-                        this.togglePlay();
+                        this.showControls = !this.showControls;
+                        if (this.showControls) {
+                            this.resetControlsTimeout();
+                        }
                         this.clickTimer = null;
-                    }, 320);
+                    }, 300);
                 }
             },
 

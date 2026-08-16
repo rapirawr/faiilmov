@@ -66,6 +66,59 @@ class NvidiaAiService
         });
     }
 
+    public function generateBannerCopywriting(string $topic): ?array
+    {
+        if (empty($this->apiKey)) {
+            return null;
+        }
+
+        try {
+            $systemPrompt = <<<PROMPT
+You are a professional UX copywriter for a movie streaming platform named "Faiilmov".
+Generate professional, concise, clean, non-cringe Indonesian banner copywriting based on the given topic. Do NOT use emojis or cheesy phrases.
+
+Output ONLY valid JSON:
+{
+  "badge_text": "SHORT BADGE IN UPPERCASE",
+  "title": "Compelling Title",
+  "description": "Clear concise description",
+  "placeholder_text": "Input placeholder text",
+  "button_text": "Action button text",
+  "action_type": "request_modal" or "url_link",
+  "bg_gradient": "amber_purple" or "emerald_teal" or "sky_indigo" or "rose_orange" or "cyber_neon"
+}
+PROMPT;
+
+            $response = Http::withToken($this->apiKey)
+                ->timeout($this->timeout + 3)
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => $this->llmModel,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => "Topic: {$topic}"]
+                    ],
+                    'temperature' => 0.4,
+                    'max_tokens' => 300,
+                ]);
+
+            if (!$response->successful()) {
+                return null;
+            }
+
+            $content = $response->json()['choices'][0]['message']['content'] ?? '';
+            if (preg_match('/```json\s*(.*?)\s*```/s', $content, $m)) {
+                $content = $m[1];
+            } elseif (preg_match('/```\s*(.*?)\s*```/s', $content, $m)) {
+                $content = $m[1];
+            }
+
+            return json_decode(trim($content), true);
+        } catch (Exception $e) {
+            Log::error('NVIDIA generateBannerCopywriting exception: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function generateEmbedding(string $text): ?array
     {
         if (empty($this->apiKey)) {

@@ -136,10 +136,13 @@ class HomeController extends Controller
             }
         }
 
+        $featureBanners = \App\Models\FeatureBanner::active()->ordered()->get();
+        $activeFeatureBanner = $featureBanners->first();
+
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return view('partials.catalog-grid', compact('films', 'searchQuery'));
         }
 
-        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'popularDracin', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery'));
+        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'popularDracin', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery', 'activeFeatureBanner', 'featureBanners'));
     }
 }

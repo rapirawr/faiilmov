@@ -5,8 +5,11 @@ import { initEcho } from './echo';
 import FilmCard from './components/FilmCard';
 import HeroBannerCarousel from './components/HeroBannerCarousel';
 import EpisodeSelector from './components/EpisodeSelector';
+import FilmRequestModal from './components/FilmRequestModal';
 import DracinFeed from './components/dracin/DracinFeed';
 import DracinCatalog from './components/dracin/DracinCatalog';
+
+import FeatureBannerRotator from './components/FeatureBannerRotator';
 
 // Make initEcho available globally and auto-initialize Echo
 window.initEcho = initEcho;
@@ -139,6 +142,33 @@ function initReactComponents() {
       console.error('Failed to mount FilmCard', e);
     }
   });
+
+  // 5. Mount Film Request Modal
+  const requestModalEl = document.getElementById('react-film-request-modal');
+  if (requestModalEl && !requestModalEl.dataset.mounted) {
+    try {
+      const initialTitle = requestModalEl.dataset.initialTitle || '';
+      const csrfToken = requestModalEl.dataset.csrf || '';
+      requestModalEl.dataset.mounted = 'true';
+      createRoot(requestModalEl).render(<FilmRequestModal initialTitle={initialTitle} csrfToken={csrfToken} />);
+    } catch (e) {
+      console.error('Failed to mount FilmRequestModal', e);
+    }
+  }
+
+  // 6. Mount Feature Banner Rotator (React 3D 4-Sided Cube)
+  const featureBannerEl = document.getElementById('react-feature-banner');
+  if (featureBannerEl && !featureBannerEl.dataset.mounted) {
+    try {
+      const banners = safeJsonParse(featureBannerEl.dataset.banners, []);
+      if (Array.isArray(banners) && banners.length > 0) {
+        featureBannerEl.dataset.mounted = 'true';
+        createRoot(featureBannerEl).render(<FeatureBannerRotator banners={banners} />);
+      }
+    } catch (e) {
+      console.error('Failed to mount FeatureBannerRotator', e);
+    }
+  }
 }
 
 // Auto mount when DOM is ready

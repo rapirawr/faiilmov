@@ -91,14 +91,22 @@
             </div>
 
             <!-- Status Filter -->
-            <select name="status" onchange="this.form.submit()" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="">Semua Pengguna Aktif</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>🟢 Aktif (Tidak Dibanned)</option>
-                <option value="banned" {{ request('status') === 'banned' ? 'selected' : '' }}>🔴 Banned / Suspend</option>
-                <option value="admin" {{ request('status') === 'admin' ? 'selected' : '' }}>👑 Administrator</option>
-                <option value="trashed" {{ request('status') === 'trashed' ? 'selected' : '' }}>🗑️ Dihapus (Soft Deleted / Sampah)</option>
-                <option value="all_with_trashed" {{ request('status') === 'all_with_trashed' ? 'selected' : '' }}>🌐 Semua (Termasuk Terhapus)</option>
-            </select>
+            <div class="w-64">
+                <x-custom-dropdown 
+                    name="status" 
+                    :value="request('status', '')" 
+                    :options="[
+                        '' => 'Semua Pengguna Aktif',
+                        'active' => '🟢 Aktif (Tidak Dibanned)',
+                        'banned' => '🔴 Banned / Suspend',
+                        'admin' => '👑 Administrator',
+                        'trashed' => '🗑️ Dihapus (Soft Deleted)',
+                        'all_with_trashed' => '🌐 Semua (Termasuk Terhapus)',
+                    ]" 
+                    placeholder="Semua Pengguna" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Reset Filter Button -->
             @if(request()->hasAny(['search', 'status']))

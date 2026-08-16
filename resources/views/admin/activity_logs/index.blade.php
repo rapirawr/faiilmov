@@ -18,24 +18,40 @@
             </div>
 
             <!-- Category Filter -->
-            <select name="category" onchange="this.form.submit()" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40 cursor-pointer">
-                <option value="">Semua Kategori Aksi</option>
-                <option value="film" {{ request('category') === 'film' ? 'selected' : '' }}>🎬 Film & Dracin</option>
-                <option value="user" {{ request('category') === 'user' ? 'selected' : '' }}>👤 User & Ban</option>
-                <option value="review" {{ request('category') === 'review' ? 'selected' : '' }}>💬 Ulasan & Moderasi</option>
-                <option value="script" {{ request('category') === 'script' ? 'selected' : '' }}>💻 Script Runner</option>
-                <option value="settings" {{ request('category') === 'settings' ? 'selected' : '' }}>⚙️ Pengaturan</option>
-                <option value="actor" {{ request('category') === 'actor' ? 'selected' : '' }}>🎭 Aktor & Cast</option>
-                <option value="genre" {{ request('category') === 'genre' ? 'selected' : '' }}>🏷️ Genre</option>
-            </select>
+            <div class="w-56">
+                <x-custom-dropdown 
+                    name="category" 
+                    :value="request('category', '')" 
+                    :options="[
+                        '' => 'Semua Kategori Aksi',
+                        'film' => '🎬 Film & Dracin',
+                        'user' => '👤 User & Ban',
+                        'review' => '💬 Ulasan & Moderasi',
+                        'script' => '💻 Script Runner',
+                        'settings' => '⚙️ Pengaturan',
+                        'actor' => '🎭 Aktor & Cast',
+                        'genre' => '🏷️ Genre',
+                    ]" 
+                    placeholder="Semua Kategori" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             <!-- Timeframe Filter -->
-            <select name="timeframe" onchange="this.form.submit()" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40 cursor-pointer">
-                <option value="">Semua Waktu</option>
-                <option value="today" {{ request('timeframe') === 'today' ? 'selected' : '' }}>Hari Ini</option>
-                <option value="7d" {{ request('timeframe') === '7d' ? 'selected' : '' }}>7 Hari Terakhir</option>
-                <option value="30d" {{ request('timeframe') === '30d' ? 'selected' : '' }}>30 Hari Terakhir</option>
-            </select>
+            <div class="w-44">
+                <x-custom-dropdown 
+                    name="timeframe" 
+                    :value="request('timeframe', '')" 
+                    :options="[
+                        '' => 'Semua Waktu',
+                        'today' => 'Hari Ini',
+                        '7d' => '7 Hari Terakhir',
+                        '30d' => '30 Hari Terakhir',
+                    ]" 
+                    placeholder="Semua Waktu" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             @if(request()->hasAny(['search', 'category', 'timeframe']))
                 <a href="{{ route('admin.activity_logs.index') }}" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors" title="Reset Filter">

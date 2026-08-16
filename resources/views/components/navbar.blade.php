@@ -230,6 +230,14 @@
             <span>App Mobile</span>
         </a>
 
+        @auth   
+        <!-- Request Film Capsule Action -->
+        <button type="button" onclick="window.openFilmRequestModal()" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-400/30 text-amber-300 border border-amber-500/40 hover:border-amber-400 transition-all text-xs font-bold shadow-md cursor-pointer group hover:scale-105" title="Request Film / Series Baru">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-amber-400 group-hover:rotate-90 transition-transform duration-300"></i>
+            <span>Request Film</span>
+        </button>
+        @endauth
+        
         @auth
             @php
                 $activeProfile = Auth::user()->activeProfile();

@@ -199,6 +199,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/parental/set-pin', [ParentalControlController::class, 'setPin'])->name('parental.set-pin');
     Route::post('/parental/set-max-rating', [ParentalControlController::class, 'setMaxRating'])->name('parental.set-max-rating');
     Route::get('/parental/check-content/{film}', [ParentalControlController::class, 'isContentAllowed'])->name('parental.check-content');
+
+    // Film Requests (User Web Actions)
+    Route::post('/film-requests', [\App\Http\Controllers\Api\FilmRequestApiController::class, 'store'])->middleware('throttle:film-request')->name('film-requests.store');
+    Route::get('/film-requests/mine', [\App\Http\Controllers\Api\FilmRequestApiController::class, 'myRequests'])->name('film-requests.mine');
 });
 
 // Admin Panel Routes
@@ -206,6 +210,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
     Route::get('/quick-search', [AdminDashboardController::class, 'quickSearch'])->name('quick_search');
+
+    // Film Requests Management
+    Route::get('/film-requests', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'index'])->name('film-requests.index');
+    Route::post('/film-requests/bulk-reject', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'bulkReject'])->name('film-requests.bulk_reject');
+    Route::post('/film-requests/{filmRequest}/resolve', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'resolve'])->name('film-requests.resolve');
+    Route::post('/film-requests/{filmRequest}/reject', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'reject'])->name('film-requests.reject');
+    Route::patch('/film-requests/{filmRequest}/status', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'updateStatus'])->name('film-requests.update_status');
+
+    // Feature Banners CMS Management
+    Route::get('/feature-banners', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'index'])->name('feature-banners.index');
+    Route::post('/feature-banners', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'store'])->name('feature-banners.store');
+    Route::post('/feature-banners/generate-ai', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'generateAi'])->name('feature-banners.generate_ai');
+    Route::put('/feature-banners/{featureBanner}', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'update'])->name('feature-banners.update');
+    Route::patch('/feature-banners/{featureBanner}/toggle', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'toggleActive'])->name('feature-banners.toggle');
+    Route::delete('/feature-banners/{featureBanner}', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'destroy'])->name('feature-banners.destroy');
 
     // Film Management
     Route::post('/films/sync-api', [AdminFilmController::class, 'syncApi'])->name('films.sync_api');

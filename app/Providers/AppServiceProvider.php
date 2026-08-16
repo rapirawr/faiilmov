@@ -48,6 +48,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('film-request', function (Request $request) {
+            return Limit::perDay(5)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Shared Welcome Modal Visibility Logic (Disabled on auth pages)
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
             $isAuthPage = request()->is('login*', 'register*', 'password*', 'auth*') || request()->routeIs('login', 'register', 'password.*');
@@ -59,11 +63,13 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\View::composer(['layouts.admin', 'admin.*'], function ($view) {
             if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->isAdmin()) {
                 $pendingReportsCount = \App\Models\ReviewReport::where('status', 'pending')->count();
+                $pendingRequestsCount = \App\Models\FilmRequest::where('status', 'pending')->count();
                 $activeWatchPartiesCount = \App\Models\WatchParty::where('status', 'active')->count();
                 $recentAdminLogs = \App\Models\AdminActivityLog::with('admin')->latest()->take(6)->get();
 
                 $view->with([
                     'adminPendingReportsCount' => $pendingReportsCount,
+                    'adminPendingRequestsCount' => $pendingRequestsCount,
                     'adminActiveWatchPartiesCount' => $activeWatchPartiesCount,
                     'adminRecentActivityLogs' => $recentAdminLogs,
                 ]);

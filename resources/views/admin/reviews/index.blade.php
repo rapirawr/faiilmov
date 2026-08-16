@@ -34,11 +34,19 @@
                        class="w-full min-w-0 bg-transparent text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
             </div>
 
-            <select name="filter" onchange="this.form.submit()" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="latest" {{ request('filter') === 'latest' ? 'selected' : '' }}>Terbaru</option>
-                <option value="reported" {{ request('filter') === 'reported' ? 'selected' : '' }}>🚨 Di-Report User</option>
-                <option value="lowest_rating" {{ request('filter') === 'lowest_rating' ? 'selected' : '' }}>Rating Terendah</option>
-            </select>
+            <div class="w-48">
+                <x-custom-dropdown 
+                    name="filter" 
+                    :value="request('filter', 'latest')" 
+                    :options="[
+                        'latest' => '🕒 Terbaru',
+                        'reported' => '🚨 Di-Report User',
+                        'lowest_rating' => '⭐ Rating Terendah',
+                    ]" 
+                    placeholder="Filter Ulasan" 
+                    :autoSubmit="true"
+                />
+            </div>
 
             @if(request()->hasAny(['search', 'filter']))
                 <a href="{{ route('admin.reviews.index') }}" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors" title="Reset Filter">

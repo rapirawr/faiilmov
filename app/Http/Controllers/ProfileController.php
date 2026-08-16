@@ -54,7 +54,9 @@ class ProfileController extends Controller
         arsort($genreCounts);
         $topGenre = !empty($genreCounts) ? array_key_first($genreCounts) : 'Beragam';
 
-        return view('profile', compact('user', 'activeProfile', 'watchlists', 'reviews', 'watchHistories', 'totalHoursWatched', 'topGenre'));
+        $filmRequests = $user->filmRequests()->with('matchedFilm')->orderByDesc('created_at')->get();
+
+        return view('profile', compact('user', 'activeProfile', 'watchlists', 'reviews', 'watchHistories', 'totalHoursWatched', 'topGenre', 'filmRequests'));
     }
 
     public function update(Request $request)

@@ -141,6 +141,35 @@
                                 </a>
                             </div>
 
+                            <!-- Request Film -->
+                            <div class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.film-requests.index') }}" 
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.film-requests.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="inbox" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Request Film</span>
+                                    </div>
+                                    @if(($adminPendingRequestsCount ?? 0) > 0)
+                                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-black">
+                                            {{ $adminPendingRequestsCount }}
+                                        </span>
+                                    @endif
+                                </a>
+                            </div>
+
+                            <!-- Banner Fitur (CMS) -->
+                            <div class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.feature-banners.index') }}" 
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.feature-banners.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="layout-template" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Banner Fitur (CMS)</span>
+                                    </div>
+                                </a>
+                            </div>
+
                             <!-- Rating Massal -->
                             <div class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>

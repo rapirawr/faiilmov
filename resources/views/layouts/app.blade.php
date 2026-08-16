@@ -298,6 +298,9 @@
             }
         }
     </script>
+    <!-- Global React Film Request Modal Container -->
+    <div id="react-film-request-modal" data-csrf="{{ csrf_token() }}"></div>
+
     @stack('scripts')
 </body>
 </html>

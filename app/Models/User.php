@@ -93,6 +93,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function filmRequests()
+    {
+        return $this->belongsToMany(FilmRequest::class, 'film_request_user')->withTimestamps();
+    }
+
     public function unreadNotifications()
     {
         return $this->notifications()->where('is_read', false);

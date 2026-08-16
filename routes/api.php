@@ -127,5 +127,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::post('/watch-party/{roomCode}/message', [MobileApiController::class, 'sendWatchPartyMessageApi']);
     Route::post('/watch-party/{roomCode}/reaction', [MobileApiController::class, 'sendWatchPartyReactionApi']);
     Route::post('/watch-party/{roomCode}/leave', [MobileApiController::class, 'leaveWatchPartyApi']);
+    // ---------------------------------------------------------
+    // 15. FILM REQUESTS API
+    // ---------------------------------------------------------
+    Route::post('/film-requests', [\App\Http\Controllers\Api\FilmRequestApiController::class, 'store'])->middleware(['auth:sanctum', 'throttle:film-request']);
+    Route::get('/film-requests/mine', [\App\Http\Controllers\Api\FilmRequestApiController::class, 'myRequests'])->middleware('auth:sanctum');
 });
 
