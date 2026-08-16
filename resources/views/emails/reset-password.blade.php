@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Reset Password — faiilmov</title>
+    <title>Reset Password | faiilmov</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f0f; color: #e4e4e7; line-height: 1.6; }
@@ -62,7 +62,7 @@
             </div>
 
             <p class="main-text" style="font-size: 13px;">
-                Jika Anda tidak meminta reset password, abaikan email ini — akun Anda tetap aman dan tidak ada perubahan yang dilakukan.
+                Jika Anda tidak meminta reset password, abaikan email ini | akun Anda tetap aman dan tidak ada perubahan yang dilakukan.
             </p>
 
             <hr class="divider">

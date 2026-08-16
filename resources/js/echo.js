@@ -14,7 +14,7 @@ window.Pusher = Pusher;
 
 /**
  * Initialize Laravel Echo with Pusher driver.
- * Called explicitly — not auto-executed — so the app can decide when to connect.
+ * Called explicitly | not auto-executed | so the app can decide when to connect.
  *
  * @returns {Echo|null} Echo instance, or null if Pusher is not configured.
  */

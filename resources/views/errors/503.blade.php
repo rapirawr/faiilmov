@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '503 — Sedang Pemeliharaan | faiilmov')
+@section('title', '503 | Sedang Pemeliharaan | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)

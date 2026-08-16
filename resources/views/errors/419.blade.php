@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '419 — Sesi Halaman Berakhir | faiilmov')
+@section('title', '419 | Sesi Halaman Berakhir | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)
@@ -33,7 +33,7 @@
         <!-- Tag -->
         <div class="mb-3">
             <span class="text-xs font-bold uppercase tracking-widest text-blue-400 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-                Error 419 — Sesi Berakhir
+                Error 419 | Sesi Berakhir
             </span>
         </div>
 

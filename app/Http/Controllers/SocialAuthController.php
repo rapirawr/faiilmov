@@ -63,7 +63,7 @@ class SocialAuthController extends Controller
         }
 
         try {
-            // Look up by provider + provider_id first (fastest path — returning social user)
+            // Look up by provider + provider_id first (fastest path | returning social user)
             $user = User::where('provider', $provider)
                 ->where('provider_id', $socialUser->getId())
                 ->first();
@@ -87,7 +87,7 @@ class SocialAuthController extends Controller
                         'provider_id' => $socialUser->getId(),
                     ]);
                 } else {
-                    // New user — create account with random secure password (since DB column is NOT NULL)
+                    // New user | create account with random secure password (since DB column is NOT NULL)
                     $user = User::create([
                         'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
                         'email'             => $socialUser->getEmail(),

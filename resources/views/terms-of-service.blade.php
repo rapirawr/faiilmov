@@ -232,7 +232,7 @@
                             faiilmov memberikan Anda lisensi yang terbatas, non-eksklusif, dan tidak dapat dipindahtangankan untuk mengakses dan menonton konten yang tersedia <strong>hanya untuk keperluan pribadi dan non-komersial</strong>.
                         </p>
                     </div>
-                    <p>Konten yang tersedia di platform faiilmov — termasuk film, series, poster, metadata, dan deskripsi sinopsi — <strong class="text-white">dilindungi oleh hak kekayaan intelektual</strong> yang dimiliki atau dilisensikan kepada faiilmov. Anda dilarang keras:</p>
+                    <p>Konten yang tersedia di platform faiilmov | termasuk film, series, poster, metadata, dan deskripsi sinopsi | <strong class="text-white">dilindungi oleh hak kekayaan intelektual</strong> yang dimiliki atau dilisensikan kepada faiilmov. Anda dilarang keras:</p>
                     <ul class="space-y-1.5 text-xs text-zinc-400 list-disc list-inside">
                         <li>Mengunduh, merekam layar, atau menyimpan konten streaming secara tidak sah.</li>
                         <li>Mendistribusikan, menjual, atau menyiarkan ulang konten kepada pihak ketiga.</li>
@@ -389,7 +389,7 @@
                     </div>
                 </div>
                 <div class="text-sm text-zinc-300 leading-relaxed space-y-3 pt-2">
-                    <p>faiilmov berhak menangguhkan atau mengakhiri akun pengguna—baik sementara maupun permanen—apabila terdapat indikasi:</p>
+                    <p>faiilmov berhak menangguhkan atau mengakhiri akun pengguna | baik sementara maupun permanen | apabila terdapat indikasi:</p>
                     <ul class="space-y-2 text-zinc-400 list-disc list-inside text-xs">
                         <li>Pelanggaran terhadap pasal-pasal dalam Syarat & Ketentuan ini.</li>
                         <li>Aktivitas penipuan, pencurian identitas, atau penyalahgunaan sistem autentikasi.</li>

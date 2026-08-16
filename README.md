@@ -18,13 +18,13 @@
 
 **Faiilmov** adalah platform streaming full-featured yang dibangun di atas Laravel 13.8 + React 19. Mendukung film, serial TV, dan drama China (Dracin) dengan fitur:
 
-- 🔍 **AI Semantic Search** — powered by NVIDIA NV-Embed-v2 + Llama 3.1
-- 🎉 **Watch Party (Nonton Bareng)** — synchronized viewing rooms dengan live chat & reactions
-- 👨‍👩‍👧 **Multi-Profile** — Netflix-style sub-profiles dengan parental control & PIN
-- 📺 **Proxy Streaming** — auto-refresh stream URLs, multi-subtitle support
-- 🛡️ **Content Rating System** — SU / G / PG / 13+ / 16+ / 18+
-- 📱 **Mobile API** — REST API lengkap untuk Android/iOS app
-- 🤖 **Admin Panel** — full CRUD, script runner, API tester, APK release manager
+- 🔍 **AI Semantic Search** | powered by NVIDIA NV-Embed-v2 + Llama 3.1
+- 🎉 **Watch Party (Nonton Bareng)** | synchronized viewing rooms dengan live chat & reactions
+- 👨‍👩‍👧 **Multi-Profile** | Netflix-style sub-profiles dengan parental control & PIN
+- 📺 **Proxy Streaming** | auto-refresh stream URLs, multi-subtitle support
+- 🛡️ **Content Rating System** | SU / G / PG / 13+ / 16+ / 18+
+- 📱 **Mobile API** | REST API lengkap untuk Android/iOS app
+- 🤖 **Admin Panel** | full CRUD, script runner, API tester, APK release manager
 
 ---
 

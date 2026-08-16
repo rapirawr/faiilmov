@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '403 — Akses Dibatasi | faiilmov')
+@section('title', '403 | Akses Dibatasi | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)
@@ -33,7 +33,7 @@
         <!-- Big Tag -->
         <div class="mb-3">
             <span class="text-xs font-bold uppercase tracking-widest text-amber-400 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
-                Error 403 — Akses Ditolak
+                Error 403 | Akses Ditolak
             </span>
         </div>
 

@@ -45,7 +45,7 @@ class ResetPasswordNotification extends Notification
         ], false));
 
         return (new MailMessage())
-            ->subject('Reset Kata Sandi — faiilmov')
+            ->subject('Reset Kata Sandi | faiilmov')
             ->view('emails.reset-password', [
                 'resetUrl'      => $resetUrl,
                 'expiryMinutes' => $this->expiryMinutes,

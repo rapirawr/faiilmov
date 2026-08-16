@@ -139,7 +139,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
-// Social Auth Routes (Google, Facebook) — accessible from login & register pages
+// Social Auth Routes (Google, Facebook) | accessible from login & register pages
 Route::middleware('guest')->group(function () {
     Route::get('/auth/{provider}', [\App\Http\Controllers\SocialAuthController::class, 'redirect'])
         ->name('social.redirect');

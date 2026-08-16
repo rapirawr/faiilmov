@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Reset Password — faiilmov')
+@section('title', 'Reset Password | faiilmov')
 
 @section('content')
 <div class="min-h-[80vh] flex items-center justify-center px-4 py-12 relative z-10">

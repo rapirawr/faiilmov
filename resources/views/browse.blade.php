@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'faiilmov — Katalog & Filter Film')
+@section('title', 'faiilmov | Katalog & Filter Film')
 
 @section('content')
 <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

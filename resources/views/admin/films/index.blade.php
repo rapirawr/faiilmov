@@ -977,7 +977,7 @@
                             <div class="flex items-center justify-between">
                                 <h5 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
                                     <i data-lucide="music" class="w-4 h-4 text-amber-400"></i>
-                                    <span>Soundtrack & Lagu Film (OST) — <span x-text="imdbData.soundtracks ? imdbData.soundtracks.length : 0"></span> Lagu Ditemukan</span>
+                                    <span>Soundtrack & Lagu Film (OST) | <span x-text="imdbData.soundtracks ? imdbData.soundtracks.length : 0"></span> Lagu Ditemukan</span>
                                 </h5>
                                 <span class="text-[10px] text-zinc-500">Otomatis disimpan ke tab OST</span>
                             </div>

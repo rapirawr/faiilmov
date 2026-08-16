@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '500 — Sinyal Server Terputus | faiilmov')
+@section('title', '500 | Sinyal Server Terputus | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)
@@ -33,7 +33,7 @@
         <!-- Big Number -->
         <div class="mb-3">
             <span class="text-xs font-bold uppercase tracking-widest text-red-400 px-3.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
-                Error 500 — Internal Server Error
+                Error 500 | Internal Server Error
             </span>
         </div>
 

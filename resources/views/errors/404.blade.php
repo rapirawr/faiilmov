@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '404 — Adegan Tidak Ditemukan | faiilmov')
+@section('title', '404 | Adegan Tidak Ditemukan | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)

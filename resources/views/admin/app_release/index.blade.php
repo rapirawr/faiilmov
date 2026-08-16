@@ -285,6 +285,28 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Floating Bottom-Right Save Action Bar -->
+            <div class="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-zinc-900/90 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/80 ring-1 ring-white/10 hover:border-amber-500/40 transition-all">
+                <button type="submit" :disabled="uploading"
+                        class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                    <template x-if="!uploading">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            <span>Publikasikan Rilis APK</span>
+                        </span>
+                    </template>
+                    <template x-if="uploading">
+                        <span class="flex items-center gap-2">
+                            <svg class="animate-spin h-3.5 w-3.5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="progress + '%'"></span>
+                        </span>
+                    </template>
+                </button>
+            </div>
         </form>
     </div>
 

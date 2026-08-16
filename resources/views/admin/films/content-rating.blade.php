@@ -163,16 +163,19 @@
             @endif
         </div>
 
-        <div class="flex items-center justify-between pt-2">
+        <!-- Bottom Spacer for Floating Bar -->
+        <div class="h-16"></div>
+
+        <!-- Floating Bottom-Right Save Action Bar -->
+        <div class="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-zinc-900/90 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/80 ring-1 ring-white/10 hover:border-amber-500/40 transition-all">
             <button type="button" 
                     @click="autoDetectCurrentPage()" 
                     :disabled="isDetectingAll"
                     class="px-4 py-2.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
                 <i data-lucide="wand-2" class="w-4 h-4 text-purple-400" :class="isDetectingAll ? 'animate-spin' : ''"></i>
-                <span x-text="isDetectingAll ? 'Mendeteksi Halaman Ini...' : 'Auto Detect Seluruh Halaman Ini'"></span>
+                <span x-text="isDetectingAll ? 'Mendeteksi...' : 'Auto Detect'"></span>
             </button>
-
-            <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-2">
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2">
                 <i data-lucide="check-check" class="w-4 h-4"></i>
                 <span>Simpan Perubahan Rating</span>
             </button>

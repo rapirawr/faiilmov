@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($title ?? 'Akses Ditolak') . ' — faiilmov')
+@section('title', ($title ?? 'Akses Ditolak') . ' | faiilmov')
 @section('hide_navbar', true)
 @section('hide_sidebar', true)
 @section('hide_footer', true)

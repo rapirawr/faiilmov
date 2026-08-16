@@ -335,10 +335,13 @@
             </div>
         </div>
 
-        <!-- Sticky Form Footer Actions -->
-        <div class="sticky bottom-4 z-20 mt-6 p-4 rounded-2xl bg-zinc-900/95 border border-white/10 backdrop-blur-xl shadow-2xl flex items-center justify-between">
-            <span class="text-xs text-zinc-400">Pastikan menyimpan konfigurasi setelah melakukan perubahan.</span>
-            <button type="submit" class="px-6 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg shadow-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
+        <!-- Bottom Spacer for Floating Bar -->
+        <div class="h-16"></div>
+
+        <!-- Floating Bottom-Right Save Action Bar -->
+        <div class="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-zinc-900/90 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/80 ring-1 ring-white/10 hover:border-amber-500/40 transition-all">
+            <span class="text-[11px] text-zinc-400 font-medium px-2 hidden sm:inline">Konfigurasi Sistem</span>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Simpan Seluruh Pengaturan</span>
             </button>
