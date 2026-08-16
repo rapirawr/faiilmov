@@ -27,6 +27,7 @@ class Film extends Model
         'subject_type',
         'content_rating',
         'max_resolution',
+        'available_from',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class Film extends Model
         'view_count' => 'integer',
         'release_year' => 'integer',
         'duration_minutes' => 'integer',
+        'available_from' => 'datetime',
     ];
 
     protected $dispatchesEvents = [
@@ -319,6 +321,17 @@ class Film extends Model
     public function isEpisodic(): bool
     {
         return in_array($this->subject_type, ['series', 'dracin'], true);
+    }
+
+    /**
+     * Check if film status is coming soon (unreleased)
+     */
+    public function isComingSoon(): bool
+    {
+        if ($this->available_from && $this->available_from->isFuture()) {
+            return true;
+        }
+        return (int)($this->release_year ?? 0) > (int)date('Y');
     }
 
     /**

@@ -84,7 +84,12 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-4 flex-wrap">
-                    @if($film->moviebox_subject_id)
+                    @if($film->isComingSoon())
+                        <div class="px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-2 shadow-lg">
+                            <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
+                            <span>Segera Hadir (Coming Soon {{ $film->release_year }})</span>
+                        </div>
+                    @elseif($film->moviebox_subject_id)
                         @php
                             $watchUrl = route('film.watch', $film->slug);
                             if ($film->subject_type === 'series' && isset($lastWatchedHistory)) {

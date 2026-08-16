@@ -48,6 +48,12 @@ export default function FilmCard({ film }) {
   const formattedAge = formatAgeRating(film.content_rating);
   const formattedDur = formatDuration(film.duration_minutes, film.subject_type);
 
+  const isComingSoon = Boolean(
+    film.is_coming_soon ||
+    (film.available_from && new Date(film.available_from) > new Date()) ||
+    (film.release_year && parseInt(film.release_year, 10) > new Date().getFullYear())
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -81,20 +87,22 @@ export default function FilmCard({ film }) {
           </div>
         )}
 
-        {/* Hover Quick Play Overlay */}
-        <motion.div
-          initial={false}
-          animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.9 }}
-          transition={{ duration: 0.2 }}
-          className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-10"
-        >
-          <a
-            href={watchUrl}
-            className="p-4 rounded-full bg-amber-500 text-zinc-950 shadow-2xl shadow-amber-500/50 hover:scale-110 transition-transform duration-200 flex items-center justify-center cursor-pointer"
+        {/* Hover Quick Play Overlay (Hidden for Coming Soon films) */}
+        {!isComingSoon && (
+          <motion.div
+            initial={false}
+            animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-10"
           >
-            <Play className="w-6 h-6 fill-zinc-950 ml-0.5" />
-          </a>
-        </motion.div>
+            <a
+              href={watchUrl}
+              className="p-4 rounded-full bg-amber-500 text-zinc-950 shadow-2xl shadow-amber-500/50 hover:scale-110 transition-transform duration-200 flex items-center justify-center cursor-pointer"
+            >
+              <Play className="w-6 h-6 fill-zinc-950 ml-0.5" />
+            </a>
+          </motion.div>
+        )}
       </div>
 
       {/* Card Info Details */}

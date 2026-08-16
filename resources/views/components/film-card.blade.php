@@ -51,6 +51,8 @@
         'thumbnail_url' => $film->thumbnail_url,
         'poster_url' => $film->poster_url,
         'genres' => $film->genres ? $film->genres->map(fn($g) => ['id' => $g->id, 'name' => $g->name])->toArray() : [],
+        'available_from' => $film->available_from ? $film->available_from->toIso8601String() : null,
+        'is_coming_soon' => $film->isComingSoon(),
     ];
 @endphp
 
