@@ -4,7 +4,9 @@
 @section('page_title', 'Manajemen Iklan Adsterra & Monetisasi')
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-6" x-data="{ activeTab: 'overview' }">
+<div class="max-w-6xl mx-auto space-y-6" 
+     x-data="{ activeTab: 'overview' }"
+     x-init="$watch('activeTab', () => $nextTick(() => { if(window.lucide) lucide.createIcons(); })); $nextTick(() => { if(window.lucide) lucide.createIcons(); });">
     
     <!-- Top Highlights / Header Hero Banner -->
     <div class="p-6 rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-amber-950/30 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
