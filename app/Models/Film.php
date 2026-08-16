@@ -494,15 +494,18 @@ class Film extends Model
             return null;
         }
 
-        $existing = static::where('moviebox_subject_id', $subjectId)->first();
+        $existing = static::withTrashed()->where('moviebox_subject_id', $subjectId)->first();
 
         if ($existing) {
+            if ($existing->trashed()) {
+                return null;
+            }
             $slug = $existing->slug;
         } else {
             $baseSlug = Str::slug($cleanTitle) . '-' . substr(md5($subjectId), 0, 6);
             $slug = $baseSlug;
             $count = 1;
-            while (static::where('slug', $slug)->exists()) {
+            while (static::withTrashed()->where('slug', $slug)->exists()) {
                 $slug = $baseSlug . '-' . $count++;
             }
         }

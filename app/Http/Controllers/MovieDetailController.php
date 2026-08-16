@@ -23,33 +23,56 @@ class MovieDetailController extends Controller
         $this->movieBox->init();
     }
 
+    private function resolveFilmBySlug(string $slug): ?Film
+    {
+        // 1. Check DB including trashed records
+        $trashedCheck = Film::withTrashed()
+            ->with(['genres', 'actors', 'seasons.episodes'])
+            ->where('slug', $slug)
+            ->orWhere('moviebox_subject_id', $slug)
+            ->orWhere('moviebox_subject_id', str_replace('-', ':', $slug))
+            ->orWhere('moviebox_subject_id', 'like', '%' . $slug)
+            ->first();
+
+        if ($trashedCheck) {
+            // If soft deleted by admin, immediately reject (return null)
+            if ($trashedCheck->trashed()) {
+                return null;
+            }
+            return $trashedCheck;
+        }
+
+        // 2. If not found in DB, attempt API fallback
+        $subjectId = $slug;
+        if (str_contains($slug, '-')) {
+            $parts = explode('-', $slug);
+            $subjectId = end($parts);
+        }
+
+        $trashedById = Film::withTrashed()->where('moviebox_subject_id', $subjectId)->first();
+        if ($trashedById && $trashedById->trashed()) {
+            return null;
+        }
+
+        try {
+            $apiDetail = $this->movieBox->getDetails($subjectId);
+            if ($apiDetail) {
+                $film = Film::fromApiData($apiDetail);
+                if ($film && $film->trashed()) {
+                    return null;
+                }
+                return $film;
+            }
+        } catch (Exception $e) {
+            return null;
+        }
+
+        return null;
+    }
+
     public function show(string $slug)
     {
-        $film = Film::with(['genres', 'actors', 'seasons.episodes'])->where('slug', $slug)->first();
-
-        if (!$film) {
-            // Try fallback lookup by subject_id or partial slug
-            $film = Film::with(['genres', 'actors', 'seasons.episodes'])
-                ->where('moviebox_subject_id', $slug)
-                ->orWhere('moviebox_subject_id', str_replace('-', ':', $slug))
-                ->orWhere('moviebox_subject_id', 'like', '%' . $slug)
-                ->first();
-        }
-
-        if (!$film) {
-            $subjectId = $slug;
-            if (str_contains($slug, '-')) {
-                $parts = explode('-', $slug);
-                $subjectId = end($parts);
-            }
-
-            try {
-                $apiDetail = $this->movieBox->getDetails($subjectId);
-                $film = Film::fromApiData($apiDetail);
-            } catch (Exception $e) {
-                abort(404, 'Film tidak ditemukan.');
-            }
-        }
+        $film = $this->resolveFilmBySlug($slug);
 
         if (!$film) {
             abort(404, 'Film tidak ditemukan.');
@@ -112,31 +135,7 @@ class MovieDetailController extends Controller
 
     public function watch(Request $request, string $slug)
     {
-        $film = Film::with(['genres', 'actors', 'seasons.episodes'])->where('slug', $slug)->first();
-
-        if (!$film) {
-            // Try fallback lookup by subject_id or partial slug
-            $film = Film::with(['genres', 'actors', 'seasons.episodes'])
-                ->where('moviebox_subject_id', $slug)
-                ->orWhere('moviebox_subject_id', str_replace('-', ':', $slug))
-                ->orWhere('moviebox_subject_id', 'like', '%' . $slug)
-                ->first();
-        }
-
-        if (!$film) {
-            $subjectId = $slug;
-            if (str_contains($slug, '-')) {
-                $parts = explode('-', $slug);
-                $subjectId = end($parts);
-            }
-
-            try {
-                $apiDetail = $this->movieBox->getDetails($subjectId);
-                $film = Film::fromApiData($apiDetail);
-            } catch (Exception $e) {
-                abort(404, 'Film tidak ditemukan.');
-            }
-        }
+        $film = $this->resolveFilmBySlug($slug);
 
         if (!$film) {
             abort(404, 'Film tidak ditemukan.');
