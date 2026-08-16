@@ -980,9 +980,159 @@
 
         <!-- Synopsis & Info Section Below Player -->
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 glass-panel p-6 rounded-3xl border border-white/10">
-                <h3 class="font-serif font-bold text-lg text-white mb-3">Ringkasan Cerita</h3>
-                <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed">{{ $film->synopsis }}</p>
+            <!-- Interactive Synopsis & AI Insights Glass Panel -->
+            <div class="lg:col-span-2 glass-panel p-6 sm:p-7 rounded-3xl border border-white/10 space-y-4 relative overflow-hidden" 
+                 x-data="synopsisWidget()">
+                
+                <!-- Ambient AI Top Glow (active when AI summary is open) -->
+                <div x-show="showAiSummary" x-transition 
+                     class="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" style="display: none;"></div>
+
+                <!-- Header Bar with Title & Action Chips -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-serif font-bold text-lg sm:text-xl text-white">Sinopsis & Alur Cerita</h3>
+                        </div>
+                    </div>
+
+                    <!-- AI & Translation Action Buttons -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <!-- Translate Button -->
+                        <button type="button" 
+                                @click="toggleTranslate()"
+                                :disabled="isTranslating"
+                                :class="isTranslated ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm disabled:opacity-50 group">
+                            <template x-if="isTranslating">
+                                <svg class="animate-spin w-3.5 h-3.5 text-amber-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!isTranslating">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0" :class="isTranslated ? 'text-zinc-950' : 'text-amber-400'">
+                                    <path d="m5 8 6 6"/>
+                                    <path d="m4 14 6-6 2-3"/>
+                                    <path d="M2 5h12"/>
+                                    <path d="M7 2h1"/>
+                                    <path d="m22 22-5-10-5 10"/>
+                                    <path d="M14 18h6"/>
+                                </svg>
+                            </template>
+                            <span x-text="isTranslating ? 'Menerjemahkan...' : (isTranslated ? 'Tampilkan Asli' : 'Terjemahkan (ID)')"></span>
+                        </button>
+
+                        <!-- AI Summary Toggle Button -->
+                        <button type="button" 
+                                @click="toggleAiSummary()"
+                                :class="showAiSummary ? 'bg-amber-500 text-zinc-950 font-extrabold shadow-lg shadow-amber-500/25 border-amber-400' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 hover:border-amber-400/50'"
+                                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-sm group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" :class="showAiSummary ? 'text-zinc-950 fill-zinc-950' : 'text-amber-400 fill-amber-400'">
+                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            </svg>
+                            <span>Ringkasan AI</span>
+                            <span :class="showAiSummary ? 'bg-zinc-950/20 text-zinc-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'" 
+                                  class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none tracking-wide">TL;DR</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Synopsis Body -->
+                <div class="relative space-y-3">
+                    <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed whitespace-pre-line transition-all duration-300"
+                       :class="!isExpanded && currentText.length > 350 ? 'line-clamp-4' : ''"
+                       x-text="currentText"></p>
+
+                    <!-- Expand/Collapse Button for Long Synopsis -->
+                    <button type="button" 
+                            x-show="currentText.length > 350" 
+                            @click="isExpanded = !isExpanded"
+                            class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1 cursor-pointer">
+                        <span x-text="isExpanded ? 'Sembunyikan Sebagian' : 'Baca Selengkapnya'"></span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="isExpanded ? 'rotate-180' : ''"></i>
+                    </button>
+                </div>
+
+                <!-- AI SUMMARY & STORY INSIGHTS PANEL (Expandable) -->
+                <div x-show="showAiSummary" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-y-2 scale-98"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 -translate-y-2 scale-98"
+                     class="mt-4 p-5 rounded-2xl bg-zinc-950/80 border border-amber-500/30 space-y-4 shadow-xl backdrop-blur-md relative"
+                     style="display: none;">
+                    
+                    <!-- AI Panel Badge Header -->
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1 rounded-lg bg-amber-500/20 text-amber-400">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-extrabold text-white font-['Outfit'] uppercase tracking-wider">AI Story Insights & Poin Kunci</span>
+                        </div>
+                        <span class="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">Llama 3.1 AI</span>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div x-show="isLoadingSummary" class="py-8 flex flex-col items-center justify-center space-y-3">
+                        <div class="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                        <p class="text-xs text-zinc-400 animate-pulse">Sedang menganalisis alur dan membuat poin ringkasan AI...</p>
+                    </div>
+
+                    <!-- AI Content Result -->
+                    <div x-show="!isLoadingSummary && aiData" class="space-y-4">
+                        
+                        <!-- 1. Quick Recap Summary -->
+                        <div class="space-y-1.5">
+                            <h4 class="text-[11px] font-extrabold uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                <span>Ringkasan Kilat</span>
+                            </h4>
+                            <p class="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium" x-text="aiData?.summary"></p>
+                        </div>
+
+                        <!-- 2. Key Story Hooks / Highlights (3 Bullets) -->
+                        <div class="space-y-2">
+                            <h4 class="text-[11px] font-extrabold uppercase text-purple-400 tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="target" class="w-3.5 h-3.5"></i>
+                                <span>Poin Kunci Cerita</span>
+                            </h4>
+                            <div class="space-y-2">
+                                <template x-for="(point, pIdx) in (aiData?.key_points || [])" :key="pIdx">
+                                    <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
+                                        <span class="w-5 h-5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5" x-text="pIdx + 1"></span>
+                                        <p class="text-xs text-zinc-300 leading-relaxed" x-text="point"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 3. Mood & Vibes + Why to Watch -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <!-- Vibes -->
+                            <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+                                <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Mood & Atmosfer:</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="v in (aiData?.vibes || [])" :key="v">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-300" x-text="v"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Why Watch -->
+                            <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+                                <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Alasan Nonton:</span>
+                                <p class="text-xs text-zinc-300 italic" x-text="'“' + (aiData?.why_watch || '') + '”'"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Sidebar Related -->
@@ -2123,6 +2273,96 @@
                 return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
             }
         }
+    }
+
+    function synopsisWidget() {
+        return {
+            filmId: {{ $film->id }},
+            filmTitle: @json($film->title),
+            originalText: @json($film->synopsis ?: 'Belum ada deskripsi sinopsis resmi untuk film ini.'),
+            currentText: @json($film->synopsis ?: 'Belum ada deskripsi sinopsis resmi untuk film ini.'),
+            translatedText: '',
+            isTranslated: false,
+            isTranslating: false,
+            
+            showAiSummary: false,
+            isLoadingSummary: false,
+            aiData: null,
+            isExpanded: false,
+            
+            async toggleTranslate() {
+                if (this.isTranslated) {
+                    this.currentText = this.originalText;
+                    this.isTranslated = false;
+                    return;
+                }
+                if (this.translatedText) {
+                    this.currentText = this.translatedText;
+                    this.isTranslated = true;
+                    return;
+                }
+                
+                this.isTranslating = true;
+                try {
+                    const res = await fetch('{{ route('synopsis.translate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            film_id: this.filmId,
+                            text: this.originalText,
+                            target_lang: 'id'
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.translated_text) {
+                        this.translatedText = data.translated_text;
+                        this.currentText = data.translated_text;
+                        this.isTranslated = true;
+                    }
+                } catch (e) {
+                    console.error('Translation error:', e);
+                } finally {
+                    this.isTranslating = false;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                }
+            },
+            
+            async toggleAiSummary() {
+                this.showAiSummary = !this.showAiSummary;
+                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+
+                if (this.showAiSummary && !this.aiData && !this.isLoadingSummary) {
+                    this.isLoadingSummary = true;
+                    try {
+                        const res = await fetch('{{ route('synopsis.summary') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                film_id: this.filmId,
+                                title: this.filmTitle,
+                                synopsis: this.originalText,
+                                genres: @json($film->genres->pluck('name')->toArray())
+                            })
+                        });
+                        const resJson = await res.json();
+                        if (resJson.success && resJson.data) {
+                            this.aiData = resJson.data;
+                        }
+                    } catch (e) {
+                        console.error('AI Summary error:', e);
+                    } finally {
+                        this.isLoadingSummary = false;
+                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                    }
+                }
+            }
+        };
     }
 </script>
 @endsection
