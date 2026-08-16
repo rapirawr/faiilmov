@@ -15,8 +15,7 @@
 
 @if($code)
     <div class="w-full flex flex-col items-center justify-center my-4 overflow-hidden {{ $class }}">
-        <div class="flex items-center gap-1 text-[9px] font-mono tracking-widest text-zinc-500 uppercase mb-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400/60"></span>
+        <div class="flex items-center text-[9px] font-mono tracking-widest text-zinc-500 uppercase mb-1">
             <span>Advertisement</span>
         </div>
         <div class="w-full flex justify-center items-center overflow-x-auto no-scrollbar rounded-2xl glass-card border border-white/5 p-2 sm:p-3 shadow-lg max-w-full">

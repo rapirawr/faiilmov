@@ -12,7 +12,6 @@
     <div class="p-6 rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-amber-950/30 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div class="space-y-2 z-10">
             <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full {{ $settings['ads_enabled'] ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600' }}"></span>
                 <span class="text-xs font-mono font-bold uppercase tracking-wider {{ $settings['ads_enabled'] ? 'text-emerald-400' : 'text-zinc-500' }}">
                     {{ $settings['ads_enabled'] ? 'Sistem Iklan Aktif' : 'Sistem Iklan Dinonaktifkan' }}
                 </span>

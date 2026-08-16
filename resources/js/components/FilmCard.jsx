@@ -109,9 +109,9 @@ export default function FilmCard({ film }) {
       </div>
 
       {/* Card Info Details */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-1.5 bg-gradient-to-b from-zinc-900/60 to-zinc-950">
-        <div>
-          <a href={showUrl} className="block group-hover:text-amber-300 transition-colors mb-1">
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2 bg-gradient-to-b from-zinc-900/60 to-zinc-950">
+        <div className="space-y-1">
+          <a href={showUrl} className="block group-hover:text-amber-300 transition-colors">
             <h3 className="font-serif font-bold text-sm text-white line-clamp-1 leading-snug">
               {film.title}
             </h3>
@@ -129,16 +129,18 @@ export default function FilmCard({ film }) {
           </div>
         </div>
 
-        {/* Genres Pill List */}
-        {film.genres && film.genres.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-hidden mt-1">
-            {film.genres.slice(0, 2).map((g) => (
+        {/* Genres Pill List with Fixed Height Reserve */}
+        <div className="flex items-center gap-1.5 overflow-hidden h-[22px]">
+          {film.genres && film.genres.length > 0 ? (
+            film.genres.slice(0, 2).map((g) => (
               <span key={g.id || g.slug || g.name} className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[9.5px] font-semibold text-zinc-400 truncate">
                 {g.name}
               </span>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <span className="h-[22px] block" aria-hidden="true"></span>
+          )}
+        </div>
       </div>
     </motion.div>
   );
