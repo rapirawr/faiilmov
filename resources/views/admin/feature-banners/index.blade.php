@@ -136,7 +136,7 @@
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
          style="display: none;">
         
-        <div @click.outside="showModal = false" class="w-full max-w-3xl bg-zinc-950 border border-zinc-800 p-6 sm:p-7 rounded-2xl shadow-2xl space-y-4 relative text-left my-auto max-h-[90vh] overflow-y-auto admin-scrollbar">
+        <div @click.outside="if (!iconPickerOpen) showModal = false" class="w-full max-w-3xl bg-zinc-950 border border-zinc-800 p-6 sm:p-7 rounded-2xl shadow-2xl space-y-4 relative text-left my-auto max-h-[90vh] overflow-y-auto admin-scrollbar">
             
             <div class="flex items-center justify-between border-b border-zinc-800/80 pb-3">
                 <h3 class="font-bold text-sm text-white flex items-center gap-2">
@@ -203,6 +203,7 @@
                                            class="w-full md:w-52 bg-zinc-950/80 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-400 cursor-not-allowed">
                                     <button type="button" disabled class="px-4 py-2 rounded-xl bg-amber-500 text-zinc-950 font-bold text-xs shrink-0 flex items-center gap-1.5 shadow">
                                         <span x-text="form.button_text || 'Request'"></span>
+                                        <span class="inline-flex items-center shrink-0" x-html="getIconSvg(form.button_icon || (form.action_type === 'request_modal' ? 'send' : 'arrow-right'))"></span>
                                     </button>
                                 </div>
                             </template>
@@ -210,7 +211,7 @@
                             <template x-if="form.input_type === 'none'">
                                 <button type="button" disabled class="px-5 py-2 rounded-xl bg-amber-500 text-zinc-950 font-bold text-xs shrink-0 flex items-center gap-1.5 shadow">
                                     <span x-text="form.button_text || 'Buka Link'"></span>
-                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5" x-show="form.action_type === 'url_link'"></i>
+                                    <span class="inline-flex items-center shrink-0" x-html="getIconSvg(form.button_icon || (form.action_type === 'request_modal' ? 'send' : 'arrow-right'))"></span>
                                 </button>
                             </template>
                         </div>
@@ -246,10 +247,10 @@
                     <textarea name="description" x-model="form.description" rows="2" required placeholder="Tuliskan keterangan singkat..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400"></textarea>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1">Tipe Aksi</label>
-                        <select name="action_type" x-model="form.action_type" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+                        <select name="action_type" x-model="form.action_type" @change="if(form.action_type==='request_modal' && (!form.button_icon || form.button_icon==='arrow-right')) form.button_icon='send'; if(form.action_type==='url_link' && form.button_icon==='send') form.button_icon='arrow-right';" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
                             <option value="request_modal">Modal Request Film</option>
                             <option value="url_link">Redirect URL Link</option>
                         </select>
@@ -268,15 +269,31 @@
                         <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1">Teks Tombol</label>
                         <input type="text" name="button_text" x-model="form.button_text" required placeholder="Request Sekarang" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span>Ikon Tombol</span>
+                            <span class="text-[9px] text-amber-400 font-normal">Klik ganti</span>
+                        </label>
+                        <input type="hidden" name="button_icon" x-model="form.button_icon">
+                        <button type="button" @click="openIconPicker()" class="w-full bg-zinc-900 border border-zinc-800 hover:border-amber-400/60 rounded-xl px-3 py-1.5 text-xs text-white flex items-center justify-between gap-2 transition-all cursor-pointer group shadow-sm">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0" x-html="getIconSvg(form.button_icon || (form.action_type === 'request_modal' ? 'send' : 'arrow-right'))"></span>
+                                <span class="truncate text-xs font-semibold" x-text="getIconLabel(form.button_icon || (form.action_type === 'request_modal' ? 'send' : 'arrow-right'))"></span>
+                            </div>
+                            <i data-lucide="palette" class="w-3.5 h-3.5 text-zinc-500 group-hover:text-amber-400 shrink-0 transition-colors"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" x-show="form.input_type !== 'none' || form.action_type === 'url_link'">
                     <div x-show="form.input_type !== 'none'">
                         <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1">Placeholder Input</label>
                         <input type="text" name="placeholder_text" x-model="form.placeholder_text" placeholder="Cari film..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
                     </div>
-                </div>
-
-                <div x-show="form.action_type === 'url_link'">
-                    <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1">URL Target</label>
-                    <input type="url" name="action_url" x-model="form.action_url" placeholder="https://..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+                    <div x-show="form.action_type === 'url_link'">
+                        <label class="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1">URL Target</label>
+                        <input type="url" name="action_url" x-model="form.action_url" placeholder="https://..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+                    </div>
                 </div>
 
                 <!-- GRADIENT PALETTE SELECTOR -->
@@ -362,18 +379,197 @@
         </div>
     </div>
 
+    <!-- ICON PICKER MODAL -->
+    <div x-show="iconPickerOpen" 
+         x-cloak 
+         @click.stop
+         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div @click.stop @click.outside="iconPickerOpen = false" class="w-full max-w-2xl bg-zinc-950 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i data-lucide="palette" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Pilih Ikon Tombol Banner</h3>
+                        <p class="text-[11px] text-zinc-400">Pilih salah satu ikon di bawah ini untuk ditampilkan pada tombol aksi banner</p>
+                    </div>
+                </div>
+                <button type="button" @click="iconPickerOpen = false" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative shrink-0">
+                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" x-model="iconSearchQuery" placeholder="Cari nama ikon (misal: send, film, play, star, flame, heart)..." 
+                       class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400">
+            </div>
+
+            <!-- Icon Categories Filter Tabs -->
+            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto pb-1 no-scrollbar">
+                <button type="button" @click="selectedIconCat = 'all'" 
+                        :class="selectedIconCat === 'all' ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
+                        class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0">
+                    Semua (<span x-text="iconsList.length"></span>)
+                </button>
+                <template x-for="cat in ['Aksi', 'Media', 'Spesial', 'Interaksi']" :key="cat">
+                    <button type="button" @click="selectedIconCat = cat" 
+                            :class="selectedIconCat === cat ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
+                            class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0" 
+                            x-text="cat">
+                    </button>
+                </template>
+            </div>
+
+            <!-- Icons Grid -->
+            <div class="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 min-h-[260px]">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                    <template x-for="item in filteredIcons" :key="item.key">
+                        <button type="button" @click="selectIcon(item.key)" 
+                                :class="form.button_icon === item.key ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/5 text-zinc-300 hover:border-amber-500/40 hover:bg-zinc-800/80 hover:text-white'" 
+                                class="p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group text-center active:scale-95">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                                 :class="form.button_icon === item.key ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-amber-400 group-hover:bg-amber-500/20'"
+                                 x-html="getIconSvg(item.key)">
+                            </div>
+                            <div class="w-full">
+                                <div class="text-[11px] font-bold truncate leading-tight" x-text="item.label"></div>
+                                <div class="text-[9px] text-zinc-500 font-mono mt-0.5 truncate" x-text="item.key"></div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+
+                <div x-show="filteredIcons.length === 0" class="py-12 text-center text-zinc-500 text-xs">
+                    Ikon dengan kata kunci "<span x-text="iconSearchQuery"></span>" tidak ditemukan.
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between border-t border-white/10 pt-3 shrink-0">
+                <div class="text-xs text-zinc-400 flex items-center gap-1.5">
+                    <span>Terpilih:</span>
+                    <span class="font-bold text-amber-400 font-mono" x-text="form.button_icon || 'send'"></span>
+                </div>
+                <button type="button" @click="iconPickerOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-colors cursor-pointer">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
+    const ICONS_DICT = {
+        'send': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+        'arrow-right': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+        'play': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+        'film': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 7h4"/><path d="M3 12h18"/><path d="M3 17h4"/><path d="M17 17h4"/><path d="M17 7h4"/></svg>',
+        'clapperboard': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.4-1.1.2-2.4 1.3-2.8l13.6-5c1.1-.4 2.4.2 2.8 1.3l.4 1z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+        'tv': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>',
+        'video': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>',
+        'music': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        'sparkles': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>',
+        'flame': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+        'crown': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>',
+        'badge-percent': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>',
+        'gift': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>',
+        'zap': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+        'star': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+        'heart': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+        'bookmark': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>',
+        'search': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+        'ticket': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>',
+        'compass': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>',
+        'download': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',
+        'message-square': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        'share-2': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>',
+        'bell': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+        'eye': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+        'trending-up': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+        'plus': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+        'check-circle-2': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+        'shuffle': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>',
+        'external-link': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
+    };
+
     Alpine.data('featureBannerCMS', () => ({
         showModal: false, 
+        iconPickerOpen: false,
+        iconSearchQuery: '',
+        selectedIconCat: 'all',
         isEdit: false, 
         editUrl: '', 
         aiTopic: '',
         aiLoading: false,
+        iconsList: [
+            { key: 'send', label: 'Kirim / Pesawat', cat: 'Aksi' },
+            { key: 'arrow-right', label: 'Panah Kanan', cat: 'Aksi' },
+            { key: 'play', label: 'Play / Tonton', cat: 'Media' },
+            { key: 'film', label: 'Film Roll', cat: 'Media' },
+            { key: 'clapperboard', label: 'Papan Film', cat: 'Media' },
+            { key: 'tv', label: 'TV / Series', cat: 'Media' },
+            { key: 'video', label: 'Kamera Video', cat: 'Media' },
+            { key: 'music', label: 'Audio / Musik', cat: 'Media' },
+            { key: 'sparkles', label: 'Magic / Kilau', cat: 'Spesial' },
+            { key: 'flame', label: 'Api / Trending', cat: 'Spesial' },
+            { key: 'crown', label: 'VIP / Mahkota', cat: 'Spesial' },
+            { key: 'badge-percent', label: 'Promo / Diskon', cat: 'Spesial' },
+            { key: 'gift', label: 'Hadiah / Reward', cat: 'Spesial' },
+            { key: 'zap', label: 'Kilat / Cepat', cat: 'Spesial' },
+            { key: 'star', label: 'Bintang / Favorit', cat: 'Interaksi' },
+            { key: 'heart', label: 'Hati / Suka', cat: 'Interaksi' },
+            { key: 'bookmark', label: 'Simpan', cat: 'Interaksi' },
+            { key: 'search', label: 'Pencarian', cat: 'Aksi' },
+            { key: 'ticket', label: 'Tiket Bioskop', cat: 'Media' },
+            { key: 'compass', label: 'Jelajah / Explore', cat: 'Aksi' },
+            { key: 'download', label: 'Download', cat: 'Aksi' },
+            { key: 'message-square', label: 'Komentar / Chat', cat: 'Interaksi' },
+            { key: 'share-2', label: 'Bagikan', cat: 'Interaksi' },
+            { key: 'bell', label: 'Notifikasi', cat: 'Interaksi' },
+            { key: 'eye', label: 'Lihat / Views', cat: 'Interaksi' },
+            { key: 'trending-up', label: 'Grafik Naik', cat: 'Spesial' },
+            { key: 'plus', label: 'Tambah / Buat', cat: 'Aksi' },
+            { key: 'check-circle-2', label: 'Centang Sukses', cat: 'Aksi' },
+            { key: 'shuffle', label: 'Acak Film', cat: 'Aksi' },
+            { key: 'external-link', label: 'Link Eksternal', cat: 'Aksi' }
+        ],
+        get filteredIcons() {
+            const q = this.iconSearchQuery.toLowerCase().trim();
+            return this.iconsList.filter(item => {
+                const matchCat = this.selectedIconCat === 'all' || item.cat === this.selectedIconCat;
+                const matchSearch = !q || item.key.toLowerCase().includes(q) || item.label.toLowerCase().includes(q) || item.cat.toLowerCase().includes(q);
+                return matchCat && matchSearch;
+            });
+        },
+        getIconSvg(key) {
+            return ICONS_DICT[key] || ICONS_DICT['send'];
+        },
+        getIconLabel(key) {
+            const item = this.iconsList.find(i => i.key === key);
+            return item ? item.label : key;
+        },
+        openIconPicker() {
+            this.iconSearchQuery = '';
+            this.iconPickerOpen = true;
+            this.$nextTick(() => {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            });
+        },
+        selectIcon(key) {
+            this.form.button_icon = key;
+            this.iconPickerOpen = false;
+            this.showModal = true;
+        },
         form: {
             badge_text: 'REQUEST FILM',
             title: 'Film Favoritmu Belum Ada di Katalog?',
@@ -381,6 +577,7 @@ document.addEventListener('alpine:init', () => {
             placeholder_text: 'Cari atau ketik judul film...',
             input_type: 'text',
             button_text: 'Request Sekarang',
+            button_icon: 'send',
             action_type: 'request_modal',
             action_url: '',
             bg_gradient: 'amber_purple',
@@ -411,7 +608,10 @@ document.addEventListener('alpine:init', () => {
                     if (d.description) this.form.description = d.description;
                     if (d.placeholder_text) this.form.placeholder_text = d.placeholder_text;
                     if (d.button_text) this.form.button_text = d.button_text;
-                    if (d.action_type) this.form.action_type = d.action_type;
+                    if (d.action_type) {
+                        this.form.action_type = d.action_type;
+                        this.form.button_icon = d.action_type === 'request_modal' ? 'send' : 'arrow-right';
+                    }
                     if (d.input_type) this.form.input_type = d.input_type;
                     if (d.bg_gradient) this.form.bg_gradient = d.bg_gradient;
                 }
@@ -431,6 +631,7 @@ document.addEventListener('alpine:init', () => {
                 placeholder_text: 'Cari atau ketik judul film...',
                 input_type: 'text',
                 button_text: 'Request Sekarang',
+                button_icon: 'send',
                 action_type: 'request_modal',
                 action_url: '',
                 bg_gradient: 'amber_purple',
@@ -440,6 +641,11 @@ document.addEventListener('alpine:init', () => {
                 sort_order: 1
             };
             this.showModal = true;
+            this.$nextTick(() => {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            });
         },
         openEdit(item, url) {
             this.isEdit = true;
@@ -452,6 +658,7 @@ document.addEventListener('alpine:init', () => {
                 placeholder_text: item.placeholder_text || '',
                 input_type: item.input_type || 'text',
                 button_text: item.button_text || 'Request Sekarang',
+                button_icon: item.button_icon || (item.action_type === 'request_modal' ? 'send' : 'arrow-right'),
                 action_type: item.action_type || 'request_modal',
                 action_url: item.action_url || '',
                 bg_gradient: item.bg_gradient || 'amber_purple',
@@ -461,6 +668,11 @@ document.addEventListener('alpine:init', () => {
                 sort_order: item.sort_order || 1
             };
             this.showModal = true;
+            this.$nextTick(() => {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            });
         },
         getPreviewStyle() {
             if (this.form.bg_gradient === 'custom') {

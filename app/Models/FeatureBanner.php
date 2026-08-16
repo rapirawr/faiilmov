@@ -17,6 +17,7 @@ class FeatureBanner extends Model
         'placeholder_text',
         'input_type',
         'button_text',
+        'button_icon',
         'action_type',
         'action_url',
         'bg_gradient',

@@ -1,5 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, Search, Send } from 'lucide-react';
+import { 
+  Sparkles, ArrowRight, Search, Send, Film, Play, Star, Flame, 
+  Tv, Ticket, Heart, Bookmark, Download, Zap, Gift, Compass, 
+  MessageSquare, Share2, Bell, Eye, Plus, CheckCircle2, Clapperboard, 
+  BadgePercent, Crown, TrendingUp, Video, Music, Shuffle, ExternalLink 
+} from 'lucide-react';
+
+const ICON_MAP = {
+  'send': Send,
+  'arrow-right': ArrowRight,
+  'play': Play,
+  'film': Film,
+  'clapperboard': Clapperboard,
+  'sparkles': Sparkles,
+  'search': Search,
+  'star': Star,
+  'flame': Flame,
+  'tv': Tv,
+  'ticket': Ticket,
+  'heart': Heart,
+  'bookmark': Bookmark,
+  'download': Download,
+  'zap': Zap,
+  'gift': Gift,
+  'compass': Compass,
+  'message-square': MessageSquare,
+  'share-2': Share2,
+  'bell': Bell,
+  'eye': Eye,
+  'plus': Plus,
+  'check-circle-2': CheckCircle2,
+  'badge-percent': BadgePercent,
+  'crown': Crown,
+  'trending-up': TrendingUp,
+  'video': Video,
+  'music': Music,
+  'shuffle': Shuffle,
+  'external-link': ExternalLink,
+};
 
 export default function FeatureBannerRotator({ banners = [] }) {
   const [activeStep, setActiveStep] = useState(0);
@@ -211,11 +249,11 @@ export default function FeatureBannerRotator({ banners = [] }) {
                       className="shrink-0 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all shadow-lg hover:shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 relative z-30 whitespace-nowrap"
                     >
                       <span>{banner.button_text || (banner.action_type === 'request_modal' ? 'Request' : 'Buka')}</span>
-                      {banner.action_type === 'request_modal' ? (
-                        <Send className="w-3.5 h-3.5 text-zinc-950" />
-                      ) : (
-                        <ArrowRight className="w-3.5 h-3.5 text-zinc-950" />
-                      )}
+                      {(() => {
+                        const iconKey = banner.button_icon || (banner.action_type === 'request_modal' ? 'send' : 'arrow-right');
+                        const IconComponent = ICON_MAP[iconKey] || (banner.action_type === 'request_modal' ? Send : ArrowRight);
+                        return <IconComponent className="w-3.5 h-3.5 text-zinc-950 shrink-0" />;
+                      })()}
                     </button>
                   </div>
                 </div>
