@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
@@ -759,11 +759,19 @@
             };
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const initLucideIcons = () => {
             if (window.lucide) {
                 lucide.createIcons();
             }
-        });
+        };
+
+        document.addEventListener('DOMContentLoaded', initLucideIcons);
+        window.addEventListener('load', initLucideIcons);
+        document.addEventListener('alpine:initialized', initLucideIcons);
+        document.addEventListener('alpine:navigated', initLucideIcons);
+        // Fallback polling for dynamically rendered components
+        setTimeout(initLucideIcons, 300);
+        setTimeout(initLucideIcons, 1000);
     </script>
     @stack('scripts')
 </body>

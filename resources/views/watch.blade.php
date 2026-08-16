@@ -778,7 +778,7 @@
         </div>
 
         <!-- Adsterra Banner Slot: Player Bottom -->
-        <x-ad-banner slot="player_bottom" />
+        <x-ad-banner placement="player_bottom" />
 
         <!-- Lower Content Section (Info, Episode Selector, Downloads, Synopsis) -->
         <div class="px-4 sm:px-0">
