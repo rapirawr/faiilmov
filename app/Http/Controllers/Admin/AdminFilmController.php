@@ -43,6 +43,19 @@ class AdminFilmController extends Controller
             }
         }
 
+        if ($request->filled('coming_soon')) {
+            if ($request->coming_soon === 'yes') {
+                $query->where(function ($q) {
+                    $q->where('available_from', '>', now())
+                      ->orWhere('release_year', '>', date('Y'));
+                });
+            } elseif ($request->coming_soon === 'no') {
+                $query->where(function ($q) {
+                    $q->whereNull('available_from')->orWhere('available_from', '<=', now());
+                })->where('release_year', '<=', date('Y'));
+            }
+        }
+
         $sort = $request->get('sort', 'latest');
         if ($sort === 'rating') {
             $query->orderBy('rating', 'desc');
@@ -62,6 +75,7 @@ class AdminFilmController extends Controller
             'series' => Film::where('subject_type', 'series')->count(),
             'dracin' => Film::where('subject_type', 'dracin')->count(),
             'unrated' => Film::whereNull('content_rating')->count(),
+            'coming_soon' => Film::where('available_from', '>', now())->orWhere('release_year', '>', date('Y'))->count(),
             'trash' => count($trashedFilms),
         ];
 
@@ -104,11 +118,24 @@ class AdminFilmController extends Controller
             $posterUrl = Storage::url($path);
         }
 
+        $availableFrom = $request->filled('available_from') ? $request->available_from : null;
+        $isComingSoonReq = $request->boolean('is_coming_soon');
+        if ($isComingSoonReq && !$availableFrom) {
+            $availableFrom = now()->addYear();
+        } elseif (!$isComingSoonReq && !$request->filled('available_from')) {
+            $availableFrom = null;
+        }
+
+        $releaseYear = $validated['release_year'] ?? (int)date('Y');
+        if ($isComingSoonReq && $releaseYear <= (int)date('Y')) {
+            $releaseYear = (int)date('Y') + 1;
+        }
+
         $film = Film::create([
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']) . '-' . Str::random(5),
             'synopsis' => $validated['synopsis'] ?? null,
-            'release_year' => $validated['release_year'] ?? date('Y'),
+            'release_year' => $releaseYear,
             'duration_minutes' => $validated['duration_minutes'] ?? 120,
             'rating' => $validated['rating'] ?? 0.0,
             'subject_type' => $validated['subject_type'],
@@ -118,6 +145,7 @@ class AdminFilmController extends Controller
             'trailer_url' => $validated['trailer_url'] ?? null,
             'poster_url' => $posterUrl ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600',
             'backdrop_url' => $validated['backdrop_url'] ?? null,
+            'available_from' => $availableFrom,
         ]);
 
         if (!empty($validated['genres'])) {
@@ -165,6 +193,7 @@ class AdminFilmController extends Controller
             'poster' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
             'poster_url' => 'nullable|string',
             'backdrop_url' => 'nullable|string',
+            'available_from' => 'nullable|date',
             'genres' => 'nullable|array',
             'genres.*' => 'exists:genres,id',
             'actors' => 'nullable|array',
@@ -178,10 +207,25 @@ class AdminFilmController extends Controller
             $validated['poster_url'] = Storage::url($path);
         }
 
+        $availableFrom = $request->filled('available_from') ? $request->available_from : null;
+        $isComingSoonReq = $request->boolean('is_coming_soon');
+        if ($isComingSoonReq && !$availableFrom) {
+            $availableFrom = ($film->available_from && $film->available_from->isFuture()) ? $film->available_from : now()->addYear();
+        } elseif (!$isComingSoonReq && !$request->filled('available_from')) {
+            $availableFrom = null;
+        }
+
+        $releaseYear = $validated['release_year'] ?? $film->release_year;
+        if ($isComingSoonReq && $releaseYear <= (int)date('Y')) {
+            $releaseYear = (int)date('Y') + 1;
+        } elseif (!$isComingSoonReq && $film->isComingSoon() && $releaseYear > (int)date('Y')) {
+            $releaseYear = (int)date('Y');
+        }
+
         $film->update([
             'title' => $validated['title'],
             'synopsis' => $validated['synopsis'] ?? $film->synopsis,
-            'release_year' => $validated['release_year'] ?? $film->release_year,
+            'release_year' => $releaseYear,
             'duration_minutes' => $validated['duration_minutes'] ?? $film->duration_minutes,
             'rating' => $validated['rating'] ?? $film->rating,
             'subject_type' => $validated['subject_type'],
@@ -191,6 +235,7 @@ class AdminFilmController extends Controller
             'trailer_url' => $validated['trailer_url'] ?? $film->trailer_url,
             'poster_url' => $validated['poster_url'] ?? $film->poster_url,
             'backdrop_url' => $validated['backdrop_url'] ?? $film->backdrop_url,
+            'available_from' => $availableFrom,
         ]);
 
         if (isset($validated['genres'])) {
@@ -384,6 +429,28 @@ class AdminFilmController extends Controller
         $scopeText = $onlyUnrated ? "film tanpa rating" : "seluruh film";
         AdminActivityLog::log('auto_rated_all_films', "Menjalankan auto-rate massal untuk {$updatedCount} {$scopeText}.");
 
-        return back()->with('success', "Auto-rate berhasil! {$updatedCount} {$scopeText} telah dikategorikan secara otomatis.");
+        return back()->with('success', "Auto-rating selesai! {$updatedCount} {$scopeText} berhasil diklasifikasikan.");
+    }
+
+    public function toggleComingSoon(Film $film)
+    {
+        if ($film->isComingSoon()) {
+            $film->update([
+                'available_from' => null,
+                'release_year' => min($film->release_year, (int)date('Y')),
+            ]);
+            $msg = "Status Coming Soon untuk film '{$film->title}' telah dinonaktifkan (film sudah rilis).";
+        } else {
+            $nextYear = (int)date('Y') + 1;
+            $film->update([
+                'available_from' => now()->addYear(),
+                'release_year' => max($film->release_year, $nextYear),
+            ]);
+            $msg = "Film '{$film->title}' berhasil ditandai sebagai Coming Soon (Segera Hadir).";
+        }
+
+        AdminActivityLog::log('updated_film_coming_soon', $msg, 'Film', $film->id);
+
+        return back()->with('success', $msg);
     }
 }

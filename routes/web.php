@@ -219,6 +219,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/films-content-rating', [AdminFilmController::class, 'updateContentRatings'])->name('films.update_content_ratings');
     Route::post('/films/auto-rate-all', [AdminFilmController::class, 'autoRateAll'])->name('films.auto_rate_all');
     Route::post('/films/{film}/auto-rate', [AdminFilmController::class, 'autoRate'])->name('films.auto_rate');
+    Route::post('/films/{film}/toggle-coming-soon', [AdminFilmController::class, 'toggleComingSoon'])->name('films.toggle_coming_soon');
     Route::resource('films', AdminFilmController::class);
 
     // Season & Episode Management

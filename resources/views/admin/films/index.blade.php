@@ -214,6 +214,16 @@
             <span class="font-extrabold text-amber-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['unrated'] ?? 0) }}</span>
         </a>
 
+        <!-- Coming Soon Filter Shortcut -->
+        <a href="{{ route('admin.films.index', ['coming_soon' => 'yes']) }}" 
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('coming_soon') === 'yes' ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/10 hover:border-amber-500/30' }}">
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-400 font-semibold group-hover:text-amber-300 transition-colors">Coming Soon</span>
+                <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
+            </div>
+            <span class="font-extrabold text-amber-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['coming_soon'] ?? 0) }}</span>
+        </a>
+
         <!-- Trash Bin Shortcut Trigger -->
         <button type="button" @click="trashModalOpen = true" 
                 class="p-3.5 rounded-2xl bg-zinc-900/80 border border-white/10 hover:border-red-500/40 hover:bg-red-500/5 transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group text-left cursor-pointer">
@@ -242,6 +252,13 @@
                 <option value="movie" {{ request('type') === 'movie' ? 'selected' : '' }}>🎬 Movie</option>
                 <option value="series" {{ request('type') === 'series' ? 'selected' : '' }}>📺 Series</option>
                 <option value="dracin" {{ request('type') === 'dracin' ? 'selected' : '' }}>🌸 Dracin</option>
+            </select>
+
+            <!-- Coming Soon Status Filter Dropdown -->
+            <select name="coming_soon" onchange="this.form.submit()" class="bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                <option value="">Semua Status Rilis</option>
+                <option value="yes" {{ request('coming_soon') === 'yes' ? 'selected' : '' }}>⏳ Coming Soon</option>
+                <option value="no" {{ request('coming_soon') === 'no' ? 'selected' : '' }}>✅ Sudah Rilis</option>
             </select>
 
             <!-- Content Rating Filter Dropdown -->
@@ -417,6 +434,13 @@
                                         {{ $film->subject_type }}
                                     </span>
 
+                                    @if($film->isComingSoon())
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 inline-flex">
+                                            <i data-lucide="clock" class="w-3 h-3 text-amber-400"></i>
+                                            <span>Coming Soon</span>
+                                        </span>
+                                    @endif
+
                                     @if($film->content_rating)
                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase {{ in_array($film->content_rating, ['SU','G','PG']) ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30' }}">
                                             {{ $film->content_rating }}
@@ -454,6 +478,14 @@
                             </td>
                             <td class="px-4 py-3.5 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    <!-- Quick Toggle Coming Soon -->
+                                    <form action="{{ route('admin.films.toggle_coming_soon', $film->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="p-1.5 rounded-lg transition-colors cursor-pointer {{ $film->isComingSoon() ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white' }}" title="{{ $film->isComingSoon() ? 'Batalkan Coming Soon (Film Sudah Rilis)' : 'Tandai sebagai Coming Soon (Segera Hadir)' }}">
+                                            <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+
                                     <a href="{{ route('film.show', $film->slug) }}" target="_blank" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors" title="Lihat di Web">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>

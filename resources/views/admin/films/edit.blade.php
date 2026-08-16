@@ -160,6 +160,29 @@
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
+                <!-- Status Coming Soon & Available From -->
+                <div class="md:col-span-2 p-4 rounded-2xl bg-zinc-950/80 border border-amber-500/30 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
+                                <span>Status Coming Soon (Segera Hadir)</span>
+                            </h4>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">Tandai jika film belum dirilis. Tombol play/nonton akan disembunyikan sampai film rilis.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_coming_soon" value="1" {{ old('is_coming_soon', $film->isComingSoon()) ? 'checked' : '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Tanggal Rilis Spesifik (Optional / Available From)</label>
+                        <input type="datetime-local" name="available_from" value="{{ old('available_from', $film->available_from ? $film->available_from->format('Y-m-d\TH:i') : '') }}" 
+                               class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
                 <!-- Live Preview -->
                 <div class="md:col-span-2 p-4 rounded-xl bg-zinc-950 border border-white/10 flex flex-col sm:flex-row items-center gap-4">
                     <img :src="posterUrl" class="w-16 h-24 object-cover rounded-lg shrink-0 border border-white/10 shadow" onerror="this.src='https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600'">
