@@ -40,6 +40,8 @@ class AdminUserController extends Controller
                 $query->where('is_banned', false);
             } elseif ($request->status === 'admin') {
                 $query->where('is_admin', true);
+            } elseif ($request->status === 'ad_free') {
+                $query->where('is_ad_free', true);
             }
         }
 
@@ -51,10 +53,46 @@ class AdminUserController extends Controller
             'active'  => User::where('is_banned', false)->count(),
             'banned'  => User::where('is_banned', true)->count(),
             'admin'   => User::where('is_admin', true)->count(),
+            'ad_free' => User::where('is_ad_free', true)->count(),
             'trashed' => User::onlyTrashed()->count(),
         ];
 
         return view('admin.users.index', compact('users', 'stats'));
+    }
+
+    /**
+     * Toggle ad-free status for a specific user.
+     */
+    public function toggleAdFree(User $user)
+    {
+        $user->update([
+            'is_ad_free' => !$user->is_ad_free,
+        ]);
+
+        $statusText = $user->is_ad_free ? 'diaktifkan (Bebas Iklan)' : 'dinonaktifkan (Iklan Ditampilkan)';
+        AdminActivityLog::log('updated_user_ad_free', "Status bebas iklan untuk user '{$user->name}' ({$user->email}) {$statusText}.", 'User', $user->id);
+
+        return redirect()->back()->with('success', "Status bebas iklan untuk user '{$user->name}' berhasil {$statusText}.");
+    }
+
+    /**
+     * Toggle admin role for a specific user.
+     */
+    public function toggleAdmin(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak dapat mencabut hak akses Administrator pada akun Anda sendiri.');
+        }
+
+        $newRole = !$user->is_admin;
+        $user->update([
+            'is_admin' => $newRole,
+        ]);
+
+        $roleText = $newRole ? 'Administrator' : 'Pengguna Biasa';
+        AdminActivityLog::log('updated_user_role', "Mengubah role user '{$user->name}' ({$user->email}) menjadi {$roleText}.", 'User', $user->id);
+
+        return redirect()->back()->with('success', "Role pengguna '{$user->name}' berhasil diubah menjadi {$roleText}.");
     }
 
     public function show($id)

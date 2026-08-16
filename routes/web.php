@@ -279,6 +279,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // User Management
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+    Route::post('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle_admin');
+    Route::post('/users/{user}/toggle-ad-free', [AdminUserController::class, 'toggleAdFree'])->name('users.toggle_ad_free');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');

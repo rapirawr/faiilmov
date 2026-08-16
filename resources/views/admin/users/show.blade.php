@@ -51,6 +51,12 @@
                     @if($user->isAdmin())
                         <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">Admin</span>
                     @endif
+                    @if($user->is_ad_free)
+                        <span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-400/40 flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
+                            <span>Bebas Iklan</span>
+                        </span>
+                    @endif
                     @if($user->isBanned())
                         <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-extrabold text-[10px] uppercase">Banned</span>
                     @endif
@@ -59,16 +65,42 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            @if(!$user->trashed() && !$user->isAdmin())
-                @if($user->isBanned())
-                    <form action="{{ route('admin.users.unban', $user->id) }}" method="POST" onsubmit="return confirm('Cabut suspen user ini?')">
+        <div class="flex flex-wrap items-center gap-3">
+            @if(!$user->trashed())
+                <!-- Toggle Ad-Free Button -->
+                <form action="{{ route('admin.users.toggle_ad_free', $user->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" 
+                            class="px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer {{ $user->is_ad_free ? 'bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 border-amber-400/40 shadow-sm' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-white/10' }}"
+                            title="{{ $user->is_ad_free ? 'Matikan status bebas iklan (Pengguna akan melihat iklan)' : 'Aktifkan status bebas iklan (Pengguna tidak akan melihat iklan)' }}">
+                        <i data-lucide="{{ $user->is_ad_free ? 'sparkles' : 'shield-ban' }}" class="w-4 h-4 {{ $user->is_ad_free ? 'text-amber-400' : 'text-zinc-400' }}"></i>
+                        <span>{{ $user->is_ad_free ? 'Matikan Bebas Iklan' : 'Jadikan Bebas Iklan (No Ads)' }}</span>
+                    </button>
+                </form>
+
+                @if($user->id !== auth()->id())
+                    <!-- Toggle Admin Role Button -->
+                    <form action="{{ route('admin.users.toggle_admin', $user->id) }}" method="POST" onsubmit="return confirm('{{ $user->isAdmin() ? "Cabut hak akses Administrator dari pengguna ini?" : "Angkat pengguna ini menjadi Administrator dengan akses penuh ke Admin Panel?" }}');">
                         @csrf
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="user-check" class="w-4 h-4"></i>
-                            <span>Unban User</span>
+                        <button type="submit" 
+                                class="px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer {{ $user->isAdmin() ? 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/30' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' }}"
+                                title="{{ $user->isAdmin() ? 'Cabut hak akses admin' : 'Angkat menjadi Administrator' }}">
+                            <i data-lucide="{{ $user->isAdmin() ? 'shield-minus' : 'crown' }}" class="w-4 h-4 {{ $user->isAdmin() ? 'text-rose-400' : 'text-amber-400' }}"></i>
+                            <span>{{ $user->isAdmin() ? 'Cabut Akses Admin' : 'Jadikan Admin' }}</span>
                         </button>
                     </form>
+                @endif
+
+                @if(!$user->isAdmin())
+                    @if($user->isBanned())
+                        <form action="{{ route('admin.users.unban', $user->id) }}" method="POST" onsubmit="return confirm('Cabut suspen user ini?')">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="user-check" class="w-4 h-4"></i>
+                                <span>Unban User</span>
+                            </button>
+                        </form>
+                    @endif
                 @endif
             @endif
 

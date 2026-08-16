@@ -25,6 +25,11 @@ class AdService
             return false;
         }
 
+        // 3. Check Account-Specific Ad-Free flag
+        if (Auth::check() && Auth::user()->is_ad_free) {
+            return false;
+        }
+
         return true;
     }
 
@@ -106,8 +111,14 @@ class AdService
      */
     public static function isAntiAdblockEnabled(): bool
     {
-        // Don't show anti-adblock prompt to admins
-        if (Auth::check() && Auth::user()->isAdmin()) {
+        // Don't show anti-adblock prompt to admins unless testing mode is on
+        $showToAdmin = Setting::get('ads_show_to_admin', '0') === '1';
+        if (!$showToAdmin && Auth::check() && Auth::user()->isAdmin()) {
+            return false;
+        }
+
+        // Don't show anti-adblock to ad-free users
+        if (Auth::check() && Auth::user()->is_ad_free) {
             return false;
         }
 
