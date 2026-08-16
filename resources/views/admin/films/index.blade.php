@@ -246,6 +246,14 @@
                        class="w-full min-w-0 bg-transparent text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
             </div>
 
+            <!-- Search Button -->
+            <button type="submit" 
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-[0.98] cursor-pointer shrink-0"
+                    title="Cari Film">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                <span>Cari</span>
+            </button>
+
             <!-- Type Filter Dropdown -->
             <div class="w-36">
                 <x-custom-dropdown 
@@ -329,7 +337,7 @@
             </div>
 
             <!-- Reset Filter Button -->
-            @if(request()->hasAny(['search', 'type', 'content_rating', 'genre', 'sort']))
+            @if(request()->hasAny(['search', 'type', 'content_rating', 'genre', 'sort', 'coming_soon']))
                 <a href="{{ route('admin.films.index') }}" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors" title="Reset Semua Filter">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                 </a>

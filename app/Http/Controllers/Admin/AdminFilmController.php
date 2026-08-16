@@ -121,15 +121,12 @@ class AdminFilmController extends Controller
         $availableFrom = $request->filled('available_from') ? $request->available_from : null;
         $isComingSoonReq = $request->boolean('is_coming_soon');
         if ($isComingSoonReq && !$availableFrom) {
-            $availableFrom = now()->addYear();
+            $availableFrom = now()->addMonth();
         } elseif (!$isComingSoonReq && !$request->filled('available_from')) {
             $availableFrom = null;
         }
 
         $releaseYear = $validated['release_year'] ?? (int)date('Y');
-        if ($isComingSoonReq && $releaseYear <= (int)date('Y')) {
-            $releaseYear = (int)date('Y') + 1;
-        }
 
         $film = Film::create([
             'title' => $validated['title'],
@@ -210,17 +207,12 @@ class AdminFilmController extends Controller
         $availableFrom = $request->filled('available_from') ? $request->available_from : null;
         $isComingSoonReq = $request->boolean('is_coming_soon');
         if ($isComingSoonReq && !$availableFrom) {
-            $availableFrom = ($film->available_from && $film->available_from->isFuture()) ? $film->available_from : now()->addYear();
+            $availableFrom = ($film->available_from && $film->available_from->isFuture()) ? $film->available_from : now()->addMonth();
         } elseif (!$isComingSoonReq && !$request->filled('available_from')) {
             $availableFrom = null;
         }
 
         $releaseYear = $validated['release_year'] ?? $film->release_year;
-        if ($isComingSoonReq && $releaseYear <= (int)date('Y')) {
-            $releaseYear = (int)date('Y') + 1;
-        } elseif (!$isComingSoonReq && $film->isComingSoon() && $releaseYear > (int)date('Y')) {
-            $releaseYear = (int)date('Y');
-        }
 
         $film->update([
             'title' => $validated['title'],
@@ -437,14 +429,12 @@ class AdminFilmController extends Controller
         if ($film->isComingSoon()) {
             $film->update([
                 'available_from' => null,
-                'release_year' => min($film->release_year, (int)date('Y')),
+                'release_year' => min($film->release_year ?? (int)date('Y'), (int)date('Y')),
             ]);
             $msg = "Status Coming Soon untuk film '{$film->title}' telah dinonaktifkan (film sudah rilis).";
         } else {
-            $nextYear = (int)date('Y') + 1;
             $film->update([
-                'available_from' => now()->addYear(),
-                'release_year' => max($film->release_year, $nextYear),
+                'available_from' => now()->addMonth(),
             ]);
             $msg = "Film '{$film->title}' berhasil ditandai sebagai Coming Soon (Segera Hadir).";
         }
