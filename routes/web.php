@@ -238,6 +238,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/films-content-rating', [AdminFilmController::class, 'updateContentRatings'])->name('films.update_content_ratings');
     Route::post('/films/auto-rate-all', [AdminFilmController::class, 'autoRateAll'])->name('films.auto_rate_all');
     Route::post('/films/{film}/auto-rate', [AdminFilmController::class, 'autoRate'])->name('films.auto_rate');
+    Route::post('/films/fetch-imdb', [AdminFilmController::class, 'fetchImdb'])->name('films.fetch_imdb');
+    Route::post('/films/import-imdb', [AdminFilmController::class, 'importImdb'])->name('films.import_imdb');
     Route::post('/films/{film}/toggle-coming-soon', [AdminFilmController::class, 'toggleComingSoon'])->name('films.toggle_coming_soon');
     Route::resource('films', AdminFilmController::class);
 

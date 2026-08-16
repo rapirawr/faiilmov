@@ -8,7 +8,91 @@
     trashModalOpen: false, 
     syncDropdownOpen: false,
     ratingDropdownOpen: false,
-    isSubmitting: false
+    imdbModalOpen: false,
+    imdbUrl: '',
+    imdbLoading: false,
+    imdbImporting: false,
+    imdbError: '',
+    imdbData: null,
+    activeAudioUrl: null,
+    audioObj: null,
+    isSubmitting: false,
+    toggleAudioPreview(url) {
+        if (!url) return;
+        if (this.audioObj && this.activeAudioUrl === url) {
+            this.audioObj.pause();
+            this.audioObj = null;
+            this.activeAudioUrl = null;
+            return;
+        }
+        if (this.audioObj) {
+            this.audioObj.pause();
+        }
+        this.audioObj = new Audio(url);
+        this.activeAudioUrl = url;
+        this.audioObj.play().catch(() => {});
+        this.audioObj.onended = () => {
+            this.audioObj = null;
+            this.activeAudioUrl = null;
+        };
+    },
+    async fetchImdbPreview() {
+        if (!this.imdbUrl.trim()) {
+            this.imdbError = 'Silakan masukkan link atau ID IMDb terlebih dahulu.';
+            return;
+        }
+        this.imdbLoading = true;
+        this.imdbError = '';
+        this.imdbData = null;
+        try {
+            const res = await fetch('{{ route('admin.films.fetch_imdb') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ imdb_url: this.imdbUrl.trim() })
+            });
+            const result = await res.json();
+            if (!res.ok || result.status !== 'ok') {
+                this.imdbError = result.message || 'Gagal mengambil data dari link IMDb.';
+            } else {
+                this.imdbData = result.data;
+                setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
+            }
+        } catch (e) {
+            this.imdbError = 'Terjadi kesalahan saat memproses: ' + e.message;
+        } finally {
+            this.imdbLoading = false;
+        }
+    },
+    async directImportImdb() {
+        if (!this.imdbUrl.trim()) return;
+        this.imdbImporting = true;
+        this.imdbError = '';
+        try {
+            const res = await fetch('{{ route('admin.films.import_imdb') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ imdb_url: this.imdbUrl.trim() })
+            });
+            const result = await res.json();
+            if (!res.ok || result.status !== 'ok') {
+                this.imdbError = result.message || 'Gagal mengimpor film dari IMDb.';
+                this.imdbImporting = false;
+            } else {
+                window.location.href = result.redirect || '{{ route('admin.films.index') }}';
+            }
+        } catch (e) {
+            this.imdbError = 'Terjadi kesalahan saat menyimpan: ' + e.message;
+            this.imdbImporting = false;
+        }
+    }
 }" class="space-y-6 relative">
 
 <script>
@@ -418,6 +502,13 @@
                 </div>
             </div>
 
+            <!-- Import from IMDb Button -->
+            <button type="button" @click="imdbModalOpen = true; imdbError = ''; imdbData = null; imdbUrl = ''; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }"
+                    class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]">
+                <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Import IMDb</span>
+            </button>
+
             <!-- Add New Film (Primary CTA) -->
             <a href="{{ route('admin.films.create') }}" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-all">
                 <i data-lucide="plus" class="w-4 h-4"></i>
@@ -715,6 +806,237 @@
                 <button @click="trashModalOpen = false" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
                     Tutup
                 </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- IMDb Live Import Modal -->
+    <div x-show="imdbModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" 
+         style="display: none;">
+        
+        <div @click.away="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" 
+             class="bg-zinc-900 border border-amber-500/30 rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i data-lucide="film" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base font-['Outfit'] flex items-center gap-2">
+                            <span>Import Film & Soundtrack dari IMDb</span>
+                            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase">Otomatis</span>
+                        </h3>
+                        <p class="text-xs text-zinc-400">Masukkan link atau ID IMDb untuk mengambil metadata, sinopsis, poster, pemeran, hingga daftar OST.</p>
+                    </div>
+                </div>
+
+                <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="space-y-3 shrink-0">
+                <div class="flex flex-col sm:flex-row items-center gap-2.5">
+                    <div class="flex-1 w-full relative">
+                        <i data-lucide="link" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input type="text" x-model="imdbUrl" @keydown.enter.prevent="fetchImdbPreview()"
+                               placeholder="https://www.imdb.com/title/tt1375666/ atau tt1375666..." 
+                               class="w-full bg-zinc-950 border border-white/15 focus:border-amber-500 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-zinc-500 outline-none transition-all">
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button type="button" @click="fetchImdbPreview()" :disabled="imdbLoading || !imdbUrl.trim()"
+                                class="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                            <i data-lucide="search" class="w-4 h-4" x-show="!imdbLoading"></i>
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbLoading" style="display:none;"></i>
+                            <span x-text="imdbLoading ? 'Mengambil Data...' : 'Tarik Data & OST'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Alert -->
+                <div x-show="imdbError" x-transition class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2" style="display: none;">
+                    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
+                    <span x-text="imdbError"></span>
+                </div>
+            </div>
+
+            <!-- Preview Content (Scrollable) -->
+            <div class="flex-1 overflow-y-auto space-y-6 pr-1">
+                
+                <!-- Initial Placeholder State -->
+                <div x-show="!imdbData && !imdbLoading" class="py-12 text-center text-zinc-500 space-y-3">
+                    <div class="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-zinc-600">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-amber-500/40"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-semibold text-zinc-300">Tempelkan Link Film IMDb di Atas</p>
+                        <p class="text-xs text-zinc-500 max-w-md mx-auto">Sistem akan membaca judul, rating, usia, durasi, poster kualitas tinggi, daftar cast/pemeran, dan melacak seluruh lagu Soundtrack (OST) dengan preview audio.</p>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 text-[11px] text-zinc-500 pt-2">
+                        <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt1375666/'; fetchImdbPreview();">Contoh: Inception (tt1375666)</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt15398776/'; fetchImdbPreview();">Oppenheimer (tt15398776)</span>
+                    </div>
+                </div>
+
+                <!-- Loading Skeleton -->
+                <div x-show="imdbLoading" class="py-12 text-center space-y-4" style="display: none;">
+                    <div class="w-12 h-12 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto"></div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-bold text-amber-300">Sedang Menganalisis IMDb & Mengumpulkan OST...</p>
+                        <p class="text-xs text-zinc-400">Menghubungkan metadata film, sinopsis, pemeran, dan lagu soundtrack.</p>
+                    </div>
+                </div>
+
+                <!-- Loaded Preview Data -->
+                <template x-if="imdbData">
+                    <div class="space-y-6">
+                        <!-- Main Film Header Card -->
+                        <div class="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 flex flex-col sm:flex-row gap-5">
+                            <div class="w-28 sm:w-36 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0 shadow-lg relative">
+                                <img :src="imdbData.poster_url" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600'">
+                                <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-mono font-extrabold text-amber-300 border border-white/15" x-text="imdbData.max_resolution"></span>
+                            </div>
+
+                            <div class="flex-1 space-y-3 min-w-0">
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase"
+                                              :class="imdbData.subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : (imdbData.subject_type === 'dracin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30')"
+                                              x-text="imdbData.subject_type"></span>
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-extrabold" x-text="imdbData.content_rating || '13+'"></span>
+                                        <span class="text-xs text-zinc-400 font-medium" x-text="imdbData.release_year"></span>
+                                        <span class="text-zinc-600">•</span>
+                                        <span class="text-xs text-zinc-400 font-medium" x-text="imdbData.duration_minutes + ' Menit'"></span>
+                                    </div>
+                                    <h4 class="text-lg sm:text-xl font-bold text-white font-serif leading-snug" x-text="imdbData.title"></h4>
+                                </div>
+
+                                <div class="flex items-center gap-4 text-xs">
+                                    <div class="flex items-center gap-1.5 font-bold text-amber-400">
+                                        <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
+                                        <span x-text="imdbData.rating + ' / 5.0'"></span>
+                                    </div>
+                                    <div class="text-zinc-400 text-[11px]" x-show="imdbData.moviebox_subject_id">
+                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex items-center gap-1 inline-flex">
+                                            <i data-lucide="check" class="w-3 h-3"></i>
+                                            <span>Stream Terhubung</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Genres -->
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="g in imdbData.genres" :key="g">
+                                        <span class="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-zinc-300 font-medium" x-text="g"></span>
+                                    </template>
+                                </div>
+
+                                <!-- Synopsis -->
+                                <p class="text-xs text-zinc-400 line-clamp-3 leading-relaxed" x-text="imdbData.synopsis"></p>
+                            </div>
+                        </div>
+
+                        <!-- Cast / Actors Section -->
+                        <div class="space-y-2.5">
+                            <h5 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
+                                <span>Pemeran & Aktor (<span x-text="imdbData.actors ? imdbData.actors.length : 0"></span>)</span>
+                            </h5>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                <template x-for="(act, idx) in (imdbData.actors || []).slice(0, 8)" :key="idx">
+                                    <div class="p-2 rounded-xl bg-zinc-950 border border-white/10 flex items-center gap-2.5">
+                                        <img :src="act.photo_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150'" class="w-8 h-8 rounded-lg object-cover bg-zinc-900 border border-white/10 shrink-0">
+                                        <div class="min-w-0">
+                                            <p class="font-bold text-white text-[11px] truncate" x-text="act.name"></p>
+                                            <p class="text-[10px] text-zinc-400 truncate" x-text="act.character_name || 'Cast'"></p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Soundtrack (OST) Section -->
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="music" class="w-4 h-4 text-amber-400"></i>
+                                    <span>Soundtrack & Lagu Film (OST) — <span x-text="imdbData.soundtracks ? imdbData.soundtracks.length : 0"></span> Lagu Ditemukan</span>
+                                </h5>
+                                <span class="text-[10px] text-zinc-500">Otomatis disimpan ke tab OST</span>
+                            </div>
+
+                            <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                <template x-for="(track, tIdx) in (imdbData.soundtracks || [])" :key="tIdx">
+                                    <div class="p-2.5 rounded-xl bg-zinc-950 border border-white/10 flex items-center justify-between gap-3 hover:border-amber-500/30 transition-colors group">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-white/10">
+                                                <img :src="track.artwork_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150'" class="w-full h-full object-cover">
+                                                <button type="button" x-show="track.preview_audio_url" @click="toggleAudioPreview(track.preview_audio_url)"
+                                                        class="absolute inset-0 bg-black/60 flex items-center justify-center text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                                    <i data-lucide="play" class="w-3.5 h-3.5" x-show="activeAudioUrl !== track.preview_audio_url"></i>
+                                                    <i data-lucide="pause" class="w-3.5 h-3.5" x-show="activeAudioUrl === track.preview_audio_url"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <p class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                                                    <span x-text="track.track_name"></span>
+                                                    <span x-show="activeAudioUrl === track.preview_audio_url" class="px-1.5 py-0.2 rounded text-[9px] bg-amber-500 text-zinc-950 font-extrabold animate-pulse">Playing</span>
+                                                </p>
+                                                <p class="text-[11px] text-zinc-400 truncate" x-text="track.artist_name + (track.collection_name ? ' • ' + track.collection_name : '')"></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <span class="text-[10px] text-zinc-500 font-mono">#<span x-text="tIdx + 1"></span></span>
+                                            <button type="button" x-show="track.preview_audio_url" @click="toggleAudioPreview(track.preview_audio_url)"
+                                                    class="p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                                                    :class="activeAudioUrl === track.preview_audio_url ? 'bg-amber-500 text-zinc-950 border-amber-400' : 'bg-white/5 text-zinc-300 border-white/10 hover:text-white hover:bg-white/10'">
+                                                <i data-lucide="play" class="w-3 h-3" x-show="activeAudioUrl !== track.preview_audio_url"></i>
+                                                <i data-lucide="pause" class="w-3 h-3" x-show="activeAudioUrl === track.preview_audio_url"></i>
+                                                <span class="text-[10px]" x-text="activeAudioUrl === track.preview_audio_url ? 'Stop' : 'Preview'"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div x-show="!imdbData.soundtracks || imdbData.soundtracks.length === 0" class="p-4 rounded-xl bg-zinc-950/60 border border-white/5 text-center text-zinc-500 text-xs">
+                                    Tidak ada OST resmi yang terdeteksi untuk judul ini.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between border-t border-white/10 pt-4 shrink-0">
+                <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
+                    Batal
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" x-show="imdbData" @click="directImportImdb()" :disabled="imdbImporting"
+                            class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                        <i data-lucide="check-circle" class="w-4 h-4" x-show="!imdbImporting"></i>
+                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbImporting" style="display:none;"></i>
+                        <span x-text="imdbImporting ? 'Sedang Menyimpan...' : 'Simpan Film Lengkap ke Database'"></span>
+                    </button>
+                </div>
             </div>
 
         </div>

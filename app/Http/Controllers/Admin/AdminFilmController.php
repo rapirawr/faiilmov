@@ -10,6 +10,7 @@ use App\Models\Season;
 use App\Models\Episode;
 use App\Models\AdminActivityLog;
 use App\Jobs\SyncFilmsJob;
+use App\Services\ImdbService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -442,5 +443,152 @@ class AdminFilmController extends Controller
         AdminActivityLog::log('updated_film_coming_soon', $msg, 'Film', $film->id);
 
         return back()->with('success', $msg);
+    }
+
+    /**
+     * Live fetch preview data from IMDb URL / ID
+     */
+    public function fetchImdb(Request $request, ImdbService $imdbService)
+    {
+        $request->validate([
+            'imdb_url' => 'required|string',
+        ]);
+
+        $data = $imdbService->fetchFilmData($request->input('imdb_url'));
+
+        if (!$data) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data dari link atau ID IMDb tersebut. Pastikan format link atau ID IMDb valid (contoh: tt1375666 atau https://www.imdb.com/title/tt1375666/).',
+            ], 422);
+        }
+
+        // Match existing genres in local database
+        $genreIds = [];
+        if (!empty($data['genres'])) {
+            $allGenres = Genre::all()->keyBy(fn($g) => strtolower(trim($g->name)));
+            foreach ($data['genres'] as $gName) {
+                $cleanName = strtolower(trim($gName));
+                if (isset($allGenres[$cleanName])) {
+                    $genreIds[] = $allGenres[$cleanName]->id;
+                }
+            }
+        }
+        $data['genre_ids'] = $genreIds;
+
+        return response()->json([
+            'status' => 'ok',
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Direct import movie with cast, genres, and soundtracks from IMDb link
+     */
+    public function importImdb(Request $request, ImdbService $imdbService)
+    {
+        $request->validate([
+            'imdb_url' => 'required|string',
+        ]);
+
+        $data = $imdbService->fetchFilmData($request->input('imdb_url'));
+
+        if (!$data) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal mengambil metadata dari link IMDb yang dimasukkan. Pastikan URL atau ID IMDb valid.',
+                ], 422);
+            }
+            return back()->with('error', 'Gagal mengambil metadata dari link IMDb yang dimasukkan. Pastikan URL atau ID IMDb valid.');
+        }
+
+        $baseSlug = Str::slug($data['title']);
+        $slug = $baseSlug ? $baseSlug . '-' . Str::random(5) : 'film-' . rand(1000, 9999);
+
+        $film = Film::create([
+            'title' => $data['title'],
+            'slug' => $slug,
+            'synopsis' => $data['synopsis'] ?? null,
+            'release_year' => $data['release_year'] ?? (int)date('Y'),
+            'duration_minutes' => $data['duration_minutes'] ?? 120,
+            'rating' => $data['rating'] ?? 0.0,
+            'subject_type' => $data['subject_type'] ?? 'movie',
+            'content_rating' => $data['content_rating'] ?? '13+',
+            'max_resolution' => $data['max_resolution'] ?? '1080P',
+            'view_count' => 0,
+            'trailer_url' => $data['trailer_url'] ?? null,
+            'poster_url' => $data['poster_url'] ?: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600',
+            'backdrop_url' => $data['backdrop_url'] ?? null,
+            'moviebox_subject_id' => $data['moviebox_subject_id'] ?? null,
+            'available_from' => $data['available_from'] ?? null,
+        ]);
+
+        // Sync Genres
+        if (!empty($data['genres'])) {
+            $genreIds = [];
+            foreach ($data['genres'] as $gName) {
+                $genre = Genre::firstOrCreate(
+                    ['name' => $gName],
+                    ['slug' => Str::slug($gName)]
+                );
+                $genreIds[] = $genre->id;
+            }
+            $film->genres()->sync($genreIds);
+        }
+
+        // Sync Actors & Cast
+        if (!empty($data['actors'])) {
+            $actorData = [];
+            foreach ($data['actors'] as $act) {
+                $actor = Actor::firstOrCreate(
+                    ['name' => $act['name']],
+                    [
+                        'photo_url' => $act['photo_url'] ?? null,
+                        'slug' => Str::slug($act['name']),
+                    ]
+                );
+                if (!empty($act['photo_url']) && (empty($actor->getRawOriginal('photo_url')) || str_contains($actor->getRawOriginal('photo_url'), 'unsplash.com'))) {
+                    $actor->update(['photo_url' => $act['photo_url']]);
+                }
+                $actorData[$actor->id] = [
+                    'character_name' => $act['character_name'] ?? null,
+                    'role_type' => $act['role_type'] ?? 'regular',
+                ];
+            }
+            $film->actors()->sync($actorData);
+        }
+
+        // Sync Soundtracks (OST)
+        $soundtrackCount = 0;
+        if (!empty($data['soundtracks'])) {
+            foreach ($data['soundtracks'] as $st) {
+                $film->soundtracks()->create([
+                    'track_name' => $st['track_name'],
+                    'artist_name' => $st['artist_name'] ?? 'Various Artists',
+                    'collection_name' => $st['collection_name'] ?? ($film->title . ' (Original Soundtrack)'),
+                    'preview_audio_url' => $st['preview_audio_url'] ?? null,
+                    'artwork_url' => $st['artwork_url'] ?? null,
+                    'track_view_url' => $st['track_view_url'] ?? null,
+                    'order' => $st['order'] ?? ($soundtrackCount + 1),
+                ]);
+                $soundtrackCount++;
+            }
+        }
+
+        AdminActivityLog::log('imported_film_imdb', "Mengimpor film '{$film->title}' dari IMDb (" . count($data['genres'] ?? []) . " genre, " . count($data['actors'] ?? []) . " aktor, {$soundtrackCount} OST)", 'Film', $film->id);
+
+        $msg = "Film '{$film->title}' berhasil diimpor dari IMDb lengkap beserta " . count($data['actors'] ?? []) . " pemeran, " . count($data['genres'] ?? []) . " genre, dan {$soundtrackCount} soundtrack (OST)!";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'ok',
+                'message' => $msg,
+                'film_id' => $film->id,
+                'redirect' => route('admin.films.edit', $film->id),
+            ]);
+        }
+
+        return redirect()->route('admin.films.edit', $film->id)->with('success', $msg);
     }
 }

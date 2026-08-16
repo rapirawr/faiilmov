@@ -5,8 +5,73 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6" x-data="{
+    imdbUrl: '',
+    imdbLoading: false,
+    imdbError: '',
+    imdbSuccess: '',
+    title: '{{ old('title', '') }}',
+    subjectType: '{{ old('subject_type', 'movie') }}',
+    contentRating: '{{ old('content_rating', '') }}',
+    maxResolution: '{{ old('max_resolution', '1080P') }}',
+    releaseYear: '{{ old('release_year', date('Y')) }}',
+    durationMinutes: '{{ old('duration_minutes', 120) }}',
+    rating: '{{ old('rating', 8.5) }}',
+    trailerUrl: '{{ old('trailer_url', '') }}',
     posterUrl: '{{ old('poster_url', 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600') }}',
-    backdropUrl: '{{ old('backdrop_url', '') }}'
+    backdropUrl: '{{ old('backdrop_url', '') }}',
+    synopsis: '{{ old('synopsis', '') }}',
+    async fetchFromImdb() {
+        if (!this.imdbUrl.trim()) {
+            this.imdbError = 'Silakan masukkan link atau ID IMDb terlebih dahulu.';
+            return;
+        }
+        this.imdbLoading = true;
+        this.imdbError = '';
+        this.imdbSuccess = '';
+        try {
+            const res = await fetch('{{ route('admin.films.fetch_imdb') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ imdb_url: this.imdbUrl.trim() })
+            });
+            const result = await res.json();
+            if (!res.ok || result.status !== 'ok') {
+                this.imdbError = result.message || 'Gagal mengambil data dari link IMDb.';
+            } else {
+                const d = result.data;
+                this.title = d.title || this.title;
+                this.synopsis = d.synopsis || this.synopsis;
+                this.releaseYear = d.release_year || this.releaseYear;
+                this.durationMinutes = d.duration_minutes || this.durationMinutes;
+                this.rating = d.rating || this.rating;
+                this.contentRating = d.content_rating || this.contentRating;
+                this.subjectType = d.subject_type || this.subjectType;
+                this.posterUrl = d.poster_url || this.posterUrl;
+                this.backdropUrl = d.backdrop_url || this.backdropUrl;
+                this.trailerUrl = d.trailer_url || this.trailerUrl;
+                
+                // Check matching genres
+                if (Array.isArray(d.genre_ids)) {
+                    document.querySelectorAll('input[name=\'genres[]\']').forEach(chk => {
+                        chk.checked = d.genre_ids.includes(parseInt(chk.value));
+                    });
+                }
+
+                const ostCount = d.soundtracks ? d.soundtracks.length : 0;
+                const castCount = d.actors ? d.actors.length : 0;
+                this.imdbSuccess = `Berhasil menarik metadata film '${d.title}' (${d.release_year})! ${castCount} pemeran dan ${ostCount} OST lagu siap disinkronkan.`;
+                setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
+            }
+        } catch (e) {
+            this.imdbError = 'Terjadi kesalahan saat memproses: ' + e.message;
+        } finally {
+            this.imdbLoading = false;
+        }
+    }
 }">
     <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-white font-['Outfit']">Form Tambah Film Baru</h2>
@@ -14,6 +79,44 @@
             <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
             <span>Kembali</span>
         </a>
+    </div>
+
+    <!-- Quick IMDb Auto-Fill Banner -->
+    <div class="p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-amber-500/30 shadow-lg space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-amber-400">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <h3 class="text-xs font-bold uppercase tracking-wider font-['Outfit']">Auto-Fill dari Link IMDb</h3>
+            </div>
+            <span class="text-[11px] text-zinc-400">Otomatis mengisi form, pemeran & melacak OST</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-2">
+            <div class="relative flex-1 w-full">
+                <i data-lucide="link" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="text" x-model="imdbUrl" @keydown.enter.prevent="fetchFromImdb()"
+                       placeholder="Masukkan link/ID IMDb (contoh: https://www.imdb.com/title/tt1375666/ atau tt1375666)..." 
+                       class="w-full bg-zinc-950 border border-white/15 focus:border-amber-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 outline-none transition-all">
+            </div>
+
+            <button type="button" @click="fetchFromImdb()" :disabled="imdbLoading || !imdbUrl.trim()"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition-all cursor-pointer shrink-0">
+                <i data-lucide="search" class="w-3.5 h-3.5" x-show="!imdbLoading"></i>
+                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin" x-show="imdbLoading" style="display:none;"></i>
+                <span x-text="imdbLoading ? 'Mengambil Data...' : 'Auto-Fill Form'"></span>
+            </button>
+        </div>
+
+        <!-- Feedback Alerts -->
+        <div x-show="imdbError" x-transition class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2" style="display: none;">
+            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
+            <span x-text="imdbError"></span>
+        </div>
+
+        <div x-show="imdbSuccess" x-transition class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2" style="display: none;">
+            <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+            <span x-text="imdbSuccess"></span>
+        </div>
     </div>
 
     <div class="p-6 rounded-2xl bg-zinc-900/60 border border-white/10 shadow-xl">
@@ -24,7 +127,7 @@
                 <!-- Title -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Judul Film *</label>
-                    <input type="text" name="title" value="{{ old('title') }}" required placeholder="Contoh: Avatar: The Way of Water" 
+                    <input type="text" name="title" x-model="title" required placeholder="Contoh: Avatar: The Way of Water" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                     @error('title')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
                 </div>
@@ -32,56 +135,56 @@
                 <!-- Type -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tipe *</label>
-                    <select name="subject_type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                        <option value="movie" {{ old('subject_type') === 'movie' ? 'selected' : '' }}>Movie</option>
-                        <option value="series" {{ old('subject_type') === 'series' ? 'selected' : '' }}>Series</option>
-                        <option value="dracin" {{ old('subject_type') === 'dracin' ? 'selected' : '' }}>Drama China (Dracin)</option>
+                    <select name="subject_type" x-model="subjectType" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        <option value="movie">Movie</option>
+                        <option value="series">Series</option>
+                        <option value="dracin">Drama China (Dracin)</option>
                     </select>
                 </div>
 
                 <!-- Content Rating (Age Rating) -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Rating Usia (Content Rating)</label>
-                    <select name="content_rating" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                    <select name="content_rating" x-model="contentRating" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                         <option value="">-- Belum Ditentukan (Unrated) --</option>
-                        <option value="SU" {{ old('content_rating') === 'SU' ? 'selected' : '' }}>SU - Semua Umur</option>
-                        <option value="G" {{ old('content_rating') === 'G' ? 'selected' : '' }}>G - General Audience</option>
-                        <option value="PG" {{ old('content_rating') === 'PG' ? 'selected' : '' }}>PG - Parental Guidance</option>
-                        <option value="13+" {{ old('content_rating') === '13+' ? 'selected' : '' }}>13+ - Remaja</option>
-                        <option value="16+" {{ old('content_rating') === '16+' ? 'selected' : '' }}>16+ - Dewasa Muda</option>
-                        <option value="18+" {{ old('content_rating') === '18+' ? 'selected' : '' }}>18+ - Dewasa</option>
+                        <option value="SU">SU - Semua Umur</option>
+                        <option value="G">G - General Audience</option>
+                        <option value="PG">PG - Parental Guidance</option>
+                        <option value="13+">13+ - Remaja</option>
+                        <option value="16+">16+ - Dewasa Muda</option>
+                        <option value="18+">18+ - Dewasa</option>
                     </select>
                 </div>
 
                 <!-- Max Resolution -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Kualitas Maksimum</label>
-                    <select name="max_resolution" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                        <option value="1080P" {{ old('max_resolution', '1080P') === '1080P' ? 'selected' : '' }}>1080P Full HD</option>
-                        <option value="4K" {{ old('max_resolution') === '4K' ? 'selected' : '' }}>4K Ultra HD</option>
-                        <option value="720P" {{ old('max_resolution') === '720P' ? 'selected' : '' }}>720P HD</option>
-                        <option value="480P" {{ old('max_resolution') === '480P' ? 'selected' : '' }}>480P SD</option>
+                    <select name="max_resolution" x-model="maxResolution" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        <option value="1080P">1080P Full HD</option>
+                        <option value="4K">4K Ultra HD</option>
+                        <option value="720P">720P HD</option>
+                        <option value="480P">480P SD</option>
                     </select>
                 </div>
 
                 <!-- Release Year -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tahun Rilis</label>
-                    <input type="number" name="release_year" value="{{ old('release_year', date('Y')) }}" placeholder="2026" 
+                    <input type="number" name="release_year" x-model="releaseYear" placeholder="2026" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
                 <!-- Duration -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Durasi (Menit)</label>
-                    <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 120) }}" placeholder="120" 
+                    <input type="number" name="duration_minutes" x-model="durationMinutes" placeholder="120" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
                 <!-- Rating -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Rating IMDb / Web (0 - 10)</label>
-                    <input type="number" step="0.1" name="rating" value="{{ old('rating', 8.5) }}" placeholder="8.5" 
+                    <input type="number" step="0.1" name="rating" x-model="rating" placeholder="8.5" 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
@@ -95,7 +198,7 @@
                 <!-- Trailer URL -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">URL Trailer YouTube</label>
-                    <input type="url" name="trailer_url" value="{{ old('trailer_url') }}" placeholder="https://www.youtube.com/watch?v=..." 
+                    <input type="url" name="trailer_url" x-model="trailerUrl" placeholder="https://www.youtube.com/watch?v=..." 
                            class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
 
@@ -154,8 +257,8 @@
                 <!-- Synopsis -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Sinopsis</label>
-                    <textarea name="synopsis" rows="4" placeholder="Tuliskan ringkasan sinopsis film di sini..." 
-                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500">{{ old('synopsis') }}</textarea>
+                    <textarea name="synopsis" rows="4" x-model="synopsis" placeholder="Tuliskan ringkasan sinopsis film di sini..." 
+                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
                 </div>
 
                 <!-- Genres -->
