@@ -316,6 +316,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
 
+    // Ads Management (Adsterra & Monetization)
+    Route::get('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'index'])->name('ads.index');
+    Route::post('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'update'])->name('ads.update');
+
     // Custom PHP Script Runner & Saved Scripts
     Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
     Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');

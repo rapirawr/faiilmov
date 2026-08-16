@@ -275,7 +275,7 @@
                     </div>
 
                     <!-- Group 3: SISTEM & LOG -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.api_tester.*') || request()->routeIs('admin.scripts.*') || request()->routeIs('admin.changelogs.*') || request()->routeIs('admin.activity_logs.*') || request()->routeIs('admin.app_release.*') || request()->routeIs('admin.navigation.*') || request()->routeIs('admin.settings.*')) ? 'true' : 'true' }} }" class="space-y-1">
+                    <div x-data="{ open: {{ (request()->routeIs('admin.api_tester.*') || request()->routeIs('admin.scripts.*') || request()->routeIs('admin.changelogs.*') || request()->routeIs('admin.activity_logs.*') || request()->routeIs('admin.app_release.*') || request()->routeIs('admin.navigation.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.ads.*')) ? 'true' : 'true' }} }" class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
                                 class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
@@ -284,7 +284,7 @@
                                 <span>Sistem & Log</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">7</span>
+                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">8</span>
                                 <i data-lucide="chevron-up" :class="open ? '' : 'rotate-180'" class="w-4 h-4 text-zinc-400 transition-transform duration-200"></i>
                             </div>
                         </button>
@@ -357,6 +357,21 @@
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
                                     <i data-lucide="sliders" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Pengaturan Umum</span>
+                                </a>
+                            </div>
+
+                            <!-- Manajemen Iklan -->
+                            <div class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.ads.index') }}" 
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-400"></i>
+                                        <span>Manajemen Iklan</span>
+                                    </div>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                        ADS
+                                    </span>
                                 </a>
                             </div>
                         </div>

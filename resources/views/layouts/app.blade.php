@@ -93,6 +93,9 @@
 
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+
+    <!-- Adsterra Popunder / OnClick Injection -->
+    <x-ad-popunder />
 </head>
 
 <body class="bg-dark-950 text-zinc-200 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-white selection:text-zinc-950 relative overflow-x-hidden"
@@ -302,6 +305,10 @@
     </script>
     <!-- Global React Film Request Modal Container -->
     <div id="react-film-request-modal" data-csrf="{{ csrf_token() }}"></div>
+
+    <!-- Adsterra Social Bar & Anti-Adblock Module -->
+    <x-ad-social-bar />
+    <x-anti-adblock />
 
     @stack('scripts')
 </body>

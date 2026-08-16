@@ -102,6 +102,14 @@
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 <span>Kembali ke Detail Film</span>
             </a>
+
+            @if(\App\Services\AdService::isDirectLinkOnServerVip())
+                <a href="{{ \App\Services\AdService::getDirectLinkUrl() }}" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 border border-amber-500/40 text-amber-300 hover:text-white hover:border-amber-400 text-xs font-bold transition-all shadow-md">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-pulse"></i>
+                    <span>Server VIP Turbo (Fast)</span>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -129,6 +137,9 @@
 
     <!-- Main Custom Video Player Theater Area -->
     <div x-ref="theaterPlaceholder" class="relative z-30 max-w-6xl mx-auto px-0 sm:px-6 py-0 sm:py-8">
+        
+        <!-- Adsterra Banner Slot: Player Top -->
+        <x-ad-banner placement="player_top" />
         
         <!-- Placeholder card in theater area when video is floating in Mini Player -->
         <div x-show="isMiniPlayer" 
@@ -766,6 +777,9 @@
 
         </div>
 
+        <!-- Adsterra Banner Slot: Player Bottom -->
+        <x-ad-banner slot="player_bottom" />
+
         <!-- Lower Content Section (Info, Episode Selector, Downloads, Synopsis) -->
         <div class="px-4 sm:px-0">
 
@@ -950,6 +964,9 @@
             </div>
 
             <!-- Download Options -->
+            @php
+                $adDirectDownloadUrl = \App\Services\AdService::isDirectLinkOnDownload() ? \App\Services\AdService::getDirectLinkUrl() : null;
+            @endphp
             <div>
                 <h4 class="font-serif font-semibold text-sm text-white mb-3 flex items-center gap-2">
                     <i data-lucide="download" class="w-4 h-4 text-zinc-300"></i>
@@ -967,7 +984,10 @@
                                 <span class="text-[11px] text-zinc-400 block mt-1" x-text="q.size ? q.size : 'Direct Stream'"></span>
                             </div>
 
-                            <a :href="q.url" target="_blank" download class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md">
+                            <a :href="q.url" 
+                               @click="if('{{ $adDirectDownloadUrl }}') { window.open('{{ $adDirectDownloadUrl }}', '_blank'); }"
+                               target="_blank" download 
+                               class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md cursor-pointer">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                 <span>Download</span>
                             </a>

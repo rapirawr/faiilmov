@@ -266,6 +266,9 @@
             <div id="react-feature-banner" data-banners="{{ json_encode($featureBanners->values()) }}"></div>
         @endif
 
+        <!-- Adsterra Native Grid Banner Slot -->
+        <x-ad-banner placement="grid" class="max-w-5xl mx-auto" />
+
         <!-- 1. Popular Series Row -->
         @if(isset($popularSeries) && is_countable($popularSeries) && count($popularSeries) > 0)
             <section x-data="{
