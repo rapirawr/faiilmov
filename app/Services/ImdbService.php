@@ -15,6 +15,7 @@ class ImdbService
 {
     public function __construct(
         protected SoundtrackService $soundtrackService,
+        protected SynopsisAiService $synopsisAiService,
         protected ?MovieBoxService $movieBox = null
     ) {}
 
@@ -77,10 +78,18 @@ class ImdbService
                     return null;
                 }
 
-                // 4. Enrich & Fetch Soundtracks (OST)
+                // 4. Translate Synopsis to Indonesian if available
+                if (!empty($data['synopsis']) && $data['synopsis'] !== 'Plot under wraps.') {
+                    $trans = $this->synopsisAiService->translate($data['synopsis'], 'id');
+                    if (!empty($trans['translated_text'])) {
+                        $data['synopsis'] = $trans['translated_text'];
+                    }
+                }
+
+                // 5. Enrich & Fetch Soundtracks (OST)
                 $data['soundtracks'] = $this->fetchSoundtracks($imdbId, $data['title'], $data['release_year']);
 
-                // 5. Try matching with MovieBox for stream subject ID
+                // 6. Try matching with MovieBox for stream subject ID
                 $data['moviebox_subject_id'] = $this->findMovieBoxSubjectId($data['title'], $data['release_year'], $data['subject_type']);
 
                 return $data;

@@ -7,7 +7,39 @@
 <div class="max-w-5xl mx-auto space-y-6" x-data="{
     activeTab: 'details',
     posterUrl: '{{ old('poster_url', $film->poster_url) }}',
-    backdropUrl: '{{ old('backdrop_url', $film->backdrop_url) }}'
+    backdropUrl: '{{ old('backdrop_url', $film->backdrop_url) }}',
+    title: @json(old('title', $film->title)),
+    synopsis: @json(old('synopsis', $film->synopsis ?: '')),
+    isAiWorking: false,
+    async runAiSynopsis(action) {
+        this.isAiWorking = true;
+        try {
+            const res = await fetch('{{ route('admin.films.ai_synopsis_tools') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: action,
+                    title: this.title || 'Film',
+                    synopsis: this.synopsis,
+                    tone: 'cinematic'
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.synopsis) {
+                this.synopsis = data.synopsis;
+            } else if (data.message) {
+                alert(data.message);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            this.isAiWorking = false;
+        }
+    }
 }">
     <div class="flex items-center justify-between">
         <div>
@@ -192,11 +224,47 @@
                     </div>
                 </div>
 
-                <!-- Synopsis -->
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Sinopsis</label>
-                    <textarea name="synopsis" rows="4" 
-                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500">{{ old('synopsis', $film->synopsis) }}</textarea>
+                <!-- Synopsis with AI Toolbar -->
+                <div class="md:col-span-2 space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">Sinopsis</label>
+                        
+                        <!-- AI Tools Buttons -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <!-- Generate AI -->
+                            <button type="button" 
+                                    @click="runAiSynopsis('generate')"
+                                    :disabled="isAiWorking"
+                                    class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                                    title="Generate sinopsis menarik otomatis dengan AI">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="isAiWorking ? 'animate-spin' : ''"></i>
+                                <span>Generate AI</span>
+                            </button>
+
+                            <!-- Translate to Indonesian -->
+                            <button type="button" 
+                                    @click="runAiSynopsis('translate')"
+                                    :disabled="isAiWorking || !synopsis"
+                                    class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                                    title="Terjemahkan sinopsis yang ada ke Bahasa Indonesia">
+                                <i data-lucide="languages" class="w-3.5 h-3.5"></i>
+                                <span>Terjemahkan (ID)</span>
+                            </button>
+
+                            <!-- Shorten / Ringkas -->
+                            <button type="button" 
+                                    @click="runAiSynopsis('shorten')"
+                                    :disabled="isAiWorking || !synopsis"
+                                    class="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                                    title="Ringkas sinopsis menjadi lebih padat">
+                                <i data-lucide="scissors" class="w-3.5 h-3.5"></i>
+                                <span>Ringkas Padat</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <textarea name="synopsis" rows="4" x-model="synopsis" placeholder="Tuliskan ringkasan sinopsis film di sini..." 
+                              class="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-amber-500 leading-relaxed"></textarea>
                 </div>
 
                 <!-- Genres -->

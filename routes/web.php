@@ -102,6 +102,10 @@ Route::middleware('throttle:search')->group(function () {
     Route::get('/search/ai-interpret', [SearchController::class, 'aiInterpret'])->name('search.ai-interpret');
 });
 
+// Synopsis AI & Translation Routes
+Route::post('/api/synopsis/translate', [\App\Http\Controllers\SynopsisController::class, 'translate'])->name('synopsis.translate');
+Route::post('/api/synopsis/summary', [\App\Http\Controllers\SynopsisController::class, 'summary'])->name('synopsis.summary');
+
 // Nonton Bareng (Watch Party) Routes - ADD RATE LIMITING
 Route::middleware(['throttle:watch-party-create', 'auth'])->post('/watch-party/create', [\App\Http\Controllers\WatchPartyController::class, 'create'])->name('watch-party.create');
 
@@ -240,6 +244,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/films/{film}/auto-rate', [AdminFilmController::class, 'autoRate'])->name('films.auto_rate');
     Route::post('/films/fetch-imdb', [AdminFilmController::class, 'fetchImdb'])->name('films.fetch_imdb');
     Route::post('/films/import-imdb', [AdminFilmController::class, 'importImdb'])->name('films.import_imdb');
+    Route::post('/films/ai-synopsis-tools', [\App\Http\Controllers\SynopsisController::class, 'adminTools'])->name('films.ai_synopsis_tools');
     Route::post('/films/{film}/toggle-coming-soon', [AdminFilmController::class, 'toggleComingSoon'])->name('films.toggle_coming_soon');
     Route::resource('films', AdminFilmController::class);
 
