@@ -69,13 +69,16 @@ export default function FilmCard({ film }) {
           src={film.thumbnail_url || film.poster_url}
           alt={film.title}
           className="h-full w-full object-cover"
-          animate={{ scale: isHovered ? 1.07 : 1 }}
-          transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          animate={{ 
+            scale: isHovered ? 1.08 : 1,
+            filter: isHovered ? 'blur(4px)' : 'blur(0px)'
+          }}
+          transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
           loading="lazy"
         />
 
-        {/* Ambient Dark Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+        {/* Ambient Dark Overlay (Disembunyikan saat hover agar poster tetap cerah) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/50 via-transparent to-transparent opacity-60 group-hover:opacity-0 transition-opacity pointer-events-none" />
 
         {/* Resolution Badge */}
         {film.max_resolution && (
@@ -87,17 +90,17 @@ export default function FilmCard({ film }) {
           </div>
         )}
 
-        {/* Hover Quick Play Overlay (Hidden for Coming Soon films) */}
+        {/* Hover Quick Play Overlay (Tanpa backdrop shadow hitam) */}
         {!isComingSoon && (
           <motion.div
             initial={false}
             animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.9 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-10"
+            className="absolute inset-0 flex items-center justify-center z-10 pointer-events-auto"
           >
             <a
               href={watchUrl}
-              className="p-4 rounded-full bg-amber-500 text-zinc-950 shadow-2xl shadow-amber-500/50 hover:scale-110 transition-transform duration-200 flex items-center justify-center cursor-pointer"
+              className="p-3.5 sm:p-4 rounded-full bg-white text-zinc-950 shadow-2xl hover:scale-110 transition-transform duration-200 flex items-center justify-center cursor-pointer"
             >
               <Play className="w-6 h-6 fill-zinc-950 ml-0.5" />
             </a>

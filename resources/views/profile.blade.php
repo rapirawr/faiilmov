@@ -314,7 +314,7 @@
                         <div class="glass-card p-3 rounded-2xl border border-white/10 hover:border-white/30 transition-all duration-300 flex flex-col justify-between group shadow-md">
                             <div>
                                 <div class="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-dark-900">
-                                    <img :src="item.poster_url" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img :src="item.poster_url" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 group-hover:blur-[3px] transition-all duration-500">
                                     <div class="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-dark-950/80 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center gap-1 shadow">
                                         <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
                                         <span x-text="item.rating"></span>

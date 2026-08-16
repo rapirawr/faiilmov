@@ -70,7 +70,7 @@
                  decoding="async"
                  width="320"
                  height="480"
-                 class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                 class="w-full h-full object-cover group-hover/card:scale-105 group-hover/card:blur-[3px] transition-all duration-500">
 
             @if($film->max_resolution)
                 <div class="absolute bottom-2 left-2 bg-dark-950/80 border border-white/10 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-lg {{ $film->max_resolution === '4K' ? 'text-violet-300' : 'text-sky-300' }} tracking-wider shadow">

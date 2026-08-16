@@ -189,7 +189,7 @@
                         @foreach($suggestedFilms as $sFilm)
                             <a href="{{ route('film.show', $sFilm->slug) }}" class="group block">
                                 <div class="aspect-[2/3] rounded-xl overflow-hidden bg-dark-900 mb-2 border border-white/10 group-hover:border-white/30 transition-all">
-                                    <img src="{{ $sFilm->thumbnail_url }}" alt="{{ $sFilm->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    <img src="{{ $sFilm->thumbnail_url }}" alt="{{ $sFilm->title }}" class="w-full h-full object-cover group-hover:scale-105 group-hover:blur-[3px] transition-all duration-500">
                                 </div>
                                 <span class="text-xs font-semibold text-zinc-300 group-hover:text-white line-clamp-1 block">{{ $sFilm->title }}</span>
                             </a>

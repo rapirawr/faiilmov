@@ -274,7 +274,7 @@ export default function DracinCatalog({
                     <img
                       src={poster}
                       alt={title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 group-hover:blur-[3px] transition-all duration-500"
                       loading="lazy"
                     />
                   ) : (
