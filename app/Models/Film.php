@@ -477,7 +477,7 @@ class Film extends Model
         return $schema;
     }
 
-    public static function fromApiData(array $data): ?self
+    public static function fromApiData(array $data, bool $force = false): ?self
     {
         $subjectId = (string)($data['subjectId'] ?? $data['id'] ?? '');
         if (!$subjectId || $subjectId === '0') {
@@ -490,7 +490,7 @@ class Film extends Model
             $cleanTitle = $rawTitle;
         }
 
-        if (static::isExcludedTitle($rawTitle) || static::isExcludedTitle($cleanTitle)) {
+        if (!$force && (static::isExcludedTitle($rawTitle) || static::isExcludedTitle($cleanTitle))) {
             return null;
         }
 
@@ -498,7 +498,7 @@ class Film extends Model
 
         if ($existing) {
             if ($existing->trashed()) {
-                return null;
+                $existing->restore();
             }
             $slug = $existing->slug;
         } else {

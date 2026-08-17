@@ -319,7 +319,7 @@ class AnichinService
     /**
      * Sync single drama item from Anichin API into local database as 'dracin'
      */
-    public function syncItemToFilmModel(string $source, array $data): ?Film
+    public function syncItemToFilmModel(string $source, array $data, bool $force = false): ?Film
     {
         $rawId = (string)($data['id'] ?? $data['dramaId'] ?? '');
         if (!$rawId) return null;
@@ -330,11 +330,20 @@ class AnichinService
         $cleanTitle = trim(preg_replace('/\[.*?\]/', '', $rawTitle));
         if (empty($cleanTitle)) $cleanTitle = $rawTitle;
 
-        if (Film::isExcludedTitle($rawTitle) || Film::isExcludedTitle($cleanTitle)) {
+        if (!$force && (Film::isExcludedTitle($rawTitle) || Film::isExcludedTitle($cleanTitle))) {
             return null;
         }
 
-        $slug = Str::slug($cleanTitle) . '-' . substr(md5($subjectId), 0, 6);
+        $existing = Film::withTrashed()->where('moviebox_subject_id', $subjectId)->first();
+        if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+            }
+            $slug = $existing->slug;
+        } else {
+            $slug = Str::slug($cleanTitle) . '-' . substr(md5($subjectId), 0, 6);
+        }
+
         $synopsis = trim($data['synopsis'] ?? $data['description'] ?? $data['intro'] ?? $data['brief'] ?? '');
 
         $posterUrl = $data['posterImg'] ?? $data['cover'] ?? $data['poster'] ?? $data['horizontalCover'] ?? null;
