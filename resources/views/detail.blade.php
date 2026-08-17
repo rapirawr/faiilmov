@@ -65,6 +65,12 @@
                             {{ $genre->name }}
                         </span>
                     @endforeach
+                    @if($film->visual_style)
+                        <span class="px-3 py-1 rounded-xl glass-chip bg-cyan-500/15 text-cyan-300 border-cyan-500/30 text-xs font-semibold flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-3 h-3 text-cyan-400"></i>
+                            <span>{{ $film->visual_style }}</span>
+                        </span>
+                    @endif
                 </div>
 
                 <h1 class="font-serif font-extrabold text-3xl sm:text-5xl text-white tracking-tight leading-tight mb-3 drop-shadow-md">

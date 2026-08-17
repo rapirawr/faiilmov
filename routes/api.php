@@ -6,6 +6,11 @@ use App\Http\Controllers\Api\MobileApiController;
 
 Route::prefix('v1')->middleware('throttle:api')->group(function () {
     // ---------------------------------------------------------
+    // 0. GLOBAL CMS SETTINGS (BRANDING, THEMES, SEO, DISPLAY)
+    // ---------------------------------------------------------
+    Route::get('/settings', [\App\Http\Controllers\Api\PublicSettingsController::class, 'index']);
+
+    // ---------------------------------------------------------
     // 1. AUTH & USER MANAGEMENT
     // ---------------------------------------------------------
     Route::post('/login', [MobileApiController::class, 'login']);
@@ -41,6 +46,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::get('/browse', [MobileApiController::class, 'browse']);
 
     // ---------------------------------------------------------
+    // 3b. SMART COLLECTIONS (AI CURATION & FRANCHISE)
+    // ---------------------------------------------------------
+    Route::get('/collections', [\App\Http\Controllers\CollectionController::class, 'apiIndex']);
+    Route::get('/collections/{slug}', [\App\Http\Controllers\CollectionController::class, 'apiShow']);
+    Route::post('/collections/from-prompt', [\App\Http\Controllers\CollectionController::class, 'fromPrompt'])->middleware('throttle:10,1');
+
+    // ---------------------------------------------------------
     // 4. SEASONS & EPISODES
     // ---------------------------------------------------------
     Route::get('/movies/{id}/seasons', [MobileApiController::class, 'getMovieSeasons']);
@@ -63,10 +75,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::get('/actors/{id}/movies', [MobileApiController::class, 'getActorMovies']);
 
     // ---------------------------------------------------------
-    // 7. SEARCH & SEARCH ANALYTICS
+    // 7. SEARCH & SEARCH ANALYTICS & VISUAL SEARCH
     // ---------------------------------------------------------
     Route::get('/search', [MobileApiController::class, 'search']);
     Route::get('/search/popular', [MobileApiController::class, 'getPopularSearches']);
+    Route::post('/search/by-image', [\App\Http\Controllers\VisualSearchController::class, 'searchByImage']);
 
     // ---------------------------------------------------------
     // 8. WATCHLIST SYNC

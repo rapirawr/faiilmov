@@ -243,6 +243,78 @@
             </section>
         @endif
 
+        <!-- Smart Collections & Franchise Hub Carousel -->
+        @if(isset($featuredCollections) && $featuredCollections->isNotEmpty())
+            <section x-data="{
+                        scrollPrev() { $refs.collectionContainer.scrollBy({ left: -360, behavior: 'smooth' }) },
+                        scrollNext() { $refs.collectionContainer.scrollBy({ left: 360, behavior: 'smooth' }) }
+                     }" 
+                     class="space-y-4">
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/10">
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                                <span>Koleksi & Semesta Franchise</span>
+                            </h2>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('collections.index') }}" class="text-xs text-zinc-400 hover:text-white font-bold flex items-center gap-1 transition-colors">
+                        <span>Lihat Semua Koleksi</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+
+                <div class="relative group">
+                    <button @click="scrollPrev()" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/90 border border-white/20 text-zinc-300 flex items-center justify-center hover:bg-white/10 hover:border-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+
+                    <div x-ref="collectionContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
+                        @foreach($featuredCollections as $col)
+                            <a href="{{ route('collections.show', $col->slug) }}" 
+                               class="w-64 sm:w-72 shrink-0 rounded-2xl overflow-hidden bg-zinc-900/80 hover:bg-zinc-850 border border-white/10 hover:border-white/30 transition-colors duration-200 shadow-xl group/card flex flex-col justify-between">
+                                
+                                <div class="relative w-full aspect-[16/9] bg-zinc-950 overflow-hidden">
+                                    @if($col->cover_image)
+                                        <img src="{{ $col->cover_image }}" 
+                                             alt="{{ $col->name }}" 
+                                             class="w-full h-full object-cover" 
+                                             loading="lazy" />
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-zinc-950 text-zinc-700">
+                                            <i data-lucide="film" class="w-8 h-8 opacity-40"></i>
+                                        </div>
+                                    @endif
+
+                                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-black/20 pointer-events-none"></div>
+                                </div>
+
+                                <div class="p-3.5 space-y-1">
+                                    <h4 class="font-serif font-bold text-sm text-white group-hover/card:text-zinc-200 transition-colors truncate">
+                                        {{ $col->name }}
+                                    </h4>
+                                    @if($col->description)
+                                        <p class="text-[11px] text-zinc-400 line-clamp-1">
+                                            {{ $col->description }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <button @click="scrollNext()" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/90 border border-white/20 text-zinc-300 flex items-center justify-center hover:bg-white/10 hover:border-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+        @endif
+
         <!-- COMING SOON Section -->
         @if(isset($comingSoon) && is_countable($comingSoon) && count($comingSoon) > 0)
             <section x-data="{

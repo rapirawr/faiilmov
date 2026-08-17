@@ -1,3 +1,6 @@
+@php
+    $navSetting = \App\Models\SiteSetting::current();
+@endphp
 <!-- Top Navigation Header Component -->
 <header class="fixed top-0 left-0 right-0 z-40 bg-dark-950/90 backdrop-blur-xl border-b border-white/10 shadow-md">
     
@@ -14,9 +17,9 @@
         </button>
 
         <a href="{{ route('home') }}" class="hidden sm:flex items-center gap-2.5 group">
-            <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105">
-            <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
-                faiil<span class="text-zinc-400 font-sans font-bold">mov</span>
+            <img src="{{ $navSetting->logo_url }}" alt="{{ $navSetting->site_name }}" class="h-8 w-auto object-contain">
+            <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-zinc-300 transition-colors">
+                {{ $navSetting->site_name }}
             </span>
         </a>
     </div>
@@ -64,8 +67,16 @@
                    autocomplete="off"
                    class="min-w-0 flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 px-2 py-2 outline-none">
             
-            <!-- Right Section: Clear Button or Ctrl K Badge -->
-            <div class="flex items-center gap-1.5 mr-2 shrink-0">
+            <!-- Right Section: AI Vision Button, Clear Button or Ctrl K Badge -->
+            <div class="flex items-center gap-1 mr-2 shrink-0">
+                <!-- AI Vision Search Button -->
+                <button type="button" 
+                        @click.stop="window.dispatchEvent(new CustomEvent('open-visual-search-modal'))"
+                        title="Cari film via AI Vision Poster"
+                        class="text-cyan-400 hover:text-cyan-300 transition-colors p-1 cursor-pointer flex items-center justify-center rounded-md hover:bg-cyan-500/10">
+                    <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                </button>
+
                 <!-- Clear Button (muncul saat ada text) -->
                 <button type="button" 
                         x-show="query.length > 0" 

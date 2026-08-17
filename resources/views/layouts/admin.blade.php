@@ -129,8 +129,8 @@
                     </div>
 
                     <!-- Group 1: MANAJEMEN KONTEN -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.films.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.actors.*') || request()->routeIs('admin.page_elements.*')) ? 'true' : 'true' }} }" 
-                         x-show="groupHasMatch(['Manajemen Konten', 'Semua Film Katalog Movie Series Dracin', 'Cari & Impor Film Moviebox Dracin Anichin Importer', 'Elemen & Widget CMS Studio Floating Popup Broadcast Custom', 'Request Film Permintaan Permohonan', 'Banner Fitur CMS Header Hero', 'Rating Massal Content Rating Batas Usia Sensor', 'Genre Film Kategori Tag', 'Aktor & Cast Pemeran Artis Pemain'])" 
+                    <div x-data="{ open: {{ (request()->routeIs('admin.films.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.actors.*') || request()->routeIs('admin.page_elements.*') || request()->routeIs('admin.collections.*')) ? 'true' : 'true' }} }" 
+                         x-show="groupHasMatch(['Manajemen Konten', 'Semua Film Katalog Movie Series Dracin', 'Cari & Impor Film Moviebox Dracin Anichin Importer', 'Smart Collections Koleksi AI Franchise Curation', 'Elemen & Widget CMS Studio Floating Popup Broadcast Custom', 'Request Film Permintaan Permohonan', 'Banner Fitur CMS Header Hero', 'Rating Massal Content Rating Batas Usia Sensor', 'Genre Film Kategori Tag', 'Aktor & Cast Pemeran Artis Pemain'])" 
                          x-init="$watch('sidebarQuery', q => { if (q && q.trim()) open = true; })"
                          class="space-y-1">
                         <button @click="open = !open" 
@@ -141,7 +141,7 @@
                                 <span>Manajemen Konten</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">8</span>
+                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">9</span>
                                 <i data-lucide="chevron-up" :class="open ? '' : 'rotate-180'" class="w-4 h-4 text-zinc-400 transition-transform duration-200"></i>
                             </div>
                         </button>
@@ -164,6 +164,19 @@
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.importer') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
                                     <i data-lucide="download-cloud" class="w-4 h-4 text-amber-400"></i>
                                     <span>Cari & Impor Film</span>
+                                </a>
+                            </div>
+
+                            <!-- Smart Collections (AI Curation) -->
+                            <div x-show="matches('Smart Collections Koleksi AI Franchise Curation')" class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.collections.index') }}" 
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.collections.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
+                                    <span class="flex items-center gap-1.5">
+                                        Smart Collections
+                                        <span class="px-1 py-0.2 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">AI</span>
+                                    </span>
                                 </a>
                             </div>
 

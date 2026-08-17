@@ -12,6 +12,11 @@ import DracinCatalog from './components/dracin/DracinCatalog';
 import FeatureBannerRotator from './components/FeatureBannerRotator';
 import AdminDevDashboard from './components/admin/dashboard/AdminDevDashboard';
 import FilmImporter from './components/admin/films/FilmImporter';
+import CreateCollectionModal from './components/collections/CreateCollectionModal';
+import WatchOrderTimeline from './components/collections/WatchOrderTimeline';
+import AdminSmartCollections from './components/admin/collections/AdminSmartCollections';
+import VisualSearchModal from './components/search/VisualSearchModal';
+import CollectionStudioEditor from './components/collections/CollectionStudioEditor';
 
 // Make initEcho available globally and auto-initialize Echo
 window.initEcho = initEcho;
@@ -225,6 +230,90 @@ function initReactComponents() {
       );
     } catch (e) {
       console.error('Failed to mount FilmImporter', e);
+    }
+  }
+
+  // 9. Mount Global Create Collection Modal
+  const createColModalEl = document.getElementById('react-create-collection-modal');
+  if (createColModalEl && !createColModalEl.dataset.mounted) {
+    try {
+      const csrfToken = createColModalEl.dataset.csrf || '';
+      createColModalEl.dataset.mounted = 'true';
+      createRoot(createColModalEl).render(<CreateCollectionModal csrfToken={csrfToken} />);
+    } catch (e) {
+      console.error('Failed to mount CreateCollectionModal', e);
+    }
+  }
+
+  // 10. Mount Watch Order Timeline
+  const watchOrderEl = document.getElementById('react-watch-order-timeline');
+  if (watchOrderEl && !watchOrderEl.dataset.mounted) {
+    try {
+      const releaseOrders = safeJsonParse(watchOrderEl.dataset.releaseOrders, []);
+      const chronologicalOrders = safeJsonParse(watchOrderEl.dataset.chronologicalOrders, []);
+      const franchiseName = watchOrderEl.dataset.franchiseName || '';
+      watchOrderEl.dataset.mounted = 'true';
+      createRoot(watchOrderEl).render(
+        <WatchOrderTimeline
+          releaseOrders={releaseOrders}
+          chronologicalOrders={chronologicalOrders}
+          franchiseName={franchiseName}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount WatchOrderTimeline', e);
+    }
+  }
+
+  // 11. Mount Admin Smart Collections Dashboard
+  const adminCollectionsEl = document.getElementById('react-admin-smart-collections');
+  if (adminCollectionsEl && !adminCollectionsEl.dataset.mounted) {
+    try {
+      const initialCollections = safeJsonParse(adminCollectionsEl.dataset.initialCollections, []);
+      const stats = safeJsonParse(adminCollectionsEl.dataset.stats, {});
+      const csrfToken = adminCollectionsEl.dataset.csrf || '';
+      adminCollectionsEl.dataset.mounted = 'true';
+      createRoot(adminCollectionsEl).render(
+        <AdminSmartCollections
+          initialCollections={initialCollections}
+          stats={stats}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount AdminSmartCollections', e);
+    }
+  }
+
+  // 12. Mount Visual Search Modal
+  const visualSearchModalEl = document.getElementById('react-visual-search-modal');
+  if (visualSearchModalEl && !visualSearchModalEl.dataset.mounted) {
+    try {
+      const csrfToken = visualSearchModalEl.dataset.csrf || '';
+      visualSearchModalEl.dataset.mounted = 'true';
+      createRoot(visualSearchModalEl).render(<VisualSearchModal csrfToken={csrfToken} />);
+    } catch (e) {
+      console.error('Failed to mount VisualSearchModal', e);
+    }
+  }
+
+  // 13. Mount Collection Studio Editor
+  const studioEditorEl = document.getElementById('react-collection-studio-editor');
+  if (studioEditorEl && !studioEditorEl.dataset.mounted) {
+    try {
+      const collection = safeJsonParse(studioEditorEl.dataset.collection, {});
+      const initialFilms = safeJsonParse(studioEditorEl.dataset.initialFilms, []);
+      const csrfToken = studioEditorEl.dataset.csrf || '';
+      studioEditorEl.dataset.mounted = 'true';
+      createRoot(studioEditorEl).render(
+        <CollectionStudioEditor
+          collection={collection}
+          initialFilms={initialFilms}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount CollectionStudioEditor', e);
     }
   }
 }

@@ -48,6 +48,25 @@ Route::get('/genre/{slug}', [BrowseController::class, 'genre'])->name('genre.sho
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
 
+// Smart Collections & User Studio (AI Curation & Drag-and-Drop Watch Order Studio)
+Route::get('/collections', [\App\Http\Controllers\CollectionController::class, 'index'])->name('collections.index');
+Route::get('/collections/api/search-films', [\App\Http\Controllers\CollectionController::class, 'searchCatalogFilms'])->name('collections.api.search-films');
+Route::post('/collections/from-prompt', [\App\Http\Controllers\CollectionController::class, 'fromPrompt'])->name('collections.from-prompt')->middleware('throttle:15,1');
+Route::post('/collections/from-image', [\App\Http\Controllers\VisualSearchController::class, 'createCollectionFromImage'])->name('collections.from-image')->middleware('throttle:10,1');
+Route::post('/search/by-image', [\App\Http\Controllers\VisualSearchController::class, 'searchByImage'])->name('search.by-image')->middleware('throttle:20,1');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/collections', [\App\Http\Controllers\CollectionController::class, 'store'])->name('collections.store');
+    Route::get('/collections/{slug}/edit', [\App\Http\Controllers\CollectionController::class, 'edit'])->name('collections.edit');
+    Route::put('/collections/{id}', [\App\Http\Controllers\CollectionController::class, 'update'])->name('collections.update');
+    Route::post('/collections/{id}/films', [\App\Http\Controllers\CollectionController::class, 'addFilm'])->name('collections.films.add');
+    Route::delete('/collections/{id}/films/{filmId}', [\App\Http\Controllers\CollectionController::class, 'removeFilm'])->name('collections.films.remove');
+    Route::post('/collections/{id}/reorder', [\App\Http\Controllers\CollectionController::class, 'reorder'])->name('collections.reorder');
+    Route::delete('/collections/{id}', [\App\Http\Controllers\CollectionController::class, 'destroy'])->name('collections.destroy');
+});
+
+Route::get('/collections/{slug}', [\App\Http\Controllers\CollectionController::class, 'show'])->name('collections.show');
+
 // Soundtrack MP3 Direct Download Proxy Route
 Route::get('/soundtrack/download', function (\Illuminate\Http\Request $request) {
     $url = $request->query('url');
@@ -238,6 +257,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/page-elements/{pageElement}/toggle', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'toggle'])->name('page_elements.toggle');
     Route::delete('/page-elements/{pageElement}', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'destroy'])->name('page_elements.destroy');
 
+    // Smart Collections (AI Curation Engine Hub)
+    Route::get('/collections', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'index'])->name('collections.index');
+    Route::get('/collections/api-list', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'apiList'])->name('collections.api_list');
+    Route::post('/collections/rebuild', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'rebuild'])->name('collections.rebuild');
+    Route::post('/collections/{id}/toggle-publish', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'togglePublish'])->name('collections.toggle_publish');
+    Route::post('/collections/{id}/takedown', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'takedown'])->name('collections.takedown');
+    Route::post('/collections/{id}/restore', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'restore'])->name('collections.restore');
+    Route::get('/collections/{id}/suggestions', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'suggestions'])->name('collections.suggestions');
+    Route::post('/collections/{id}/films', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'addFilm'])->name('collections.add_film');
+    Route::delete('/collections/{id}/films/{film_id}', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'removeFilm'])->name('collections.remove_film');
+    Route::post('/collections/{id}/generate-watch-order', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'generateWatchOrder'])->name('collections.generate_watch_order');
+    Route::delete('/collections/{id}', [\App\Http\Controllers\Admin\AdminCollectionController::class, 'destroy'])->name('collections.destroy');
+
     // Film Management
     Route::get('/films/importer', [AdminFilmController::class, 'importer'])->name('films.importer');
     Route::post('/api/films/external-search', [AdminFilmController::class, 'externalSearch'])->name('films.external_search');
@@ -327,9 +359,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'update'])->name('navigation.update');
     Route::post('/navigation/reset', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'reset'])->name('navigation.reset');
 
-    // Site Settings
+    // Site Settings (CMS Global Settings & Configuration)
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::get('/api/settings', [AdminSettingController::class, 'apiGet'])->name('settings.api.get');
+    Route::put('/api/settings', [AdminSettingController::class, 'apiUpdate'])->name('settings.api.update');
+    Route::post('/api/settings/logo', [AdminSettingController::class, 'apiUploadLogo'])->name('settings.api.logo');
 
     // Ads Management (Adsterra & Monetization)
     Route::get('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'index'])->name('ads.index');

@@ -154,6 +154,17 @@ class NavigationService
                 'visibility' => 'all',
             ],
             [
+                'id'         => 'collections',
+                'label'      => 'Koleksi AI',
+                'icon'       => 'layers',
+                'url'        => '/collections',
+                'route'      => 'collections.index',
+                'is_active'  => true,
+                'badge'      => 'AI',
+                'target'     => '_self',
+                'visibility' => 'all',
+            ],
+            [
                 'id'         => 'most_watched',
                 'label'      => 'Most Watched',
                 'icon'       => 'flame',

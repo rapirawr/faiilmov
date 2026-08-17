@@ -161,10 +161,17 @@ class HomeController extends Controller
         $featureBanners = \App\Models\FeatureBanner::active()->ordered()->get();
         $activeFeatureBanner = $featureBanners->first();
 
+        $featuredCollections = \App\Models\Collection::published()
+            ->withCount('films')
+            ->having('films_count', '>=', 2)
+            ->orderByDesc('films_count')
+            ->limit(8)
+            ->get();
+
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return view('partials.catalog-grid', compact('films', 'searchQuery'));
         }
 
-        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'popularDracin', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery', 'activeFeatureBanner', 'featureBanners'));
+        return view('home', compact('films', 'genres', 'heroFilms', 'popularSeries', 'popularDracin', 'trendingMovies', 'continueWatching', 'becauseYouWatched', 'comingSoon', 'searchQuery', 'activeFeatureBanner', 'featureBanners', 'featuredCollections'));
     }
 }

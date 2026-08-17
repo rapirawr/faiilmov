@@ -16,6 +16,8 @@ class Film extends Model
         'title',
         'slug',
         'synopsis',
+        'poster_visual_summary',
+        'visual_style',
         'ai_embeddings',
         'release_year',
         'duration_minutes',
@@ -164,6 +166,33 @@ class Film extends Model
     public function watchlists()
     {
         return $this->hasMany(Watchlist::class);
+    }
+
+    public function tags()
+    {
+        return $this->hasMany(FilmTag::class);
+    }
+
+    public function filmEmbedding()
+    {
+        return $this->hasOne(FilmEmbedding::class);
+    }
+
+    public function collectionFilms()
+    {
+        return $this->hasMany(CollectionFilm::class);
+    }
+
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class, 'collection_films')
+            ->withPivot('added_by', 'created_at', 'updated_at')
+            ->withTimestamps();
+    }
+
+    public function watchOrders()
+    {
+        return $this->hasMany(CollectionWatchOrder::class);
     }
 
     public function scopeForActiveProfile($query)

@@ -11,27 +11,29 @@
 ])
 
 @php
+    $cmsSetting = \App\Models\SiteSetting::current();
+
     if ($film) {
         $finalTitle = $title ?? $film->seo_title;
         $finalDescription = $description ?? $film->seo_description;
         $finalKeywords = $keywords ?? $film->seo_keywords;
-        $finalImage = $image ?? ($film->backdrop_url ?: $film->poster_url ?: asset('images/logo.png'));
+        $finalImage = $image ?? ($film->backdrop_url ?: $film->poster_url ?: $cmsSetting->logo_url);
         $finalType = $type ?? ($film->subject_type === 'series' ? 'video.tv_show' : 'video.movie');
         $finalUrl = $url ?? route('film.show', $film->slug);
         $finalSchema = $schema ?? $film->schema_json_ld_array;
     } else {
-        $finalTitle = $title ?? 'faiilmov | Nonton Film & TV Series Streaming Subtitle Indonesia';
-        $finalDescription = $description ?? 'Streaming & nonton film online subtitle Indonesia gratis HD. Katalog ribuan film bioskop, drama series, anime, dan serial TV favorit di faiilmov.';
-        $finalKeywords = $keywords ?? 'nonton film, streaming film, film gratis, film sub indo, faiilmov, serial tv, moviebox, anime, streaming bioskop';
-        $finalImage = $image ?? asset('images/logo.png');
+        $finalTitle = $title ?? ($cmsSetting->seo_meta_title ?: ($cmsSetting->site_name . ' | Streaming Film & Series Subtitle Indonesia'));
+        $finalDescription = $description ?? ($cmsSetting->seo_meta_description ?: 'Streaming & nonton film online subtitle Indonesia gratis HD.');
+        $finalKeywords = $keywords ?? ($cmsSetting->seo_meta_keywords ?: 'nonton film, streaming film, film gratis, film sub indo, serial tv');
+        $finalImage = $image ?? ($cmsSetting->seo_og_image_url ?: $cmsSetting->logo_url);
         $finalType = $type ?? 'website';
-        $finalUrl = $url ?? url()->current();
+        $finalUrl = $url ?? ($cmsSetting->seo_canonical_url ?: url()->current());
         $finalSchema = $schema ?? [
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
-            'name' => 'faiilmov',
+            'name' => $cmsSetting->site_name,
             'url' => url('/'),
-            'description' => 'Streaming & nonton film online subtitle Indonesia gratis HD.',
+            'description' => $finalDescription,
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => route('browse') . '?q={search_term_string}',
@@ -54,7 +56,7 @@
 <meta name="description" content="{{ $finalDescription }}">
 <meta name="keywords" content="{{ $finalKeywords }}">
 <meta name="robots" content="{{ $finalRobots }}">
-<meta name="author" content="faiilmov">
+<meta name="author" content="{{ $cmsSetting->site_name }}">
 <link rel="canonical" href="{{ $finalUrl }}">
 
 <!-- Open Graph / Facebook / WhatsApp -->

@@ -55,6 +55,13 @@ return [
         'embedding_model' => env('NVIDIA_EMBEDDING_MODEL', 'nvidia/nv-embed-v2'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', env('GOOGLE_AI_API_KEY', '')),
+        'base_url' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+        'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'text-embedding-004'),
+        'vision_model' => env('GEMINI_VISION_MODEL', 'gemini-flash-lite-latest'),
+    ],
+
     'anichin' => [
         'api_url'      => env('ANICHIN_API_URL', 'https://api.anichin.bio'),
         'priv_api_url' => env('ANICHIN_PRIV_API_URL', 'https://priv-api.anichin.bio'),

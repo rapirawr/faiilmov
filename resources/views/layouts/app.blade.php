@@ -27,10 +27,23 @@
         <x-seo-meta />
     @endif
 
+    @php
+        $siteGlobalSetting = \App\Models\SiteSetting::current();
+    @endphp
+
     <!-- Favicon & App Icon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ $siteGlobalSetting->favicon_url }}">
+    <link rel="apple-touch-icon" href="{{ $siteGlobalSetting->logo_url }}">
+    <link rel="shortcut icon" href="{{ $siteGlobalSetting->favicon_url }}">
+
+    <!-- Dynamic CMS Theme Custom Properties -->
+    <style>
+        :root {
+            --site-primary-color: {{ $siteGlobalSetting->primary_color ?: '#ffffff' }};
+            --site-secondary-color: {{ $siteGlobalSetting->secondary_color ?: '#a1a1aa' }};
+            --site-bg-color: {{ $siteGlobalSetting->background_color ?: '#09090b' }};
+        }
+    </style>
     
     <!-- Google Fonts: Instrument Sans & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,6 +129,16 @@
              class="fixed top-20 right-6 z-50 glass-panel border border-emerald-500/40 text-emerald-400 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3">
             <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
             <span class="text-sm font-medium">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if($siteGlobalSetting->maintenance_mode && auth()->check() && (auth()->user()->is_admin || (method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin())))
+        <!-- Floating Admin Maintenance Mode Badge Indicator -->
+        <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-red-600/90 text-white font-bold text-xs shadow-2xl backdrop-blur-xl border border-white/20 flex items-center gap-2 pointer-events-auto">
+            <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <span>Mode Maintenance Aktif (Pengunjung melihat 503 • Anda melihat sebagai Admin)</span>
+            <a href="{{ route('admin.settings.index') }}" class="underline ml-1 hover:text-zinc-200">CMS &rarr;</a>
         </div>
     @endif
 
@@ -309,8 +332,10 @@
             }
         }
     </script>
-    <!-- Global React Film Request Modal Container -->
+    <!-- Global React Modals Container -->
     <div id="react-film-request-modal" data-csrf="{{ csrf_token() }}"></div>
+    <div id="react-visual-search-modal" data-csrf="{{ csrf_token() }}"></div>
+    <div id="react-create-collection-modal" data-csrf="{{ csrf_token() }}"></div>
 
     <!-- Adsterra Social Bar & Anti-Adblock Module -->
     <x-ad-social-bar />

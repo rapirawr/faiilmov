@@ -24,7 +24,7 @@ class GenerateFilmEmbeddingOnUpdate implements ShouldQueue
             }
         }
 
-        GenerateFilmEmbeddingJob::dispatch($film->id)
+        \App\Jobs\TagFilmJob::dispatch($film->id)
             ->delay(now()->addSeconds($this->delay));
     }
 
