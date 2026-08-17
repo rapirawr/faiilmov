@@ -41,10 +41,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tipe Rilis *</label>
                     <select name="type" required class="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                        <option value="major" {{ old('type', $changelog->type) === 'major' ? 'selected' : '' }}>Major Release (🚀 Fitur Utama Baru)</option>
-                        <option value="minor" {{ old('type', $changelog->type) === 'minor' ? 'selected' : '' }}>Minor Update (✨ Fitur Tambahan)</option>
-                        <option value="patch" {{ old('type', $changelog->type) === 'patch' ? 'selected' : '' }}>Patch (🔧 Perbaikan Bug)</option>
-                        <option value="security" {{ old('type', $changelog->type) === 'security' ? 'selected' : '' }}>Security Patch (🛡️ Keamanan)</option>
+                        <option value="major" {{ old('type', $changelog->type) === 'major' ? 'selected' : '' }}>Major Release (Fitur Utama Baru)</option>
+                        <option value="minor" {{ old('type', $changelog->type) === 'minor' ? 'selected' : '' }}>Minor Update (Fitur Tambahan)</option>
+                        <option value="patch" {{ old('type', $changelog->type) === 'patch' ? 'selected' : '' }}>Patch (Perbaikan Bug)</option>
+                        <option value="security" {{ old('type', $changelog->type) === 'security' ? 'selected' : '' }}>Security Patch (Keamanan)</option>
                     </select>
                 </div>
 

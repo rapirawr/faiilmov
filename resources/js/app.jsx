@@ -10,6 +10,8 @@ import DracinFeed from './components/dracin/DracinFeed';
 import DracinCatalog from './components/dracin/DracinCatalog';
 
 import FeatureBannerRotator from './components/FeatureBannerRotator';
+import AdminDevDashboard from './components/admin/dashboard/AdminDevDashboard';
+import FilmImporter from './components/admin/films/FilmImporter';
 
 // Make initEcho available globally and auto-initialize Echo
 window.initEcho = initEcho;
@@ -167,6 +169,62 @@ function initReactComponents() {
       }
     } catch (e) {
       console.error('Failed to mount FeatureBannerRotator', e);
+    }
+  }
+
+  // 7. Mount Admin Developer & Ops Real-Time Dashboard
+  const adminDevDashboardEl = document.getElementById('react-admin-dev-dashboard');
+  if (adminDevDashboardEl && !adminDevDashboardEl.dataset.mounted) {
+    try {
+      const initialSnapshot = safeJsonParse(adminDevDashboardEl.dataset.initialSnapshot, null);
+      const csrfToken = adminDevDashboardEl.dataset.csrf || '';
+      const actionUrls = {
+        importer: adminDevDashboardEl.dataset.importerUrl || '',
+        syncMoviebox: adminDevDashboardEl.dataset.syncMovieboxUrl || '',
+        syncDracin: adminDevDashboardEl.dataset.syncDracinUrl || '',
+        reports: adminDevDashboardEl.dataset.reportsUrl || '',
+        requests: adminDevDashboardEl.dataset.requestsUrl || '',
+        catalog: adminDevDashboardEl.dataset.catalogUrl || '',
+        contentRating: adminDevDashboardEl.dataset.contentRatingUrl || '',
+        users: adminDevDashboardEl.dataset.usersUrl || '',
+        watchParties: adminDevDashboardEl.dataset.watchPartiesUrl || '',
+      };
+
+      adminDevDashboardEl.dataset.mounted = 'true';
+      createRoot(adminDevDashboardEl).render(
+        <AdminDevDashboard
+          initialSnapshot={initialSnapshot}
+          csrfToken={csrfToken}
+          actionUrls={actionUrls}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount AdminDevDashboard', e);
+    }
+  }
+
+  // 8. Mount Admin Film Importer
+  const filmImporterEl = document.getElementById('react-film-importer');
+  if (filmImporterEl && !filmImporterEl.dataset.mounted) {
+    try {
+      const searchUrl = filmImporterEl.dataset.searchUrl || '';
+      const detailUrl = filmImporterEl.dataset.detailUrl || '';
+      const importUrl = filmImporterEl.dataset.importUrl || '';
+      const importBatchUrl = filmImporterEl.dataset.importBatchUrl || '';
+      const csrfToken = filmImporterEl.dataset.csrf || '';
+
+      filmImporterEl.dataset.mounted = 'true';
+      createRoot(filmImporterEl).render(
+        <FilmImporter
+          searchUrl={searchUrl}
+          detailUrl={detailUrl}
+          importUrl={importUrl}
+          importBatchUrl={importBatchUrl}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount FilmImporter', e);
     }
   }
 }

@@ -540,6 +540,7 @@ class MovieBoxService
             $url = $baseHost . $pathAndQuery;
 
             $headers = $this->buildSignedHeaders($method, $url, $bodyStr);
+            $startMicro = microtime(true);
 
             try {
                 // Fast 3s timeout per host instead of 12s
@@ -553,15 +554,20 @@ class MovieBoxService
                     $response = $http->get($url);
                 }
 
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
                 $this->absorbXUserToken($response->headers());
 
                 if (in_array($response->status(), $retryStatusCodes, true)) {
+                    app(SystemHealthService::class)->logApiCall('moviebox', $baseHost, false, $response->status(), $latencyMs, 'HTTP ' . $response->status() . ' Retryable status code');
                     continue;
                 }
 
                 if (!$response->successful()) {
+                    app(SystemHealthService::class)->logApiCall('moviebox', $baseHost, false, $response->status(), $latencyMs, 'HTTP ' . $response->status() . ' Unsuccessful response');
                     continue;
                 }
+
+                app(SystemHealthService::class)->logApiCall('moviebox', $baseHost, true, $response->status(), $latencyMs, null);
 
                 $this->activeHostIdx = $idx;
                 $data = $response->json();
@@ -572,6 +578,8 @@ class MovieBoxService
 
                 return $data;
             } catch (Exception $e) {
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+                app(SystemHealthService::class)->logApiCall('moviebox', $baseHost, false, null, $latencyMs, $e->getMessage());
                 Log::debug(sprintf('MovieBox host %s failed: %s', $baseHost, $e->getMessage()));
                 continue;
             }

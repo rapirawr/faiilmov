@@ -227,7 +227,7 @@
                     <!-- Tombol Utama (Button 1: Mobile) -->
                     <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
                         <span class="text-[11px] font-bold text-white flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-white"></span>
+                            <i data-lucide="smartphone" class="w-3.5 h-3.5 text-zinc-300"></i>
                             <span>Tombol Utama (Default: Mobile)</span>
                         </span>
 
@@ -238,25 +238,25 @@
                                 <button type="button" 
                                         @click="openIconPicker('widget1')" 
                                         class="w-full h-9 rounded-xl bg-zinc-900 border border-zinc-700 text-white flex items-center justify-center hover:bg-zinc-800 transition-colors cursor-pointer"
-                                        title="Ganti icon tombol utama">
-                                    <span class="flex items-center justify-center pointer-events-none" x-html="getIconSvg(sidebarWidget.button_icon || 'smartphone', 'w-4 h-4 text-zinc-200')"></span>
+                                        title="Pilih Icon Tombol">
+                                    <i :data-lucide="sidebarWidget.button1_icon || 'smartphone'" class="w-4 h-4"></i>
                                 </button>
                             </div>
 
-                            <!-- Label (4 Cols) -->
-                            <div class="sm:col-span-4 space-y-1">
-                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Label Tombol</label>
+                            <!-- Label (5 Cols) -->
+                            <div class="sm:col-span-5 space-y-1">
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Teks Tombol</label>
                                 <input type="text" 
-                                       x-model="sidebarWidget.button_text" 
-                                       placeholder="Mobile" 
-                                       class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 font-medium">
+                                       x-model="sidebarWidget.button1_label" 
+                                       placeholder="App Mobile" 
+                                       class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 font-semibold">
                             </div>
 
-                            <!-- URL (6 Cols) -->
-                            <div class="sm:col-span-6 space-y-1">
-                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Tautan URL</label>
+                            <!-- URL (5 Cols) -->
+                            <div class="sm:col-span-5 space-y-1">
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Link URL</label>
                                 <input type="text" 
-                                       x-model="sidebarWidget.button_url" 
+                                       x-model="sidebarWidget.button1_url" 
                                        placeholder="/download-app" 
                                        class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 font-mono">
                             </div>
@@ -267,7 +267,7 @@
                     <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full" :class="sidebarWidget.button2_active ? 'bg-emerald-400' : 'bg-zinc-600'"></span>
+                                <i data-lucide="layers" class="w-3.5 h-3.5 text-zinc-300"></i>
                                 <span>Tombol Kedua (Opsional, misal: macOS / PC / Telegram)</span>
                             </span>
 
@@ -640,7 +640,7 @@ document.addEventListener('alpine:init', () => {
 
                 const data = await res.json();
                 if (data.success) {
-                    alert('🎉 ' + data.message);
+                    alert(data.message);
                 } else {
                     alert('Gagal menyimpan menu: ' + (data.message || 'Terjadi kesalahan'));
                 }

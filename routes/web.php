@@ -213,7 +213,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
-    Route::get('/quick-search', [AdminDashboardController::class, 'quickSearch'])->name('quick_search');
+    Route::get('/api/dashboard/snapshot', [AdminDashboardController::class, 'snapshot'])->name('dashboard.snapshot')->middleware('throttle:60,1');
+    Route::post('/api/dashboard/ping', [AdminDashboardController::class, 'pingApi'])->name('dashboard.ping');
 
     // Film Requests Management
     Route::get('/film-requests', [\App\Http\Controllers\Admin\AdminFilmRequestController::class, 'index'])->name('film-requests.index');
@@ -231,6 +232,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/feature-banners/{featureBanner}', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'destroy'])->name('feature-banners.destroy');
 
     // Film Management
+    Route::get('/films/importer', [AdminFilmController::class, 'importer'])->name('films.importer');
+    Route::post('/api/films/external-search', [AdminFilmController::class, 'externalSearch'])->name('films.external_search');
+    Route::post('/api/films/external-detail', [AdminFilmController::class, 'externalDetail'])->name('films.external_detail');
+    Route::post('/api/films/import-item', [AdminFilmController::class, 'importItem'])->name('films.import_item');
+    Route::post('/api/films/import-batch', [AdminFilmController::class, 'importBatch'])->name('films.import_batch');
     Route::post('/films/sync-api', [AdminFilmController::class, 'syncApi'])->name('films.sync_api');
     Route::post('/films/sync-dracin-api', [AdminFilmController::class, 'syncDracinApi'])->name('films.sync_dracin_api');
     Route::post('/films/bulk-delete', [AdminFilmController::class, 'bulkDelete'])->name('films.bulk_delete');

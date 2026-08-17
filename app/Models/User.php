@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'is_admin', 'is_ad_free', 'is_banned', 'banned_reason', 'banned_until', 'parental_pin', 'max_allowed_rating', 'has_seen_welcome_modal', 'provider', 'provider_id', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'is_admin', 'is_ad_free', 'is_banned', 'banned_reason', 'banned_until', 'parental_pin', 'max_allowed_rating', 'has_seen_welcome_modal', 'provider', 'provider_id', 'email_verified_at', 'last_active_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,6 +27,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_ad_free' => 'boolean',
@@ -34,6 +35,11 @@ class User extends Authenticatable
             'banned_until' => 'datetime',
             'has_seen_welcome_modal' => 'boolean',
         ];
+    }
+
+    public function scopeActiveToday($query)
+    {
+        return $query->where('last_active_at', '>=', now()->startOfDay());
     }
 
     public function isAdmin(): bool

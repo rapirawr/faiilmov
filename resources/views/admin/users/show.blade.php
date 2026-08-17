@@ -151,7 +151,10 @@
                         <img src="{{ $p->avatar_url }}" alt="{{ $p->name }}" class="w-10 h-10 rounded-full object-cover border border-white/10 bg-zinc-800" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($p->name) }}';">
                         <div>
                             <h4 class="font-bold text-white text-sm">{{ $p->name }}</h4>
-                            <p class="text-[10px] text-zinc-400">{{ $p->is_child ? '🧒 Kids Profile' : '👤 Adult Profile' }}</p>
+                            <p class="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5">
+                                <i data-lucide="{{ $p->is_child ? 'smile' : 'user' }}" class="w-3 h-3 text-zinc-400"></i>
+                                <span>{{ $p->is_child ? 'Kids Profile' : 'Adult Profile' }}</span>
+                            </p>
                         </div>
                     </div>
                     @if($p->is_main)
@@ -162,8 +165,9 @@
                 <div class="pt-2 border-t border-white/5 space-y-2 text-xs">
                     <div class="flex justify-between text-zinc-400">
                         <span>Parental PIN:</span>
-                        <span class="font-mono font-bold {{ $p->pin ? 'text-amber-400' : 'text-zinc-500' }}">
-                            {{ $p->pin ? '🔒 Set' : '🔓 Off' }}
+                        <span class="font-mono font-bold flex items-center gap-1 {{ $p->pin ? 'text-amber-400' : 'text-zinc-500' }}">
+                            <i data-lucide="{{ $p->pin ? 'lock' : 'unlock' }}" class="w-3 h-3"></i>
+                            <span>{{ $p->pin ? 'Set' : 'Off' }}</span>
                         </span>
                     </div>
                     <div class="flex justify-between text-zinc-400">

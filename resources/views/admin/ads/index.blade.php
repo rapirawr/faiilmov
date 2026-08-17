@@ -50,7 +50,7 @@
             <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i>
             <span>Popunder (OnClick)</span>
             @if($settings['ads_popunder_enabled'])
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ON</span>
             @endif
         </button>
 
@@ -60,7 +60,7 @@
             <i data-lucide="bell-ring" class="w-4 h-4"></i>
             <span>Social Bar</span>
             @if($settings['ads_socialbar_enabled'])
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ON</span>
             @endif
         </button>
 
@@ -70,7 +70,7 @@
             <i data-lucide="tv" class="w-4 h-4"></i>
             <span>Banner Player (Watch)</span>
             @if($settings['ads_banner_player_top_enabled'] || $settings['ads_banner_player_bottom_enabled'])
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ON</span>
             @endif
         </button>
 
@@ -80,7 +80,7 @@
             <i data-lucide="grid" class="w-4 h-4"></i>
             <span>Native / Grid Banner</span>
             @if($settings['ads_banner_grid_enabled'])
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ON</span>
             @endif
         </button>
 
@@ -90,7 +90,7 @@
             <i data-lucide="link-2" class="w-4 h-4"></i>
             <span>Direct Link (Smartlink)</span>
             @if($settings['ads_direct_link_enabled'])
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ON</span>
             @endif
         </button>
 
@@ -100,7 +100,7 @@
             <i data-lucide="shield-alert" class="w-4 h-4"></i>
             <span>Anti-Adblock</span>
             @if($settings['ads_anti_adblock_enabled'])
-                <span class="w-2 h-2 rounded-full bg-black"></span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-black/20 text-black border border-black/30">ON</span>
             @endif
         </button>
     </div>

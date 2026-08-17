@@ -37,14 +37,17 @@ class SoundtrackService
         $cacheKey = "film_soundtracks_v2_" . $film->id;
 
         return Cache::remember($cacheKey, now()->addDays(7), function () use ($film, $limit) {
+            $startMicro = microtime(true);
             try {
                 $cleanTitle = preg_replace('/[^\w\s]/u', ' ', $film->title);
                 $cleanTitle = trim(preg_replace('/\s+/', ' ', $cleanTitle));
 
                 $url = "https://itunes.apple.com/search?term=" . urlencode($cleanTitle . " soundtrack") . "&entity=song&limit=" . $limit;
                 $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])->timeout(5)->get($url);
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
 
                 if ($response->successful() && !empty($response->json()['results'])) {
+                    app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', true, $response->status(), $latencyMs, null);
                     $results = $response->json()['results'];
                     $soundtracks = [];
 
@@ -63,8 +66,12 @@ class SoundtrackService
                     if (!empty($soundtracks)) {
                         return $soundtracks;
                     }
+                } else {
+                    app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', false, $response->status(), $latencyMs, 'No results or failed');
                 }
             } catch (Exception $e) {
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+                app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', false, null, $latencyMs, $e->getMessage());
                 // Fail silently
             }
 
@@ -82,11 +89,14 @@ class SoundtrackService
             return [];
         }
 
+        $startMicro = microtime(true);
         try {
             $url = "https://itunes.apple.com/search?term=" . urlencode($cleanQuery) . "&entity=song&limit=" . $limit;
             $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])->timeout(6)->get($url);
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
 
             if ($response->successful() && !empty($response->json()['results'])) {
+                app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', true, $response->status(), $latencyMs, null);
                 $results = $response->json()['results'];
                 $tracks = [];
 
@@ -102,8 +112,12 @@ class SoundtrackService
                 }
 
                 return $tracks;
+            } else {
+                app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', false, $response->status(), $latencyMs, 'No results');
             }
         } catch (Exception $e) {
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+            app(SystemHealthService::class)->logApiCall('itunes', 'itunes.apple.com', false, null, $latencyMs, $e->getMessage());
             // Fail silently
         }
 

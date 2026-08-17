@@ -270,7 +270,7 @@
                              const p = await Notification.requestPermission();
                              this.hasDevicePermission = (p === 'granted');
                              if (p === 'granted') {
-                                 new Notification('🎉 Notifikasi Perangkat Diaktifkan!', {
+                                 new Notification('Notifikasi Perangkat Diaktifkan!', {
                                      body: 'Pemberitahuan film dan update Faiilmov akan otomatis muncul di perangkat Anda.',
                                      icon: '/favicon.png'
                                  });

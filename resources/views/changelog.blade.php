@@ -104,20 +104,24 @@
 
                         <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
                             @if($log->type === 'major')
-                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[11px] uppercase border border-amber-500/30 whitespace-nowrap inline-block shadow-sm">
-                                    🚀 Major Release
+                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[11px] uppercase border border-amber-500/30 whitespace-nowrap inline-flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="rocket" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span>Major Release</span>
                                 </span>
                             @elseif($log->type === 'minor')
-                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[11px] uppercase border border-sky-500/30 whitespace-nowrap inline-block shadow-sm">
-                                    ✨ Feature Update
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[11px] uppercase border border-sky-500/30 whitespace-nowrap inline-flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-sky-400"></i>
+                                    <span>Feature Update</span>
                                 </span>
                             @elseif($log->type === 'security')
-                                <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[11px] uppercase border border-purple-500/30 whitespace-nowrap inline-block shadow-sm">
-                                    🛡️ Security Patch
+                                <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[11px] uppercase border border-purple-500/30 whitespace-nowrap inline-flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-400"></i>
+                                    <span>Security Patch</span>
                                 </span>
                             @else
-                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[11px] uppercase border border-emerald-500/30 whitespace-nowrap inline-block shadow-sm">
-                                    🔧 Patch & Fixes
+                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[11px] uppercase border border-emerald-500/30 whitespace-nowrap inline-flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="wrench" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    <span>Patch & Fixes</span>
                                 </span>
                             @endif
 

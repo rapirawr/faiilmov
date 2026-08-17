@@ -47,8 +47,8 @@
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased min-h-screen selection:bg-rose-500 selection:text-white"
       x-data="adminShell()"
-      @keydown.window.ctrl.k.prevent="openSearchModal()"
-      @keydown.window.cmd.k.prevent="openSearchModal()"
+      @keydown.ctrl.k.window.prevent="$refs.sidebarSearchInput?.focus(); sidebarOpen = true"
+      @keydown.cmd.k.window.prevent="$refs.sidebarSearchInput?.focus(); sidebarOpen = true"
       @keydown.escape.window="closeAllModals()">
 
     <div class="flex min-h-screen bg-zinc-950">
@@ -86,26 +86,39 @@
                     </button>
                 </div>
 
-                <!-- Global Search Trigger Pill -->
+                <!-- Real-time Live Filter in Sidebar -->
                 <div class="px-4 pt-3 pb-1">
-                    <button @click="openSearchModal()" 
-                            type="button"
-                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all text-xs group cursor-pointer">
-                        <div class="flex items-center gap-2.5">
-                            <i data-lucide="search" class="w-4 h-4 text-zinc-400"></i>
-                            <span class="text-zinc-400 text-xs">Search movies...</span>
+                    <div class="relative w-full flex items-center group">
+                        <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none group-focus-within:text-amber-400 transition-colors"></i>
+                        <input type="text" 
+                               x-model="sidebarQuery"
+                               x-ref="sidebarSearchInput"
+                               @keydown.escape.prevent="sidebarQuery = ''; $refs.sidebarSearchInput.blur()"
+                               placeholder="Cari menu sidebar..." 
+                               autocomplete="off"
+                               class="w-full pl-9 pr-14 py-2 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-[#E4E2DD] placeholder-zinc-500 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all font-sans">
+                        
+                        <div class="absolute right-2.5 flex items-center gap-1">
+                            <button type="button" 
+                                    x-show="sidebarQuery" 
+                                    x-cloak
+                                    @click="sidebarQuery = ''; $refs.sidebarSearchInput.focus()"
+                                    class="p-0.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                                    title="Hapus pencarian">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <kbd x-show="!sidebarQuery" class="flex items-center gap-0.5 text-[9px] font-mono font-bold bg-zinc-800/90 px-1.5 py-0.5 rounded border border-zinc-700/60 text-zinc-400 pointer-events-none">
+                                <span>Ctrl K</span>
+                            </kbd>
                         </div>
-                        <kbd class="flex items-center gap-0.5 text-[10px] font-mono font-bold bg-zinc-800/90 px-2 py-0.5 rounded-md border border-zinc-700/60 text-zinc-300">
-                            <span>Ctrl K</span>
-                        </kbd>
-                    </button>
+                    </div>
                 </div>
 
                 <!-- Scrollable Navigation Menu -->
                 <div class="flex-1 overflow-y-auto px-4 py-2 space-y-3 admin-scrollbar">
                     
                     <!-- Dashboard Overview Pill -->
-                    <div>
+                    <div x-show="matches('Dashboard Overview Beranda Home')">
                         <a href="{{ route('admin.dashboard') }}" 
                            class="flex items-center gap-3 px-4 py-3 rounded-full text-xs font-bold transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-white text-zinc-950 shadow-md font-bold' : 'bg-transparent text-zinc-300 hover:bg-zinc-900 hover:text-white' }}">
                             <div class="w-7 h-7 rounded-full flex items-center justify-center {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-zinc-400 border border-zinc-800' }}">
@@ -116,7 +129,10 @@
                     </div>
 
                     <!-- Group 1: MANAJEMEN KONTEN -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.films.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.actors.*')) ? 'true' : 'true' }} }" class="space-y-1">
+                    <div x-data="{ open: {{ (request()->routeIs('admin.films.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.actors.*')) ? 'true' : 'true' }} }" 
+                         x-show="groupHasMatch(['Manajemen Konten', 'Semua Film Katalog Movie Series Dracin', 'Cari & Impor Film Moviebox Dracin Anichin Importer', 'Request Film Permintaan Permohonan', 'Banner Fitur CMS Header Hero', 'Rating Massal Content Rating Batas Usia Sensor', 'Genre Film Kategori Tag', 'Aktor & Cast Pemeran Artis Pemain'])" 
+                         x-init="$watch('sidebarQuery', q => { if (q && q.trim()) open = true; })"
+                         class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
                                 class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
@@ -125,14 +141,14 @@
                                 <span>Manajemen Konten</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">4</span>
+                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">7</span>
                                 <i data-lucide="chevron-up" :class="open ? '' : 'rotate-180'" class="w-4 h-4 text-zinc-400 transition-transform duration-200"></i>
                             </div>
                         </button>
 
                         <div x-show="open" class="ml-6 pl-3 border-l border-zinc-800 space-y-1 py-1">
                             <!-- Semua Film -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Semua Film Katalog Movie Series Dracin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.index') || request()->routeIs('admin.films.create') || request()->routeIs('admin.films.edit') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -141,8 +157,18 @@
                                 </a>
                             </div>
 
+                            <!-- Cari & Impor Film -->
+                            <div x-show="matches('Cari & Impor Film Moviebox Dracin Anichin Importer')" class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.films.importer') }}" 
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.importer') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <i data-lucide="download-cloud" class="w-4 h-4 text-amber-400"></i>
+                                    <span>Cari & Impor Film</span>
+                                </a>
+                            </div>
+
                             <!-- Request Film -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Request Film Permintaan Permohonan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.film-requests.index') }}" 
                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.film-requests.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -159,7 +185,7 @@
                             </div>
 
                             <!-- Banner Fitur (CMS) -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Banner Fitur CMS Header Hero')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.feature-banners.index') }}" 
                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.feature-banners.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -171,7 +197,7 @@
                             </div>
 
                             <!-- Rating Massal -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Rating Massal Content Rating Batas Usia Sensor')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.content_rating') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -181,7 +207,7 @@
                             </div>
 
                             <!-- Genre Film -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Genre Film Kategori Tag')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.genres.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.genres.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -191,7 +217,7 @@
                             </div>
 
                             <!-- Aktor & Cast -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Aktor & Cast Pemeran Artis Pemain')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.actors.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.actors.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -203,7 +229,10 @@
                     </div>
 
                     <!-- Group 2: MODERASI & USER -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.watch_parties.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.notifications.*')) ? 'true' : 'true' }} }" class="space-y-1">
+                    <div x-data="{ open: {{ (request()->routeIs('admin.watch_parties.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.notifications.*')) ? 'true' : 'true' }} }" 
+                         x-show="groupHasMatch(['Moderasi & User', 'Watch Parties Nobar Live Room Ruangan', 'Moderasi Ulasan Review Komentar Laporan Report', 'Kelola Pengguna User Akun Ban Banned Role Admin', 'Broadcast Notifikasi Push Notification Pesan Blast'])" 
+                         x-init="$watch('sidebarQuery', q => { if (q && q.trim()) open = true; })"
+                         class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
                                 class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
@@ -219,7 +248,7 @@
 
                         <div x-show="open" class="ml-6 pl-3 border-l border-zinc-800 space-y-1 py-1">
                             <!-- Watch Parties -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Watch Parties Nobar Live Room Ruangan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.watch_parties.index') }}" 
                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.watch_parties.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -236,7 +265,7 @@
                             </div>
 
                             <!-- Moderasi Ulasan -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Moderasi Ulasan Review Komentar Laporan Report')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.reviews.index') }}" 
                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.reviews.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -253,7 +282,7 @@
                             </div>
 
                             <!-- Kelola Pengguna -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Kelola Pengguna User Akun Ban Banned Role Admin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.users.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.users.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -263,7 +292,7 @@
                             </div>
 
                             <!-- Broadcast Notifikasi -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Broadcast Notifikasi Push Notification Pesan Blast')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.notifications.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.notifications.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -275,7 +304,10 @@
                     </div>
 
                     <!-- Group 3: SISTEM & LOG -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.api_tester.*') || request()->routeIs('admin.scripts.*') || request()->routeIs('admin.changelogs.*') || request()->routeIs('admin.activity_logs.*') || request()->routeIs('admin.app_release.*') || request()->routeIs('admin.navigation.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.ads.*')) ? 'true' : 'true' }} }" class="space-y-1">
+                    <div x-data="{ open: {{ (request()->routeIs('admin.api_tester.*') || request()->routeIs('admin.scripts.*') || request()->routeIs('admin.changelogs.*') || request()->routeIs('admin.activity_logs.*') || request()->routeIs('admin.app_release.*') || request()->routeIs('admin.navigation.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.ads.*')) ? 'true' : 'true' }} }" 
+                         x-show="groupHasMatch(['Sistem & Log', 'API Tester Docs Endpoint Swagger Dokumentasi', 'PHP Script Runner Eksekusi Script Terminal Artisan', 'Changelog & Updates Rilis Versi Pembaruan Update', 'Activity Audit Log Aktivitas Riwayat Log Admin', 'Rilis APK Mobile Download Android App Release', 'Kelola Menu Sidebar Navigasi Navigation Urutan', 'Pengaturan Umum Settings Konfigurasi Web Website', 'Manajemen Iklan Ads Adsterra Banner Popunder Socialbar'])" 
+                         x-init="$watch('sidebarQuery', q => { if (q && q.trim()) open = true; })"
+                         class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
                                 class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
@@ -291,7 +323,7 @@
 
                         <div x-show="open" class="ml-6 pl-3 border-l border-zinc-800 space-y-1 py-1">
                             <!-- API Tester & Docs -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('API Tester Docs Endpoint Swagger Dokumentasi')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.api_tester.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -301,7 +333,7 @@
                             </div>
 
                             <!-- PHP Script Runner -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('PHP Script Runner Eksekusi Script Terminal Artisan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.scripts.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.scripts.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -311,7 +343,7 @@
                             </div>
 
                             <!-- Changelog & Updates -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Changelog & Updates Rilis Versi Pembaruan Update')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.changelogs.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -321,7 +353,7 @@
                             </div>
 
                             <!-- Activity Audit Log -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Activity Audit Log Aktivitas Riwayat Log Admin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.activity_logs.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.activity_logs.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -331,7 +363,7 @@
                             </div>
 
                             <!-- Rilis APK Mobile -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Rilis APK Mobile Download Android App Release')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.app_release.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -341,7 +373,7 @@
                             </div>
 
                             <!-- Kelola Menu Sidebar -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Kelola Menu Sidebar Navigasi Navigation Urutan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.navigation.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.navigation.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -351,7 +383,7 @@
                             </div>
 
                             <!-- Pengaturan Umum -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Pengaturan Umum Settings Konfigurasi Web Website')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.settings.index') }}" 
                                    class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -361,7 +393,7 @@
                             </div>
 
                             <!-- Manajemen Iklan -->
-                            <div class="relative flex items-center">
+                            <div x-show="matches('Manajemen Iklan Ads Adsterra Banner Popunder Socialbar')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.ads.index') }}" 
                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
@@ -375,6 +407,17 @@
                                 </a>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Empty state if no menu matches -->
+                    <div x-show="sidebarQuery.trim() && !matches('Dashboard Overview Beranda Home') && !groupHasMatch(['Manajemen Konten', 'Semua Film Katalog Movie Series Dracin', 'Cari & Impor Film Moviebox Dracin Anichin Importer', 'Request Film Permintaan Permohonan', 'Banner Fitur CMS Header Hero', 'Rating Massal Content Rating Batas Usia Sensor', 'Genre Film Kategori Tag', 'Aktor & Cast Pemeran Artis Pemain', 'Moderasi & User', 'Watch Parties Nobar Live Room Ruangan', 'Moderasi Ulasan Review Komentar Laporan Report', 'Kelola Pengguna User Akun Ban Banned Role Admin', 'Broadcast Notifikasi Push Notification Pesan Blast', 'Sistem & Log', 'API Tester Docs Endpoint Swagger Dokumentasi', 'PHP Script Runner Eksekusi Script Terminal Artisan', 'Changelog & Updates Rilis Versi Pembaruan Update', 'Activity Audit Log Aktivitas Riwayat Log Admin', 'Rilis APK Mobile Download Android App Release', 'Kelola Menu Sidebar Navigasi Navigation Urutan', 'Pengaturan Umum Settings Konfigurasi Web Website', 'Manajemen Iklan Ads Adsterra Banner Popunder Socialbar'])" 
+                         class="py-6 text-center text-xs text-zinc-500 space-y-2"
+                         x-cloak>
+                        <i data-lucide="search-x" class="w-6 h-6 mx-auto text-zinc-600"></i>
+                        <p>Tidak ada menu yang cocok</p>
+                        <button type="button" @click="sidebarQuery = ''" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 text-[11px] font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                            Reset Pencarian
+                        </button>
                     </div>
 
                 </div>
@@ -422,12 +465,6 @@
 
                 <!-- Right: Quick Actions, Activity Bell, and Admin Profile Dropdown -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                    
-                    <!-- Search Button on Mobile/Tablet -->
-                    <button @click="openSearchModal()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white border border-white/10 transition-colors sm:hidden">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </button>
-
                     <!-- Activity Log Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
@@ -579,182 +616,26 @@
         </div>
     </div>
 
-    <!-- ==================== GLOBAL QUICK SEARCH MODAL (Ctrl + K) ==================== -->
-    <div x-show="searchModalOpen" 
-         class="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 md:p-20 overflow-y-auto"
-         x-cloak>
-        
-        <!-- Backdrop -->
-        <div x-show="searchModalOpen" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             @click="closeSearchModal()" 
-             class="fixed inset-0 bg-black/80 backdrop-blur-md"></div>
-
-        <!-- Dialog Box -->
-        <div x-show="searchModalOpen" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="relative w-full max-w-2xl bg-zinc-900 border border-white/20 rounded-3xl shadow-2xl overflow-hidden z-10 text-white">
-            
-            <!-- Search Header Bar -->
-            <div class="p-4 border-b border-white/10 flex items-center gap-3">
-                <i data-lucide="search" class="w-5 h-5 text-zinc-400"></i>
-                <input x-ref="searchInput"
-                       type="text" 
-                       x-model="searchQuery" 
-                       @input.debounce.300ms="executeSearch()"
-                       placeholder="Ketik judul film, nama pengguna, atau menu admin..." 
-                       class="w-full bg-transparent border-none text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-0">
-                
-                <span x-show="isSearching" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <kbd @click="closeSearchModal()" class="px-2 py-1 rounded-lg bg-white/10 text-zinc-400 text-[10px] font-mono cursor-pointer hover:text-white">ESC</kbd>
-            </div>
-
-            <!-- Search Results Body -->
-            <div class="max-h-96 overflow-y-auto p-4 space-y-4 admin-scrollbar">
-                
-                <!-- Initial State / Suggestions -->
-                <div x-show="!searchQuery && searchResults.menus.length === 0" class="py-8 text-center text-xs text-zinc-500 space-y-2">
-                    <i data-lucide="sparkles" class="w-8 h-8 text-zinc-600 mx-auto"></i>
-                    <p class="font-semibold text-zinc-400">Pencarian Cepat Admin</p>
-                    <p>Ketik apa saja untuk mencari film, data user, atau navigasi ke menu CMS.</p>
-                </div>
-
-                <!-- Navigation Menus Section -->
-                <div x-show="searchResults.menus && searchResults.menus.length > 0" class="space-y-1.5">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-zinc-500 px-2">Menu Halaman</div>
-                    <template x-for="menu in searchResults.menus" :key="menu.url">
-                        <a :href="menu.url" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/10 transition-colors text-xs text-zinc-200 hover:text-white group">
-                            <div class="flex items-center gap-3">
-                                <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-zinc-300 group-hover:text-white">
-                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                                </div>
-                                <span class="font-bold" x-text="menu.title"></span>
-                            </div>
-                            <span class="text-[10px] font-mono text-zinc-500 uppercase" x-text="menu.category"></span>
-                        </a>
-                    </template>
-                </div>
-
-                <!-- Films Section -->
-                <div x-show="searchResults.films && searchResults.films.length > 0" class="space-y-1.5">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-zinc-500 px-2">Katalog Film & Dracin</div>
-                    <template x-for="film in searchResults.films" :key="film.id">
-                        <a :href="film.url" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/10 transition-colors text-xs text-zinc-200 hover:text-white group">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <img :src="film.poster" class="w-8 h-11 object-cover rounded-lg bg-zinc-800 shrink-0">
-                                <div class="min-w-0">
-                                    <p class="font-bold truncate text-white" x-text="film.title"></p>
-                                    <p class="text-[10px] text-zinc-400" x-text="film.year + ' &bull; ' + film.type"></p>
-                                </div>
-                            </div>
-                            <span class="px-2 py-1 rounded-lg bg-white/10 text-[10px] font-bold text-zinc-300 group-hover:bg-white group-hover:text-black">Edit</span>
-                        </a>
-                    </template>
-                </div>
-
-                <!-- Users Section -->
-                <div x-show="searchResults.users && searchResults.users.length > 0" class="space-y-1.5">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-zinc-500 px-2">Pengguna</div>
-                    <template x-for="user in searchResults.users" :key="user.id">
-                        <a :href="user.url" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/10 transition-colors text-xs text-zinc-200 hover:text-white group">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <img :src="user.avatar" class="w-8 h-8 rounded-full bg-zinc-800 shrink-0">
-                                <div class="min-w-0">
-                                    <p class="font-bold truncate text-white" x-text="user.name"></p>
-                                    <p class="text-[10px] text-zinc-400" x-text="user.email"></p>
-                                </div>
-                            </div>
-                            <span class="text-[10px] font-bold text-zinc-400 group-hover:text-white">Detail</span>
-                        </a>
-                    </template>
-                </div>
-
-                <!-- Empty Search Result -->
-                <div x-show="searchQuery && !isSearching && searchResults.films.length === 0 && searchResults.users.length === 0 && searchResults.menus.length === 0" 
-                     class="py-8 text-center text-xs text-zinc-500">
-                    Tidak ditemukan data atau menu yang cocok dengan "<span x-text="searchQuery" class="text-white font-semibold"></span>".
-                </div>
-
-            </div>
-
-            <!-- Footer Hint -->
-            <div class="p-3 bg-zinc-950 border-t border-white/10 flex items-center justify-between text-[11px] text-zinc-500">
-                <span>Tekan <kbd class="px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-mono text-zinc-300">ESC</kbd> untuk menutup</span>
-                <span>Faiilmov CMS Search</span>
-            </div>
-
-        </div>
-    </div>
-
     @stack('scripts')
 
     <script>
         function adminShell() {
             return {
                 sidebarOpen: false,
-                searchModalOpen: false,
-                searchQuery: '',
-                isSearching: false,
-                searchResults: {
-                    films: [],
-                    users: [],
-                    menus: []
+                sidebarQuery: '',
+                matches(text) {
+                    if (!this.sidebarQuery || !this.sidebarQuery.trim()) return true;
+                    const q = this.sidebarQuery.toLowerCase().trim();
+                    const words = q.split(/\s+/).filter(Boolean);
+                    const target = String(text || '').toLowerCase();
+                    return words.every(w => target.includes(w));
                 },
-                openSearchModal() {
-                    this.searchModalOpen = true;
-                    this.$nextTick(() => {
-                        if (this.$refs.searchInput) {
-                            this.$refs.searchInput.focus();
-                        }
-                    });
-                },
-                closeSearchModal() {
-                    this.searchModalOpen = false;
-                    this.searchQuery = '';
-                    this.searchResults = { films: [], users: [], menus: [] };
+                groupHasMatch(items) {
+                    if (!this.sidebarQuery || !this.sidebarQuery.trim()) return true;
+                    return Array.isArray(items) && items.some(t => this.matches(t));
                 },
                 closeAllModals() {
-                    this.searchModalOpen = false;
                     this.sidebarOpen = false;
-                },
-                async executeSearch() {
-                    const q = this.searchQuery.trim();
-                    if (!q) {
-                        this.searchResults = { films: [], users: [], menus: [] };
-                        return;
-                    }
-                    this.isSearching = true;
-                    try {
-                        const res = await fetch(`/admin/quick-search?q=${encodeURIComponent(q)}`, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (res.ok) {
-                            const data = await res.json();
-                            this.searchResults = data;
-                            this.$nextTick(() => {
-                                if (window.lucide) {
-                                    lucide.createIcons();
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        console.error('Quick search error:', e);
-                    } finally {
-                        this.isSearching = false;
-                    }
                 }
             };
         }

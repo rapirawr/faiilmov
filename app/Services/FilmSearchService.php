@@ -30,32 +30,14 @@ class FilmSearchService
             return null;
         }
 
-        // 1. Direct Local DB SQL Match (Title, Actor, Synopsis)
+        // 1. Direct Word Matching (Title exact / substring / word match)
         $results = $this->buildQuery($query, $filters, $perPage);
 
-        // 2. If results are sparse (< 5), attempt Fuzzy & Token Local Match
-        if ($results->total() < 5) {
-            $fuzzyResults = $this->fuzzyLocalSearch($query, $filters, $perPage);
-            if ($fuzzyResults && $fuzzyResults->total() > $results->total()) {
-                $results = $fuzzyResults;
-            }
-        }
-
-        // 3. If results are still sparse (< 3), fetch Live data from MovieBox API & Sync to DB
-        if ($results->total() < 3) {
+        // 2. If results are 0, attempt live upstream search with exact query from MovieBox & Sync to DB
+        if ($results->total() === 0) {
             $this->fetchAndSyncFromMovieBox($query);
-            // Re-query local DB after sync
             $results = $this->buildQuery($query, $filters, $perPage);
-            if ($results->total() < 3) {
-                $fuzzyResults = $this->fuzzyLocalSearch($query, $filters, $perPage);
-                if ($fuzzyResults && $fuzzyResults->total() > $results->total()) {
-                    $results = $fuzzyResults;
-                }
-            }
         }
-
-        // NOTE: AI Search interpretation is NEVER used to replace main title matching results.
-        // It is exposed separately via getAiRecommendations() for a dedicated recommendation section.
 
         $this->logSearch($query, $results->total(), $ip);
 
@@ -217,39 +199,27 @@ class FilmSearchService
     private function buildQuery(string $query, array $filters, int $perPage): LengthAwarePaginator
     {
         $cleanQ = $this->sanitize($query);
-        $normalizedQ = str_replace(['and', 'dan', '&', '-', ' ', ':', '.', "'", '"', '!', '?'], '', strtolower($cleanQ));
-        $sqlNormalizeTitle = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(title, 'and', ''), 'dan', ''), '&', ''), '-', ''), ' ', ''), ':', ''), '.', ''), '!', ''), '?', ''))";
-        $expandedTerms = $this->expandSearchTerms($cleanQ);
+        $words = array_values(array_filter(explode(' ', strtolower($cleanQ)), fn($w) => strlen($w) >= 2));
 
         $filmQuery = Film::forActiveProfile()->with('genres')
             ->selectRaw("films.*, 
                 CASE 
                     WHEN LOWER(title) = LOWER(?) THEN 100
                     WHEN LOWER(title) LIKE ? THEN 90
-                    WHEN {$sqlNormalizeTitle} LIKE ? THEN 80
                     WHEN LOWER(title) LIKE ? THEN 70
-                    WHEN {$sqlNormalizeTitle} LIKE ? THEN 60
                     ELSE 40
                 END as relevance_score",
                 [
                     $cleanQ,
                     strtolower($cleanQ) . '%',
-                    $normalizedQ . '%',
                     '%' . strtolower($cleanQ) . '%',
-                    '%' . $normalizedQ . '%',
                 ]
             )
-            ->where(function ($sub) use ($cleanQ, $normalizedQ, $sqlNormalizeTitle, $expandedTerms) {
-                $sub->where('title', 'LIKE', '%' . $cleanQ . '%')
-                    ->orWhereRaw("{$sqlNormalizeTitle} LIKE ?", ['%' . $normalizedQ . '%']);
+            ->where(function ($sub) use ($cleanQ, $words) {
+                // 1. Direct full query match
+                $sub->where('title', 'LIKE', '%' . $cleanQ . '%');
 
-                foreach ($expandedTerms as $term) {
-                    $sub->orWhere('title', 'LIKE', '%' . $term . '%')
-                        ->orWhere('synopsis', 'LIKE', '%' . $term . '%');
-                }
-
-                // Tokenize words for multi-word queries (e.g. "spider man")
-                $words = array_values(array_filter(explode(' ', strtolower($cleanQ)), fn($w) => strlen($w) >= 2));
+                // 2. Multi-word: match all words in title (e.g. "Spider" AND "Man")
                 if (count($words) > 1) {
                     $sub->orWhere(function ($qWords) use ($words) {
                         foreach ($words as $word) {

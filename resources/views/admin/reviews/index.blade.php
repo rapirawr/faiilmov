@@ -20,9 +20,9 @@
                     name="filter" 
                     :value="request('filter', 'latest')" 
                     :options="[
-                        'latest' => '🕒 Terbaru',
-                        'reported' => '🚨 Di-Report User',
-                        'lowest_rating' => '⭐ Rating Terendah',
+                        'latest' => 'Terbaru',
+                        'reported' => 'Di-Report User',
+                        'lowest_rating' => 'Rating Terendah',
                     ]" 
                     placeholder="Filter Ulasan" 
                     :autoSubmit="true"

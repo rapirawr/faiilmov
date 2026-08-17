@@ -28,12 +28,12 @@
                 </span>
                 @if($versionData['force_update'])
                     <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>
                         <span>Wajib Update (Force)</span>
                     </span>
                 @else
                     <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
                         <span>Opsional</span>
                     </span>
                 @endif

@@ -22,8 +22,8 @@
                     :value="request('status', '')" 
                     :options="[
                         '' => 'Semua Status Ruangan',
-                        'active' => '🟢 Aktif (Sedang Berjalan)',
-                        'ended' => '⚪ Selesai / Ditutup',
+                        'active' => 'Aktif (Sedang Berjalan)',
+                        'ended' => 'Selesai / Ditutup',
                     ]" 
                     placeholder="Semua Status" 
                     :autoSubmit="true"
@@ -39,7 +39,7 @@
 
         <div class="flex items-center gap-2.5 text-xs font-mono">
             <span class="px-3.5 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-bold flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                <i data-lucide="radio" class="w-3.5 h-3.5 text-purple-400"></i>
                 <span>{{ $activeCount }} Ruangan Aktif</span>
             </span>
             <span class="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 font-semibold">
@@ -93,7 +93,7 @@
                             <td class="px-4 py-3.5">
                                 @if($party->status === 'active')
                                     <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold flex items-center gap-1 w-fit">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        <i data-lucide="radio" class="w-3 h-3 text-emerald-400"></i>
                                         <span>Aktif</span>
                                     </span>
                                 @else

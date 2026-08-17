@@ -53,8 +53,10 @@ class AnichinService
     {
         $baseUrl = $usePriv ? $this->privApiUrl : $this->apiUrl;
         $key = $usePriv ? $this->privApiKey : $this->apiKey;
+        $host = parse_url($baseUrl, PHP_URL_HOST) ?? 'api.anichin.bio';
 
         $url = rtrim($baseUrl, '/') . '/' . ltrim($endpoint, '/');
+        $startMicro = microtime(true);
 
         try {
             $response = Http::withHeaders([
@@ -63,13 +65,19 @@ class AnichinService
                 'Accept' => 'application/json',
             ])->withoutVerifying()->timeout(6)->get($url, $queryParams);
 
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+
             if ($response->successful()) {
+                app(SystemHealthService::class)->logApiCall('anichin', $host, true, $response->status(), $latencyMs, null);
                 return $response->json();
             }
 
+            app(SystemHealthService::class)->logApiCall('anichin', $host, false, $response->status(), $latencyMs, 'HTTP ' . $response->status());
             Log::warning("AnichinService HTTP {$response->status()} for {$url}");
             return null;
         } catch (\Exception $e) {
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+            app(SystemHealthService::class)->logApiCall('anichin', $host, false, null, $latencyMs, $e->getMessage());
             Log::warning("AnichinService Exception on {$url}: " . $e->getMessage());
             return null;
         }

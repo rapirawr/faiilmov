@@ -1095,7 +1095,9 @@
                     <i data-lucide="user-check" class="w-4 h-4 text-amber-400"></i>
                     <span>Ubah Nama Tampilan</span>
                 </h3>
-                <button @click="editNicknameModalOpen = false" class="text-zinc-400 hover:text-white text-xs">✕</button>
+                <button @click="editNicknameModalOpen = false" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
             </div>
             <div>
                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">Nama Tampilan Baru</label>

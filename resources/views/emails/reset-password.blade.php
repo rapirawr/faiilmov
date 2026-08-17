@@ -46,7 +46,7 @@
         </div>
 
         <div class="body">
-            <p class="greeting">Halo, {{ $notifiable->name }} 👋</p>
+            <p class="greeting">Halo, {{ $notifiable->name }}</p>
 
             <p class="main-text">
                 Kami menerima permintaan untuk mereset kata sandi akun faiilmov yang terhubung dengan email ini.
@@ -54,7 +54,7 @@
             </p>
 
             <a href="{{ $resetUrl }}" class="btn-reset">
-                🔑 &nbsp; Reset Password Sekarang
+                Reset Password Sekarang
             </a>
 
             <div class="expiry-note">

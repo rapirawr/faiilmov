@@ -17,10 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'check.banned' => \App\Http\Middleware\CheckBannedMiddleware::class,
+            'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\CheckMaintenanceMode::class,
             \App\Http\Middleware\CheckBannedMiddleware::class,
+            \App\Http\Middleware\TrackUserActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

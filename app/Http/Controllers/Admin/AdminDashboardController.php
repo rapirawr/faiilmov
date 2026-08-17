@@ -81,6 +81,8 @@ class AdminDashboardController extends Controller
             'cache_driver' => config('cache.default'),
         ];
 
+        $initialSnapshot = app(\App\Services\DashboardSnapshotService::class)->getSnapshot();
+
         return view('admin.dashboard.index', compact(
             'stats',
             'contentRatings',
@@ -92,86 +94,40 @@ class AdminDashboardController extends Controller
             'pendingReportsCount',
             'recentUsers',
             'activeWatchPartiesList',
-            'systemInfo'
+            'systemInfo',
+            'initialSnapshot'
         ));
     }
 
     /**
-     * Global Quick Search for Admin Shell (Ctrl+K Modal)
+     * Real-time Developer & Admin Dashboard Snapshot (System Health, Content Performance, User Analytics)
      */
-    public function quickSearch(Request $request): \Illuminate\Http\JsonResponse
+    public function snapshot(\App\Services\DashboardSnapshotService $snapshotService): \Illuminate\Http\JsonResponse
     {
-        $q = trim((string)$request->query('q', ''));
-        if (mb_strlen($q) < 1) {
-            return response()->json(['films' => [], 'users' => [], 'menus' => []]);
+        return response()->json($snapshotService->getSnapshot());
+    }
+
+    /**
+     * Actively ping API services & hosts on demand
+     */
+    public function pingApi(Request $request, \App\Services\SystemHealthService $healthService): \Illuminate\Http\JsonResponse
+    {
+        $service = $request->input('service');
+        $host = $request->input('host');
+
+        if (!empty($service)) {
+            $result = $healthService->pingSingleService($service, $host);
+        } else {
+            $result = $healthService->pingAllServices();
         }
 
-        // 1. Search Films
-        $films = Film::select('id', 'title', 'slug', 'subject_type', 'release_year', 'poster_url')
-            ->where(function ($sub) use ($q) {
-                $sub->where('title', 'LIKE', "%{$q}%")
-                    ->orWhere('synopsis', 'LIKE', "%{$q}%");
-            })
-            ->take(6)
-            ->get()
-            ->map(function ($film) {
-                return [
-                    'id' => $film->id,
-                    'title' => $film->title,
-                    'type' => strtoupper($film->subject_type),
-                    'year' => $film->release_year,
-                    'poster' => $film->poster_url ?: asset('images/placeholder.jpg'),
-                    'url' => route('admin.films.edit', $film->id),
-                ];
-            });
-
-        // 2. Search Users
-        $users = User::select('id', 'name', 'email', 'avatar_url', 'is_admin', 'is_banned')
-            ->where(function ($sub) use ($q) {
-                $sub->where('name', 'LIKE', "%{$q}%")
-                    ->orWhere('email', 'LIKE', "%{$q}%");
-            })
-            ->take(5)
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_admin' => (bool)$user->is_admin,
-                    'is_banned' => (bool)$user->is_banned,
-                    'avatar' => $user->avatar_url ?: 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
-                    'url' => route('admin.users.show', $user->id),
-                ];
-            });
-
-        // 3. Navigation Pages
-        $allMenus = [
-            ['title' => 'Dashboard Overview', 'category' => 'Utama', 'icon' => 'home', 'url' => route('admin.dashboard')],
-            ['title' => 'Semua Film & Dracin', 'category' => 'Konten', 'icon' => 'film', 'url' => route('admin.films.index')],
-            ['title' => 'Tambah Film Baru', 'category' => 'Konten', 'icon' => 'plus-circle', 'url' => route('admin.films.create')],
-            ['title' => 'Editor Rating Massal', 'category' => 'Konten', 'icon' => 'shield-alert', 'url' => route('admin.films.content_rating')],
-            ['title' => 'Manajemen Genre Film', 'category' => 'Konten', 'icon' => 'tags', 'url' => route('admin.genres.index')],
-            ['title' => 'Manajemen Aktor & Cast', 'category' => 'Konten', 'icon' => 'users', 'url' => route('admin.actors.index')],
-            ['title' => 'Moderasi Ulasan Pengguna', 'category' => 'Moderasi', 'icon' => 'message-square', 'url' => route('admin.reviews.index')],
-            ['title' => 'Manajemen Pengguna', 'category' => 'Pengguna', 'icon' => 'user-check', 'url' => route('admin.users.index')],
-            ['title' => 'Watch Parties (Nobar)', 'category' => 'Moderasi', 'icon' => 'tv', 'url' => route('admin.watch_parties.index')],
-            ['title' => 'API Tester & Docs', 'category' => 'Sistem', 'icon' => 'terminal', 'url' => route('admin.api_tester.index')],
-            ['title' => 'PHP Script Runner', 'category' => 'Sistem', 'icon' => 'code', 'url' => route('admin.scripts.index')],
-            ['title' => 'Changelog & Updates', 'category' => 'Sistem', 'icon' => 'file-clock', 'url' => route('admin.changelogs.index')],
-            ['title' => 'Activity Audit Logs', 'category' => 'Sistem', 'icon' => 'history', 'url' => route('admin.activity_logs.index')],
-            ['title' => 'Rilis APK Mobile', 'category' => 'Sistem', 'icon' => 'smartphone', 'url' => route('admin.app_release.index')],
-            ['title' => 'Pengaturan Umum & API Keys', 'category' => 'Pengaturan', 'icon' => 'sliders', 'url' => route('admin.settings.index')],
-        ];
-
-        $matchedMenus = array_values(array_filter($allMenus, function ($m) use ($q) {
-            return stripos($m['title'], $q) !== false || stripos($m['category'], $q) !== false;
-        }));
+        $snapshot = app(\App\Services\DashboardSnapshotService::class)->getSnapshot();
 
         return response()->json([
-            'films' => $films,
-            'users' => $users,
-            'menus' => $matchedMenus,
+            'status'        => 'success',
+            'result'        => $result,
+            'system_health' => $snapshot['system_health'] ?? [],
         ]);
     }
 }
+

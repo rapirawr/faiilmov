@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 // Scheduled Daily Sync for Films & Actors
 Illuminate\Support\Facades\Schedule::job(new \App\Jobs\SyncFilmsJob(null, false, 15))->dailyAt('02:00');
 Illuminate\Support\Facades\Schedule::job(new \App\Jobs\SyncActorsJob(null, false))->dailyAt('03:00');
+
+// Scheduled System Health Monitoring & Near-Real-Time Content Analytics
+Illuminate\Support\Facades\Schedule::command('monitor:recompute-status')->everyMinute();
+Illuminate\Support\Facades\Schedule::command('analytics:rollup-daily-stats')->everyFiveMinutes();

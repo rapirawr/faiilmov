@@ -88,12 +88,12 @@
                     :value="request('status', '')" 
                     :options="[
                         '' => 'Semua Pengguna Aktif',
-                        'active' => '🟢 Aktif (Tidak Dibanned)',
-                        'ad_free' => '✨ Bebas Iklan (No Ads)',
-                        'banned' => '🔴 Banned / Suspend',
-                        'admin' => '👑 Administrator',
-                        'trashed' => '🗑️ Dihapus (Soft Deleted)',
-                        'all_with_trashed' => '🌐 Semua (Termasuk Terhapus)',
+                        'active' => 'Aktif (Tidak Dibanned)',
+                        'ad_free' => 'Bebas Iklan (No Ads)',
+                        'banned' => 'Banned / Suspend',
+                        'admin' => 'Administrator',
+                        'trashed' => 'Dihapus (Soft Deleted)',
+                        'all_with_trashed' => 'Semua (Termasuk Terhapus)',
                     ]" 
                     placeholder="Semua Pengguna" 
                     :autoSubmit="true"
@@ -247,12 +247,12 @@
                                     </span>
                                 @elseif($user->isBanned())
                                     <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 font-extrabold text-[10px] border border-rose-500/30 flex items-center gap-1 w-max">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                        <i data-lucide="ban" class="w-3 h-3 text-rose-400"></i>
                                         <span>Banned</span>
                                     </span>
                                 @else
                                     <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30 flex items-center gap-1 w-max">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i>
                                         <span>Aktif</span>
                                     </span>
                                 @endif

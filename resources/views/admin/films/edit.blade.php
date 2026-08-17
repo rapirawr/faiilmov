@@ -962,7 +962,7 @@ if (typeof window.castPicker !== 'function') {
                                 class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 cursor-pointer transition-all">
                             <div x-show="isBatchImporting" class="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                             <svg x-show="!isBatchImporting" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                            <span>⚡ Impor Semua Lagu iTunes ke Database Sekarang</span>
+                            <span>Impor Semua Lagu iTunes ke Database Sekarang</span>
                         </button>
                     </div>
                 </div>

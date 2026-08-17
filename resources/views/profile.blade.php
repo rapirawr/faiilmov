@@ -472,12 +472,12 @@
                     avatarModalOpen: false,
                     avatarStyle: 'avataaars-neutral',
                     avatarStyles: [
-                        { id: 'avataaars-neutral', label: 'Avataaars', emoji: '🧑' },
-                        { id: 'adventurer-neutral', label: 'Adventurer', emoji: '🧙' },
-                        { id: 'bottts-neutral', label: 'Bottts', emoji: '🤖' },
-                        { id: 'blobs', label: 'Blobs', emoji: '🫧' },
-                        { id: 'clay', label: 'Clay', emoji: '🏺' },
-                        { id: 'fun-emoji', label: 'Fun Emoji', emoji: '😄' }
+                        { id: 'avataaars-neutral', label: 'Avataaars' },
+                        { id: 'adventurer-neutral', label: 'Adventurer' },
+                        { id: 'bottts-neutral', label: 'Bottts' },
+                        { id: 'blobs', label: 'Blobs' },
+                        { id: 'clay', label: 'Clay' },
+                        { id: 'fun-emoji', label: 'Fun Cartoon' }
                     ],
                     dicebearSeeds: ['Felix','Luna','Mochi','Jasper','Zara','Echo','Orion','Nova','Sable','Atlas','Ember','Sage','Flynn','Lyra','Rune','Cleo','Onyx','Iris','Finn','Halo','Mira','Dax','Wren','Skye','Bex','Juno','Loki','Nyx','Cove','Ash','Storm','Vale','Rex','Zoe','Kai','Rue','Vex','Mox','Pax','Sol'],
                     selectedSeed: null,
@@ -601,7 +601,6 @@
                                                 ? 'bg-white text-zinc-950 font-bold shadow-md'
                                                 : 'glass-card text-zinc-400 hover:text-white border-white/10'"
                                             class="px-3.5 py-1.5 rounded-2xl text-xs transition-all whitespace-nowrap cursor-pointer border flex items-center gap-1.5 shrink-0">
-                                        <span x-text="s.emoji"></span>
                                         <span x-text="s.label"></span>
                                     </button>
                                 </template>
@@ -841,7 +840,10 @@
 
                         <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500">
                             <span>Dikirim {{ $req->created_at->diffForHumans() }}</span>
-                            <span>🔥 {{ $req->request_count }} Pemohon</span>
+                            <span class="inline-flex items-center gap-1 text-amber-400 font-medium">
+                                <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                                <span>{{ $req->request_count }} Pemohon</span>
+                            </span>
                         </div>
                     </div>
                 @endforeach

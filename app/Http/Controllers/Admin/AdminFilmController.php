@@ -11,6 +11,8 @@ use App\Models\Episode;
 use App\Models\AdminActivityLog;
 use App\Jobs\SyncFilmsJob;
 use App\Services\ImdbService;
+use App\Services\MovieBoxService;
+use App\Services\AnichinService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -590,5 +592,394 @@ class AdminFilmController extends Controller
         }
 
         return redirect()->route('admin.films.edit', $film->id)->with('success', $msg);
+    }
+
+    /**
+     * View Film Importer Page
+     */
+    public function importer(Request $request)
+    {
+        return view('admin.films.importer');
+    }
+
+    /**
+     * Search External Providers (MovieBox & Anichin)
+     */
+    public function externalSearch(Request $request, MovieBoxService $movieBox, AnichinService $anichin)
+    {
+        $query = trim($request->input('query', ''));
+        $provider = $request->input('provider', 'all');
+        $typeFilter = $request->input('type', 'all');
+        $page = (int)$request->input('page', 1);
+
+        if (empty($query)) {
+            return response()->json(['status' => 'success', 'results' => [], 'total' => 0]);
+        }
+
+        $results = [];
+
+        // 1. Search MovieBox
+        if (in_array($provider, ['all', 'moviebox'])) {
+            try {
+                $mbData = $movieBox->search($query, $page);
+                if (!empty($mbData)) {
+                    $subjects = Film::extractSearchSubjects($mbData);
+                    foreach ($subjects as $sub) {
+                        $subId = (string)($sub['subjectId'] ?? $sub['id'] ?? '');
+                        if (!$subId) continue;
+
+                        $title = $sub['title'] ?? $sub['name'] ?? 'Untitled';
+                        $stype = (int)($sub['subjectType'] ?? $sub['stype'] ?? 1);
+                        $subType = ($stype === 2) ? 'series' : 'movie';
+
+                        if ($typeFilter !== 'all' && $typeFilter !== $subType) {
+                            continue;
+                        }
+
+                        $poster = $sub['cover']['url'] ?? $sub['cover'] ?? $sub['poster']['url'] ?? $sub['poster'] ?? $sub['pic']['url'] ?? $sub['pic'] ?? null;
+                        $backdrop = $sub['banner']['url'] ?? $sub['banner'] ?? $sub['bgCover']['url'] ?? $sub['bgCover'] ?? $poster;
+                        $year = isset($sub['releaseDate']) ? (int)substr($sub['releaseDate'], 0, 4) : 0;
+                        if ($year <= 0 && isset($sub['year'])) $year = (int)$sub['year'];
+
+                        $results[] = [
+                            'subject_id'     => $subId,
+                            'source'         => 'moviebox',
+                            'provider_name'  => 'MovieBox',
+                            'title'          => $title,
+                            'original_title' => $sub['originName'] ?? $title,
+                            'subject_type'   => $subType,
+                            'poster_url'     => $poster,
+                            'backdrop_url'   => $backdrop,
+                            'release_year'   => $year > 0 ? $year : null,
+                            'rating'         => (float)($sub['imdbRatingValue'] ?? $sub['score'] ?? 0.0),
+                            'synopsis'       => $sub['description'] ?? $sub['intro'] ?? $sub['synopsis'] ?? '',
+                            'genres'         => array_column($sub['genreList'] ?? $sub['genres'] ?? [], 'name'),
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning("External search MovieBox error: " . $e->getMessage());
+            }
+        }
+
+        // 2. Search Anichin (Dracin)
+        if ($provider === 'all' || in_array($provider, ['anichin', 'dramabox', 'reelshort', 'shortmax', 'goodshort', 'dramawave', 'dramanova'])) {
+            if ($typeFilter === 'all' || $typeFilter === 'dracin') {
+                $dracinSources = ($provider === 'all' || $provider === 'anichin') 
+                    ? ['dramabox', 'reelshort', 'shortmax'] 
+                    : [$provider];
+
+                foreach ($dracinSources as $src) {
+                    try {
+                        $anichinItems = $anichin->search($query, $src);
+                        if (!empty($anichinItems)) {
+                            foreach ($anichinItems as $item) {
+                                $rawId = (string)($item['id'] ?? $item['dramaId'] ?? '');
+                                if (!$rawId) continue;
+
+                                $subId = "anichin:{$src}:{$rawId}";
+                                $title = $item['title'] ?? $item['name'] ?? 'Untitled Dracin';
+                                $poster = $item['posterImg'] ?? $item['cover'] ?? $item['poster'] ?? null;
+                                if (is_array($poster)) $poster = $poster['url'] ?? null;
+
+                                $results[] = [
+                                    'subject_id'     => $subId,
+                                    'source'         => $src,
+                                    'provider_name'  => ucfirst($src) . ' (Dracin)',
+                                    'title'          => $title,
+                                    'original_title' => $title,
+                                    'subject_type'   => 'dracin',
+                                    'poster_url'     => $poster,
+                                    'backdrop_url'   => $poster,
+                                    'release_year'   => (int)date('Y'),
+                                    'rating'         => (float)($item['score'] ?? 4.8),
+                                    'synopsis'       => $item['synopsis'] ?? $item['description'] ?? $item['intro'] ?? '',
+                                    'genres'         => ['Drama Pendek'],
+                                ];
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning("External search Anichin [{$src}] error: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        // 3. Mark which items already exist in local database
+        if (!empty($results)) {
+            $subjectIds = array_column($results, 'subject_id');
+            $existingFilms = Film::whereIn('moviebox_subject_id', $subjectIds)->get()->keyBy('moviebox_subject_id');
+
+            foreach ($results as &$res) {
+                $existing = $existingFilms->get($res['subject_id']);
+                if ($existing) {
+                    $res['is_imported'] = true;
+                    $res['local_film_id'] = $existing->id;
+                    $res['local_edit_url'] = route('admin.films.edit', $existing->id);
+                    if (!empty($existing->synopsis) && empty($res['synopsis'])) {
+                        $res['synopsis'] = $existing->synopsis;
+                    }
+                } else {
+                    $res['is_imported'] = false;
+                    $res['local_film_id'] = null;
+                    $res['local_edit_url'] = null;
+                }
+            }
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'query'   => $query,
+            'count'   => count($results),
+            'results' => $results,
+        ]);
+    }
+
+    /**
+     * Get full details & synopsis for an external film on demand (e.g. for modal preview)
+     */
+    public function externalDetail(Request $request, MovieBoxService $movieBox, AnichinService $anichin)
+    {
+        $subjectId = (string)$request->input('subject_id');
+        $source = $request->input('source', 'moviebox');
+
+        if (empty($subjectId)) {
+            return response()->json(['status' => 'error', 'message' => 'Subject ID wajib diisi.'], 422);
+        }
+
+        try {
+            // First check if already in local DB
+            $localFilm = Film::where('moviebox_subject_id', $subjectId)->with('genres')->first();
+
+            if (str_starts_with($subjectId, 'anichin:')) {
+                $parts = explode(':', $subjectId);
+                $dracinSource = $parts[1] ?? 'dramabox';
+                $rawId = $parts[2] ?? '';
+
+                $detail = $anichin->getDetail($dracinSource, $rawId) ?: [];
+                $title = $detail['title'] ?? $detail['name'] ?? ($localFilm->title ?? '');
+                $synopsis = $detail['synopsis'] ?? $detail['description'] ?? $detail['intro'] ?? ($localFilm->synopsis ?? '');
+                $poster = $detail['posterImg'] ?? $detail['cover'] ?? ($localFilm->poster_url ?? null);
+                if (is_array($poster)) $poster = $poster['url'] ?? null;
+
+                return response()->json([
+                    'status' => 'success',
+                    'detail' => [
+                        'subject_id'     => $subjectId,
+                        'source'         => $dracinSource,
+                        'provider_name'  => ucfirst($dracinSource) . ' (Dracin)',
+                        'title'          => $title,
+                        'original_title' => $title,
+                        'synopsis'       => $synopsis,
+                        'poster_url'     => $poster,
+                        'backdrop_url'   => $poster,
+                        'rating'         => (float)($detail['score'] ?? ($localFilm->rating ?? 4.8)),
+                        'release_year'   => $localFilm->release_year ?? (int)date('Y'),
+                        'genres'         => ['Drama Pendek'],
+                        'duration'       => null,
+                        'episodes_count' => count($detail['episodes'] ?? []),
+                        'is_imported'    => (bool)$localFilm,
+                        'local_edit_url' => $localFilm ? route('admin.films.edit', $localFilm->id) : null,
+                    ],
+                ]);
+            } else {
+                $detail = $movieBox->getDetails($subjectId);
+                if (empty($detail) && $localFilm) {
+                    return response()->json([
+                        'status' => 'success',
+                        'detail' => [
+                            'subject_id'     => $subjectId,
+                            'source'         => 'moviebox',
+                            'provider_name'  => 'MovieBox',
+                            'title'          => $localFilm->title,
+                            'original_title' => $localFilm->title,
+                            'synopsis'       => $localFilm->synopsis,
+                            'poster_url'     => $localFilm->poster_url,
+                            'backdrop_url'   => $localFilm->backdrop_url,
+                            'rating'         => (float)$localFilm->rating,
+                            'release_year'   => $localFilm->release_year,
+                            'genres'         => $localFilm->genres->pluck('name')->toArray(),
+                            'duration'       => $localFilm->duration_minutes ? "{$localFilm->duration_minutes}m" : null,
+                            'is_imported'    => true,
+                            'local_edit_url' => route('admin.films.edit', $localFilm->id),
+                        ],
+                    ]);
+                }
+
+                if (empty($detail)) {
+                    return response()->json(['status' => 'error', 'message' => 'Detail tidak ditemukan di provider API.'], 404);
+                }
+
+                $stype = (int)($detail['subjectType'] ?? $detail['stype'] ?? 1);
+                $subType = ($stype === 2) ? 'series' : 'movie';
+                $poster = $detail['cover']['url'] ?? $detail['cover'] ?? $detail['poster']['url'] ?? $detail['poster'] ?? ($localFilm->poster_url ?? null);
+                $backdrop = $detail['banner']['url'] ?? $detail['banner'] ?? $detail['stills']['url'] ?? $poster ?? ($localFilm->backdrop_url ?? null);
+                $year = isset($detail['releaseDate']) ? (int)substr($detail['releaseDate'], 0, 4) : 0;
+                if ($year <= 0 && isset($detail['year'])) $year = (int)$detail['year'];
+                if ($year <= 0 && $localFilm) $year = $localFilm->release_year;
+
+                $genres = [];
+                if (!empty($detail['genreList'])) {
+                    $genres = array_column($detail['genreList'], 'name');
+                } elseif (!empty($detail['genre'])) {
+                    $genres = array_map('trim', explode(',', $detail['genre']));
+                } elseif ($localFilm && $localFilm->genres->count() > 0) {
+                    $genres = $localFilm->genres->pluck('name')->toArray();
+                }
+
+                $synopsis = $detail['description'] ?? $detail['intro'] ?? $detail['synopsis'] ?? ($localFilm->synopsis ?? '');
+
+                return response()->json([
+                    'status' => 'success',
+                    'detail' => [
+                        'subject_id'     => $subjectId,
+                        'source'         => 'moviebox',
+                        'provider_name'  => 'MovieBox',
+                        'title'          => $detail['title'] ?? $detail['postTitle'] ?? ($localFilm->title ?? ''),
+                        'original_title' => $detail['originName'] ?? $detail['title'] ?? ($localFilm->title ?? ''),
+                        'subject_type'   => $subType,
+                        'synopsis'       => $synopsis,
+                        'poster_url'     => $poster,
+                        'backdrop_url'   => $backdrop,
+                        'rating'         => (float)($detail['imdbRatingValue'] ?? $detail['score'] ?? ($localFilm->rating ?? 0.0)),
+                        'release_year'   => $year > 0 ? $year : null,
+                        'genres'         => $genres,
+                        'duration'       => $detail['duration'] ?? ($localFilm->duration_minutes ? "{$localFilm->duration_minutes}m" : null),
+                        'content_rating' => $detail['contentRating'] ?? ($localFilm->content_rating ?? null),
+                        'is_imported'    => (bool)$localFilm,
+                        'local_edit_url' => $localFilm ? route('admin.films.edit', $localFilm->id) : null,
+                    ],
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error("External detail error for {$subjectId}: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengambil detail film: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Import a single film from external provider
+     */
+    public function importItem(Request $request, MovieBoxService $movieBox, AnichinService $anichin)
+    {
+        $subjectId = (string)$request->input('subject_id');
+        $source = $request->input('source', 'moviebox');
+
+        if (empty($subjectId)) {
+            return response()->json(['status' => 'error', 'message' => 'Subject ID wajib diisi.'], 422);
+        }
+
+        try {
+            $film = null;
+
+            if (str_starts_with($subjectId, 'anichin:')) {
+                $parts = explode(':', $subjectId);
+                $dracinSource = $parts[1] ?? 'dramabox';
+                $rawId = $parts[2] ?? '';
+
+                $detail = $anichin->getDetail($dracinSource, $rawId) ?: ['id' => $rawId, 'title' => $request->input('title')];
+                $film = $anichin->syncItemToFilmModel($dracinSource, $detail);
+            } else {
+                $detail = $movieBox->getDetails($subjectId);
+                if (empty($detail)) {
+                    $detail = [
+                        'subjectId' => $subjectId,
+                        'title' => $request->input('title'),
+                        'cover' => $request->input('poster_url'),
+                    ];
+                }
+                $film = Film::fromApiData($detail);
+            }
+
+            if (!$film) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal memproses data film dari provider API.'], 400);
+            }
+
+            AdminActivityLog::log(
+                'imported_external_film',
+                "Mengimpor film '{$film->title}' (" . strtoupper($film->subject_type) . ") dari {$source} API.",
+                'Film',
+                $film->id
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Film '{$film->title}' berhasil diimpor ke katalog Faiilmov!",
+                'film' => [
+                    'id' => $film->id,
+                    'title' => $film->title,
+                    'slug' => $film->slug,
+                    'poster_url' => $film->poster_url,
+                    'subject_type' => $film->subject_type,
+                    'edit_url' => route('admin.films.edit', $film->id),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Import external film error for {$subjectId}: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengimpor: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Import multiple selected films in batch
+     */
+    public function importBatch(Request $request, MovieBoxService $movieBox, AnichinService $anichin)
+    {
+        $items = $request->input('items', []);
+        if (!is_array($items) || empty($items)) {
+            return response()->json(['status' => 'error', 'message' => 'Daftar film yang dipilih kosong.'], 422);
+        }
+
+        $importedCount = 0;
+        $failedCount = 0;
+        $importedFilms = [];
+
+        foreach ($items as $item) {
+            $subjectId = (string)($item['subject_id'] ?? '');
+            $source = $item['source'] ?? 'moviebox';
+            if (!$subjectId) continue;
+
+            try {
+                if (str_starts_with($subjectId, 'anichin:')) {
+                    $parts = explode(':', $subjectId);
+                    $dracinSource = $parts[1] ?? 'dramabox';
+                    $rawId = $parts[2] ?? '';
+                    $detail = $anichin->getDetail($dracinSource, $rawId) ?: ['id' => $rawId, 'title' => $item['title'] ?? ''];
+                    $film = $anichin->syncItemToFilmModel($dracinSource, $detail);
+                } else {
+                    $detail = $movieBox->getDetails($subjectId);
+                    if (empty($detail)) {
+                        $detail = ['subjectId' => $subjectId, 'title' => $item['title'] ?? ''];
+                    }
+                    $film = Film::fromApiData($detail);
+                }
+
+                if ($film) {
+                    $importedCount++;
+                    $importedFilms[$subjectId] = [
+                        'id' => $film->id,
+                        'title' => $film->title,
+                        'edit_url' => route('admin.films.edit', $film->id),
+                    ];
+                } else {
+                    $failedCount++;
+                }
+            } catch (\Exception $e) {
+                $failedCount++;
+            }
+        }
+
+        AdminActivityLog::log(
+            'imported_batch_external_films',
+            "Mengimpor massal {$importedCount} film dari provider API ({$failedCount} gagal)."
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Berhasil mengimpor {$importedCount} film ke katalog Faiilmov!" . ($failedCount > 0 ? " ({$failedCount} gagal)" : ""),
+            'imported_count' => $importedCount,
+            'failed_count' => $failedCount,
+            'films' => $importedFilms,
+        ]);
     }
 }

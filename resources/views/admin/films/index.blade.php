@@ -345,9 +345,9 @@
                     :value="request('type', '')" 
                     :options="[
                         '' => 'Semua Tipe',
-                        'movie' => '🎬 Movie',
-                        'series' => '📺 Series',
-                        'dracin' => '🌸 Dracin',
+                        'movie' => 'Movie',
+                        'series' => 'Series',
+                        'dracin' => 'Dracin',
                     ]" 
                     placeholder="Semua Tipe" 
                     :autoSubmit="true"
@@ -361,8 +361,8 @@
                     :value="request('coming_soon', '')" 
                     :options="[
                         '' => 'Semua Status Rilis',
-                        'yes' => '⏳ Coming Soon',
-                        'no' => '✅ Sudah Rilis',
+                        'yes' => 'Coming Soon',
+                        'no' => 'Sudah Rilis',
                     ]" 
                     placeholder="Semua Status" 
                     :autoSubmit="true"
@@ -376,11 +376,11 @@
                     :value="request('content_rating', '')" 
                     :options="[
                         '' => 'Semua Usia',
-                        'SU' => '🟢 SU (Semua Umur)',
-                        '13+' => '🔵 13+',
-                        '16+' => '🟠 16+',
-                        '18+' => '🔴 18+',
-                        'UNRATED' => '⚪ Unrated',
+                        'SU' => 'SU (Semua Umur)',
+                        '13+' => '13+',
+                        '16+' => '16+',
+                        '18+' => '18+',
+                        'UNRATED' => 'Unrated',
                     ]" 
                     placeholder="Semua Usia" 
                     :autoSubmit="true"
@@ -411,9 +411,9 @@
                     name="sort" 
                     :value="request('sort', 'latest')" 
                     :options="[
-                        'latest' => '🕒 Terbaru',
-                        'rating' => '⭐ Rating Tertinggi',
-                        'views' => '👁️ View Terbanyak',
+                        'latest' => 'Terbaru',
+                        'rating' => 'Rating Tertinggi',
+                        'views' => 'View Terbanyak',
                     ]" 
                     placeholder="Urutkan" 
                     :autoSubmit="true"
@@ -465,42 +465,12 @@
                 </div>
             </div>
 
-            <!-- Sync API Dropdown -->
-            <div class="relative" @click.outside="syncDropdownOpen = false">
-                <button type="button" @click="syncDropdownOpen = !syncDropdownOpen" 
-                        class="px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 font-bold text-xs flex items-center gap-2 border border-blue-500/30 transition-all cursor-pointer">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-400"></i>
-                    <span>Sync Content</span>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-blue-400 transition-transform duration-200" :class="syncDropdownOpen ? 'rotate-180' : ''"></i>
-                </button>
-
-                <div x-show="syncDropdownOpen" 
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-60 bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl p-1.5 z-40 space-y-1"
-                     style="display: none;">
-                    
-                    <form action="{{ route('admin.films.sync_api') }}" method="POST" @submit="isSubmitting = true">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-blue-300 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer">
-                            <i data-lucide="film" class="w-4 h-4 text-blue-400"></i>
-                            <span>Sync MovieBox API</span>
-                        </button>
-                    </form>
-
-                    <form action="{{ route('admin.films.sync_dracin_api') }}" method="POST" @submit="isSubmitting = true">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-rose-300 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-rose-400"></i>
-                            <span>Sync Dracin (Anichin API)</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <!-- Cari & Impor Film Button -->
+            <a href="{{ route('admin.films.importer') }}" 
+               class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]">
+                <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Cari & Impor Film</span>
+            </a>
 
             <!-- Import from IMDb Button -->
             <button type="button" @click="imdbModalOpen = true; imdbError = ''; imdbData = null; imdbUrl = ''; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }"

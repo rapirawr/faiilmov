@@ -265,13 +265,13 @@
                             <div class="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-zinc-800/80 text-[10px] text-zinc-500 font-mono">
                                 <div class="flex items-center gap-1.5">
                                     <template x-if="script.last_run_status === 'success'">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                        <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i>
                                     </template>
                                     <template x-if="script.last_run_status === 'error'">
-                                        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                                        <i data-lucide="alert-circle" class="w-3 h-3 text-rose-400"></i>
                                     </template>
                                     <template x-if="!script.last_run_status || script.last_run_status === 'pending'">
-                                        <span class="w-2 h-2 rounded-full bg-zinc-600"></span>
+                                        <i data-lucide="clock" class="w-3 h-3 text-zinc-600"></i>
                                     </template>
                                     <span x-text="script.last_run_at_human || 'Belum dijalankan'"></span>
                                 </div>
@@ -372,7 +372,7 @@
                 </div>
 
                 <div class="flex items-center justify-between text-[11px] text-zinc-500">
-                    <span>💡 Shortcut: <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+Enter</kbd> Eksekusi, <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+S</kbd> Simpan, <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Tab</kbd> Indentasi 4 spasi.</span>
+                    <span class="inline-flex items-center gap-1.5"><i data-lucide="keyboard" class="w-3.5 h-3.5 text-amber-400"></i><span>Shortcut:</span> <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+Enter</kbd> Eksekusi, <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+S</kbd> Simpan, <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Tab</kbd> Indentasi 4 spasi.</span>
                 </div>
             </div>
 

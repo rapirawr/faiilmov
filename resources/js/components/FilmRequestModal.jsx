@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Film, Tv, Smartphone } from 'lucide-react';
 
 export default function FilmRequestModal({ isOpen: propIsOpen = false, onClose: propOnClose, initialTitle = '', csrfToken = '' }) {
   const [isOpen, setIsOpen] = useState(propIsOpen);
@@ -185,35 +186,38 @@ export default function FilmRequestModal({ isOpen: propIsOpen = false, onClose: 
               <button
                 type="button"
                 onClick={() => setType('movie')}
-                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
+                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
                   type === 'movie'
                     ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-md'
                     : 'bg-zinc-950 text-zinc-400 border-white/10 hover:text-white'
                 }`}
               >
-                🎬 Movie
+                <Film className="w-3.5 h-3.5" />
+                <span>Movie</span>
               </button>
               <button
                 type="button"
                 onClick={() => setType('tv')}
-                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
+                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
                   type === 'tv'
                     ? 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-md'
                     : 'bg-zinc-950 text-zinc-400 border-white/10 hover:text-white'
                 }`}
               >
-                📺 Series / TV
+                <Tv className="w-3.5 h-3.5" />
+                <span>Series / TV</span>
               </button>
               <button
                 type="button"
                 onClick={() => setType('dracin')}
-                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
+                className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
                   type === 'dracin'
                     ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-md'
                     : 'bg-zinc-950 text-zinc-400 border-white/10 hover:text-white'
                 }`}
               >
-                🌸 Dracin
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Dracin</span>
               </button>
             </div>
           </div>

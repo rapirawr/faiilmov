@@ -31,6 +31,7 @@ class NvidiaAiService
         $cacheKey = 'nvidia_interpret_' . md5($query);
         
         return Cache::remember($cacheKey, now()->addHours(6), function () use ($query) {
+            $startMicro = microtime(true);
             try {
                 $systemPrompt = $this->buildSystemPrompt();
                 
@@ -46,7 +47,10 @@ class NvidiaAiService
                         'max_tokens' => 200,
                     ]);
 
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+
                 if (!$response->successful()) {
+                    app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, $response->status(), $latencyMs, 'HTTP ' . $response->status());
                     Log::warning('NVIDIA API request failed', [
                         'status' => $response->status(),
                         'body' => $response->body()
@@ -54,12 +58,16 @@ class NvidiaAiService
                     return null;
                 }
 
+                app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', true, $response->status(), $latencyMs, null);
+
                 $data = $response->json();
                 $content = $data['choices'][0]['message']['content'] ?? '';
                 
                 return $this->parseInterpretationResult($content);
 
             } catch (Exception $e) {
+                $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+                app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, null, $latencyMs, $e->getMessage());
                 Log::error('NVIDIA interpretQuery exception: ' . $e->getMessage());
                 return null;
             }
@@ -72,6 +80,7 @@ class NvidiaAiService
             return null;
         }
 
+        $startMicro = microtime(true);
         try {
             $systemPrompt = <<<PROMPT
 You are a professional UX copywriter for a movie streaming platform named "Faiilmov".
@@ -101,9 +110,14 @@ PROMPT;
                     'max_tokens' => 300,
                 ]);
 
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+
             if (!$response->successful()) {
+                app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, $response->status(), $latencyMs, 'HTTP ' . $response->status());
                 return null;
             }
+
+            app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', true, $response->status(), $latencyMs, null);
 
             $content = $response->json()['choices'][0]['message']['content'] ?? '';
             if (preg_match('/```json\s*(.*?)\s*```/s', $content, $m)) {
@@ -114,6 +128,8 @@ PROMPT;
 
             return json_decode(trim($content), true);
         } catch (Exception $e) {
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+            app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, null, $latencyMs, $e->getMessage());
             Log::error('NVIDIA generateBannerCopywriting exception: ' . $e->getMessage());
             return null;
         }
@@ -125,6 +141,7 @@ PROMPT;
             return null;
         }
 
+        $startMicro = microtime(true);
         try {
             $response = Http::withToken($this->apiKey)
                 ->timeout($this->timeout + 2)
@@ -134,17 +151,24 @@ PROMPT;
                     'encoding_format' => 'float',
                 ]);
 
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+
             if (!$response->successful()) {
+                app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, $response->status(), $latencyMs, 'HTTP ' . $response->status());
                 Log::warning('NVIDIA embedding API failed', [
                     'status' => $response->status()
                 ]);
                 return null;
             }
 
+            app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', true, $response->status(), $latencyMs, null);
+
             $data = $response->json();
             return $data['data'][0]['embedding'] ?? null;
 
         } catch (Exception $e) {
+            $latencyMs = (int)round((microtime(true) - $startMicro) * 1000);
+            app(SystemHealthService::class)->logApiCall('nvidia', 'integrate.api.nvidia.com', false, null, $latencyMs, $e->getMessage());
             Log::error('NVIDIA generateEmbedding exception: ' . $e->getMessage());
             return null;
         }

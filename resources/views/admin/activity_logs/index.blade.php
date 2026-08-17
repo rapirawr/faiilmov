@@ -24,13 +24,13 @@
                     :value="request('category', '')" 
                     :options="[
                         '' => 'Semua Kategori Aksi',
-                        'film' => '🎬 Film & Dracin',
-                        'user' => '👤 User & Ban',
-                        'review' => '💬 Ulasan & Moderasi',
-                        'script' => '💻 Script Runner',
-                        'settings' => '⚙️ Pengaturan',
-                        'actor' => '🎭 Aktor & Cast',
-                        'genre' => '🏷️ Genre',
+                        'film' => 'Film & Dracin',
+                        'user' => 'User & Ban',
+                        'review' => 'Ulasan & Moderasi',
+                        'script' => 'Script Runner',
+                        'settings' => 'Pengaturan',
+                        'actor' => 'Aktor & Cast',
+                        'genre' => 'Genre',
                     ]" 
                     placeholder="Semua Kategori" 
                     :autoSubmit="true"

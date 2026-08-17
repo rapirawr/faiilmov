@@ -84,9 +84,9 @@
                     :value="request('type', '')" 
                     :options="[
                         '' => 'Semua Tipe',
-                        'movie' => '🎬 Movie',
-                        'tv' => '📺 TV / Series',
-                        'dracin' => '🌸 Dracin',
+                        'movie' => 'Movie',
+                        'tv' => 'TV / Series',
+                        'dracin' => 'Dracin',
                     ]" 
                     placeholder="Semua Tipe" 
                     :autoSubmit="true"
@@ -99,10 +99,10 @@
                     :value="request('status', '')" 
                     :options="[
                         '' => 'Status: Active (Pending & Searching)',
-                        'pending' => '⏳ Pending',
-                        'searching' => '🔍 Sedang Dicari',
-                        'added' => '✅ Ditemukan',
-                        'rejected' => '❌ Ditolak',
+                        'pending' => 'Pending',
+                        'searching' => 'Sedang Dicari',
+                        'added' => 'Ditemukan',
+                        'rejected' => 'Ditolak',
                     ]" 
                     placeholder="Semua Status" 
                     :autoSubmit="true"
@@ -114,8 +114,8 @@
                     name="sort" 
                     :value="request('sort', 'popularity')" 
                     :options="[
-                        'popularity' => '🔥 Terpopuler (Banyak Permintaan)',
-                        'latest' => '🕒 Terbaru',
+                        'popularity' => 'Terpopuler (Banyak Permintaan)',
+                        'latest' => 'Terbaru',
                     ]" 
                     placeholder="Urutkan" 
                     :autoSubmit="true"
@@ -229,8 +229,9 @@
 
                             <!-- Jumlah Pemohon -->
                             <td class="p-4 text-center">
-                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold font-mono text-xs border border-amber-500/30">
-                                    🔥 {{ $req->request_count }}x
+                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold font-mono text-xs border border-amber-500/30 inline-flex items-center gap-1">
+                                    <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span>{{ $req->request_count }}x</span>
                                 </span>
                             </td>
 
@@ -416,10 +417,10 @@
                     <div>
                         <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Pilih Status Baru</label>
                         <select name="status" x-model="activeStatusModalData.status" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                            <option value="pending">⏳ Pending</option>
-                            <option value="searching">🔍 Sedang Dicari</option>
-                            <option value="added">✅ Ditemukan / Selesai</option>
-                            <option value="rejected">❌ Ditolak</option>
+                            <option value="pending">Pending</option>
+                            <option value="searching">Sedang Dicari</option>
+                            <option value="added">Ditemukan / Selesai</option>
+                            <option value="rejected">Ditolak</option>
                         </select>
                     </div>
 

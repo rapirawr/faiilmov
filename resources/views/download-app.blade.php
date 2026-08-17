@@ -58,7 +58,9 @@
                                             <button type="submit" :disabled="loading"
                                                     class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shrink-0 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                                 <span x-show="!loading">Beri Tahu Saya</span>
-                                                <span x-show="loading" class="animate-spin text-xs">🌀</span>
+                                                <span x-show="loading" class="flex items-center gap-1">
+                                                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+                                                </span>
                                             </button>
                                         </form>
                                     </template>
