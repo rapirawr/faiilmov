@@ -877,18 +877,52 @@ class AdminFilmController extends Controller
                 $dracinSource = $parts[1] ?? 'dramabox';
                 $rawId = $parts[2] ?? '';
 
-                $detail = $anichin->getDetail($dracinSource, $rawId) ?: ['id' => $rawId, 'title' => $request->input('title')];
-                $film = $anichin->syncItemToFilmModel($dracinSource, $detail);
+                $detail = $anichin->getDetail($dracinSource, $rawId);
+                if (empty($detail) || !is_array($detail)) {
+                    $detail = [
+                        'id' => $rawId,
+                        'title' => $request->input('title'),
+                        'posterImg' => $request->input('poster_url'),
+                    ];
+                } else {
+                    if (empty($detail['id']) && empty($detail['dramaId'])) {
+                        $detail['id'] = $rawId;
+                    }
+                    if (empty($detail['title']) && $request->input('title')) {
+                        $detail['title'] = $request->input('title');
+                    }
+                    if (empty($detail['posterImg']) && empty($detail['cover']) && $request->input('poster_url')) {
+                        $detail['posterImg'] = $request->input('poster_url');
+                    }
+                }
+                $film = $anichin->syncItemToFilmModel($dracinSource, $detail, true);
             } else {
-                $detail = $movieBox->getDetails($subjectId);
-                if (empty($detail)) {
+                $detail = null;
+                try {
+                    $detail = $movieBox->getDetails($subjectId);
+                } catch (\Throwable $e) {
+                    \Log::warning("MovieBox getDetails fallback for {$subjectId}: " . $e->getMessage());
+                }
+
+                if (empty($detail) || !is_array($detail)) {
                     $detail = [
                         'subjectId' => $subjectId,
                         'title' => $request->input('title'),
                         'cover' => $request->input('poster_url'),
+                        'subjectType' => $request->input('subject_type') === 'series' ? 2 : 1,
                     ];
+                } else {
+                    if (empty($detail['subjectId'])) {
+                        $detail['subjectId'] = $subjectId;
+                    }
+                    if (empty($detail['title']) && $request->input('title')) {
+                        $detail['title'] = $request->input('title');
+                    }
+                    if (empty($detail['cover']) && $request->input('poster_url')) {
+                        $detail['cover'] = $request->input('poster_url');
+                    }
                 }
-                $film = Film::fromApiData($detail);
+                $film = Film::fromApiData($detail, true);
             }
 
             if (!$film) {
@@ -944,14 +978,30 @@ class AdminFilmController extends Controller
                     $parts = explode(':', $subjectId);
                     $dracinSource = $parts[1] ?? 'dramabox';
                     $rawId = $parts[2] ?? '';
-                    $detail = $anichin->getDetail($dracinSource, $rawId) ?: ['id' => $rawId, 'title' => $item['title'] ?? ''];
-                    $film = $anichin->syncItemToFilmModel($dracinSource, $detail);
-                } else {
-                    $detail = $movieBox->getDetails($subjectId);
-                    if (empty($detail)) {
-                        $detail = ['subjectId' => $subjectId, 'title' => $item['title'] ?? ''];
+                    $detail = $anichin->getDetail($dracinSource, $rawId);
+                    if (empty($detail) || !is_array($detail)) {
+                        $detail = [
+                            'id' => $rawId,
+                            'title' => $item['title'] ?? '',
+                            'posterImg' => $item['poster_url'] ?? null,
+                        ];
                     }
-                    $film = Film::fromApiData($detail);
+                    $film = $anichin->syncItemToFilmModel($dracinSource, $detail, true);
+                } else {
+                    $detail = null;
+                    try {
+                        $detail = $movieBox->getDetails($subjectId);
+                    } catch (\Throwable $e) {}
+
+                    if (empty($detail) || !is_array($detail)) {
+                        $detail = [
+                            'subjectId' => $subjectId, 
+                            'title' => $item['title'] ?? '',
+                            'cover' => $item['poster_url'] ?? null,
+                            'subjectType' => ($item['subject_type'] ?? '') === 'series' ? 2 : 1,
+                        ];
+                    }
+                    $film = Film::fromApiData($detail, true);
                 }
 
                 if ($film) {
