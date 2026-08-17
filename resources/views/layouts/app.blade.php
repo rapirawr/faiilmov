@@ -50,12 +50,12 @@
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #09090b; }
-        ::-webkit-scrollbar-thumb { background: #272730; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #161614; }
+        ::-webkit-scrollbar-thumb { background: #2f2f2a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #71717a; }
         
         .glass-panel {
-            background: rgba(12, 12, 16, 0.92);
+            background: rgba(22, 22, 20, 0.94);
             backdrop-filter: blur(28px);
             -webkit-backdrop-filter: blur(28px);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -63,7 +63,7 @@
         }
         
         .glass-card {
-            background: rgba(24, 24, 32, 0.55);
+            background: rgba(30, 30, 27, 0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -71,7 +71,7 @@
         }
 
         .glass-chip {
-            background: rgba(9, 9, 11, 0.75);
+            background: rgba(22, 22, 20, 0.85);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -79,7 +79,7 @@
         }
 
         .bridge-container {
-            background: rgba(18, 18, 23, 0.75);
+            background: rgba(28, 28, 25, 0.82);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.12);
