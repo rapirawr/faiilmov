@@ -210,17 +210,23 @@
         <!-- BECAUSE YOU WATCHED Section (Personalized) -->
         @if(isset($becauseYouWatched) && !empty($becauseYouWatched['source_film']) && $becauseYouWatched['recommendations']->count() > 0)
             <section x-data="{
+                        scrollPrev() { $refs.becauseContainer.scrollBy({ left: -300, behavior: 'smooth' }) },
                         scrollNext() { $refs.becauseContainer.scrollBy({ left: 300, behavior: 'smooth' }) }
                      }" 
                      class="space-y-4">
                 
                 <div class="flex items-center justify-between">
                     <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
                         <span>Karena Anda Menonton: <span class="text-amber-400">{{ Str::limit($becauseYouWatched['source_film']->title, 25) }}</span></span>
                     </h2>
                 </div>
 
                 <div class="relative group">
+                    <button @click="scrollPrev()" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/80 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500/20 hover:border-amber-500/40 hover:text-amber-300 transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+
                     <div x-ref="becauseContainer" class="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 will-change-transform transform-gpu">
                         @foreach($becauseYouWatched['recommendations'] as $film)
                             @if($film)
@@ -230,6 +236,10 @@
                             @endif
                         @endforeach
                     </div>
+
+                    <button @click="scrollNext()" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-dark-950/80 border border-amber-500/20 text-amber-400 flex items-center justify-center hover:bg-amber-500/20 hover:border-amber-500/40 hover:text-amber-300 transition-all opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </section>
         @endif

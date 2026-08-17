@@ -105,34 +105,56 @@ class HomeController extends Controller
         $becauseYouWatched = null;
         $comingSoon = $this->recommendation->getComingSoon(12);
         
+        $sourceFilm = null;
+        $watchedIds = [];
+
         if (Auth::check()) {
             $activeProfileId = session('active_profile_id');
 
-            $continueWatching = \App\Models\WatchHistory::where('user_id', Auth::id())
-                ->where('profile_id', $activeProfileId)
+            $continueWatchingQuery = \App\Models\WatchHistory::where('user_id', Auth::id())
                 ->has('film')
                 ->with(['film' => fn($q) => $q->select('id', 'title', 'slug', 'poster_url', 'rating', 'release_year', 'subject_type', 'max_resolution', 'content_rating', 'duration_minutes')])
                 ->whereNotExists(fn($q) => $q->from('watchlists')->whereColumn('watchlists.film_id', 'watch_histories.film_id')->whereColumn('watchlists.user_id', 'watch_histories.user_id')->where('status', 'completed'))
-                ->orderByDesc('updated_at')
-                ->limit(8)
-                ->get();
-            
-            $becauseRecommendations = $this->recommendation->getBecauseYouWatched(Auth::user(), $activeProfileId, 12);
-            
-            if ($becauseRecommendations->isNotEmpty()) {
-                $lastWatchedFilm = \App\Models\WatchHistory::where('user_id', Auth::id())
-                    ->where('profile_id', $activeProfileId)
-                    ->has('film')
-                    ->with('film')
-                    ->orderByDesc('updated_at')
-                    ->first();
+                ->orderByDesc('updated_at');
 
-                if ($lastWatchedFilm && $lastWatchedFilm->film) {
-                    $becauseYouWatched = [
-                        'source_film' => $lastWatchedFilm->film,
-                        'recommendations' => $becauseRecommendations,
-                    ];
+            if ($activeProfileId) {
+                $continueWatching = (clone $continueWatchingQuery)->where('profile_id', $activeProfileId)->limit(8)->get();
+                if ($continueWatching->isEmpty()) {
+                    $continueWatching = $continueWatchingQuery->limit(8)->get();
                 }
+            } else {
+                $continueWatching = $continueWatchingQuery->limit(8)->get();
+            }
+            
+            $lastWatchedFilmRecord = \App\Models\WatchHistory::where('user_id', Auth::id())
+                ->has('film')
+                ->with(['film.genres', 'film.actors'])
+                ->orderByDesc('updated_at');
+
+            if ($activeProfileId) {
+                $lastWatched = (clone $lastWatchedFilmRecord)->where('profile_id', $activeProfileId)->first() ?: $lastWatchedFilmRecord->first();
+            } else {
+                $lastWatched = $lastWatchedFilmRecord->first();
+            }
+
+            if ($lastWatched && $lastWatched->film) {
+                $sourceFilm = $lastWatched->film;
+                $watchedIds = \App\Models\WatchHistory::where('user_id', Auth::id())->pluck('film_id')->toArray();
+            }
+        }
+
+        // If no user watch history exists or guest, use top trending / popular movie as showcase source
+        if (!$sourceFilm) {
+            $sourceFilm = $trendingMovies->first() ?: Film::forActiveProfile()->with(['genres', 'actors'])->orderByDesc('view_count')->first();
+        }
+
+        if ($sourceFilm) {
+            $becauseRecommendations = $this->recommendation->getSimilarForFilm($sourceFilm, $watchedIds, 12);
+            if ($becauseRecommendations->isNotEmpty()) {
+                $becauseYouWatched = [
+                    'source_film' => $sourceFilm,
+                    'recommendations' => $becauseRecommendations,
+                ];
             }
         }
 
