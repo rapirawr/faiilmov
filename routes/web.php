@@ -231,6 +231,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/feature-banners/{featureBanner}/toggle', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'toggleActive'])->name('feature-banners.toggle');
     Route::delete('/feature-banners/{featureBanner}', [\App\Http\Controllers\Admin\AdminFeatureBannerController::class, 'destroy'])->name('feature-banners.destroy');
 
+    // Page Elements & Widgets CMS Studio
+    Route::get('/page-elements', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'index'])->name('page_elements.index');
+    Route::post('/page-elements', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'store'])->name('page_elements.store');
+    Route::put('/page-elements/{pageElement}', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'update'])->name('page_elements.update');
+    Route::patch('/page-elements/{pageElement}/toggle', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'toggle'])->name('page_elements.toggle');
+    Route::delete('/page-elements/{pageElement}', [\App\Http\Controllers\Admin\AdminPageElementController::class, 'destroy'])->name('page_elements.destroy');
+
     // Film Management
     Route::get('/films/importer', [AdminFilmController::class, 'importer'])->name('films.importer');
     Route::post('/api/films/external-search', [AdminFilmController::class, 'externalSearch'])->name('films.external_search');

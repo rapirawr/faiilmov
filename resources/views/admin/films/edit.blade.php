@@ -4,43 +4,7 @@
 @section('page_title', 'Edit Film: ' . $film->title)
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6" x-data="{
-    activeTab: 'details',
-    posterUrl: '{{ old('poster_url', $film->poster_url) }}',
-    backdropUrl: '{{ old('backdrop_url', $film->backdrop_url) }}',
-    title: @json(old('title', $film->title)),
-    synopsis: @json(old('synopsis', $film->synopsis ?: '')),
-    isAiWorking: false,
-    async runAiSynopsis(action) {
-        this.isAiWorking = true;
-        try {
-            const res = await fetch('{{ route('admin.films.ai_synopsis_tools') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: action,
-                    title: this.title || 'Film',
-                    synopsis: this.synopsis,
-                    tone: 'cinematic'
-                })
-            });
-            const data = await res.json();
-            if (data.success && data.synopsis) {
-                this.synopsis = data.synopsis;
-            } else if (data.message) {
-                alert(data.message);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            this.isAiWorking = false;
-        }
-    }
-}">
+<div class="max-w-5xl mx-auto space-y-6" x-data="filmEditForm()">
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-lg font-bold text-white font-['Outfit']">Edit Data Film: {{ $film->title }}</h2>
@@ -1272,6 +1236,46 @@ if (typeof window.soundtrackManager !== 'function') {
                 this.editModalOpen = true;
             }
         };
+    };
+}
+
+function filmEditForm() {
+    return {
+        activeTab: 'details',
+        posterUrl: @json(old('poster_url', $film->poster_url)),
+        backdropUrl: @json(old('backdrop_url', $film->backdrop_url)),
+        title: @json(old('title', $film->title)),
+        synopsis: @json(old('synopsis', $film->synopsis ?: '')),
+        isAiWorking: false,
+        async runAiSynopsis(action) {
+            this.isAiWorking = true;
+            try {
+                const res = await fetch('{{ route('admin.films.ai_synopsis_tools') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        title: this.title || 'Film',
+                        synopsis: this.synopsis,
+                        tone: 'cinematic'
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.synopsis) {
+                    this.synopsis = data.synopsis;
+                } else if (data.message) {
+                    alert(data.message);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isAiWorking = false;
+            }
+        }
     };
 }
 </script>

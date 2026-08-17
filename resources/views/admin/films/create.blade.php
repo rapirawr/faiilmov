@@ -4,105 +4,7 @@
 @section('page_title', 'Tambah Film Manual')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6" x-data="{
-    imdbUrl: '',
-    imdbLoading: false,
-    imdbError: '',
-    imdbSuccess: '',
-    title: '{{ old('title', '') }}',
-    subjectType: '{{ old('subject_type', 'movie') }}',
-    contentRating: '{{ old('content_rating', '') }}',
-    maxResolution: '{{ old('max_resolution', '1080P') }}',
-    releaseYear: '{{ old('release_year', date('Y')) }}',
-    durationMinutes: '{{ old('duration_minutes', 120) }}',
-    rating: '{{ old('rating', 8.5) }}',
-    trailerUrl: '{{ old('trailer_url', '') }}',
-    posterUrl: '{{ old('poster_url', 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600') }}',
-    backdropUrl: '{{ old('backdrop_url', '') }}',
-    synopsis: '{{ old('synopsis', '') }}',
-    async fetchFromImdb() {
-        if (!this.imdbUrl.trim()) {
-            this.imdbError = 'Silakan masukkan link atau ID IMDb terlebih dahulu.';
-            return;
-        }
-        this.imdbLoading = true;
-        this.imdbError = '';
-        this.imdbSuccess = '';
-        try {
-            const res = await fetch('{{ route('admin.films.fetch_imdb') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ imdb_url: this.imdbUrl.trim() })
-            });
-            const result = await res.json();
-            if (!res.ok || result.status !== 'ok') {
-                this.imdbError = result.message || 'Gagal mengambil data dari link IMDb.';
-            } else {
-                const d = result.data;
-                this.title = d.title || this.title;
-                this.synopsis = d.synopsis || this.synopsis;
-                this.releaseYear = d.release_year || this.releaseYear;
-                this.durationMinutes = d.duration_minutes || this.durationMinutes;
-                this.rating = d.rating || this.rating;
-                this.contentRating = d.content_rating || this.contentRating;
-                this.subjectType = d.subject_type || this.subjectType;
-                this.posterUrl = d.poster_url || this.posterUrl;
-                this.backdropUrl = d.backdrop_url || this.backdropUrl;
-                this.trailerUrl = d.trailer_url || this.trailerUrl;
-                
-                // Check matching genres
-                if (Array.isArray(d.genre_ids)) {
-                    document.querySelectorAll('input[name=\'genres[]\']').forEach(chk => {
-                        chk.checked = d.genre_ids.includes(parseInt(chk.value));
-                    });
-                }
-
-                const ostCount = d.soundtracks ? d.soundtracks.length : 0;
-                const castCount = d.actors ? d.actors.length : 0;
-                this.imdbSuccess = `Berhasil menarik metadata film '${d.title}' (${d.release_year})! ${castCount} pemeran dan ${ostCount} OST lagu siap disinkronkan.`;
-                setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
-            }
-        } catch (e) {
-            this.imdbError = 'Terjadi kesalahan saat memproses: ' + e.message;
-        } finally {
-            this.imdbLoading = false;
-        }
-    },
-    isAiWorking: false,
-    async runAiSynopsis(action) {
-        this.isAiWorking = true;
-        try {
-            const res = await fetch('{{ route('admin.films.ai_synopsis_tools') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: action,
-                    title: this.title || 'Film',
-                    synopsis: this.synopsis,
-                    tone: 'cinematic'
-                })
-            });
-            const data = await res.json();
-            if (data.success && data.synopsis) {
-                this.synopsis = data.synopsis;
-            } else if (data.message) {
-                alert(data.message);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            this.isAiWorking = false;
-        }
-    }
-}">
+<div class="max-w-4xl mx-auto space-y-6" x-data="filmCreateForm()">
     <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-white font-['Outfit']">Form Tambah Film Baru</h2>
         <a href="{{ route('admin.films.index') }}" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1">
@@ -500,4 +402,108 @@ if (typeof window.castPicker !== 'function') {
         </form>
     </div>
 </div>
+
+<script>
+function filmCreateForm() {
+    return {
+        imdbUrl: '',
+        imdbLoading: false,
+        imdbError: '',
+        imdbSuccess: '',
+        title: @json(old('title', '')),
+        subjectType: @json(old('subject_type', 'movie')),
+        contentRating: @json(old('content_rating', '')),
+        maxResolution: @json(old('max_resolution', '1080P')),
+        releaseYear: @json(old('release_year', date('Y'))),
+        durationMinutes: @json(old('duration_minutes', 120)),
+        rating: @json(old('rating', 8.5)),
+        trailerUrl: @json(old('trailer_url', '')),
+        posterUrl: @json(old('poster_url', 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600')),
+        backdropUrl: @json(old('backdrop_url', '')),
+        synopsis: @json(old('synopsis', '')),
+        async fetchFromImdb() {
+            if (!this.imdbUrl.trim()) {
+                this.imdbError = 'Silakan masukkan link atau ID IMDb terlebih dahulu.';
+                return;
+            }
+            this.imdbLoading = true;
+            this.imdbError = '';
+            this.imdbSuccess = '';
+            try {
+                const res = await fetch('{{ route('admin.films.fetch_imdb') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ imdb_url: this.imdbUrl.trim() })
+                });
+                const result = await res.json();
+                if (!res.ok || result.status !== 'ok') {
+                    this.imdbError = result.message || 'Gagal mengambil data dari link IMDb.';
+                } else {
+                    const d = result.data;
+                    this.title = d.title || this.title;
+                    this.synopsis = d.synopsis || this.synopsis;
+                    this.releaseYear = d.release_year || this.releaseYear;
+                    this.durationMinutes = d.duration_minutes || this.durationMinutes;
+                    this.rating = d.rating || this.rating;
+                    this.contentRating = d.content_rating || this.contentRating;
+                    this.subjectType = d.subject_type || this.subjectType;
+                    this.posterUrl = d.poster_url || this.posterUrl;
+                    this.backdropUrl = d.backdrop_url || this.backdropUrl;
+                    this.trailerUrl = d.trailer_url || this.trailerUrl;
+                    
+                    // Check matching genres
+                    if (Array.isArray(d.genre_ids)) {
+                        document.querySelectorAll('input[name=\'genres[]\']').forEach(chk => {
+                            chk.checked = d.genre_ids.includes(parseInt(chk.value));
+                        });
+                    }
+
+                    const ostCount = d.soundtracks ? d.soundtracks.length : 0;
+                    const castCount = d.actors ? d.actors.length : 0;
+                    this.imdbSuccess = `Berhasil menarik metadata film '${d.title}' (${d.release_year})! ${castCount} pemeran dan ${ostCount} OST lagu siap disinkronkan.`;
+                    setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
+                }
+            } catch (e) {
+                this.imdbError = 'Terjadi kesalahan saat memproses: ' + e.message;
+            } finally {
+                this.imdbLoading = false;
+            }
+        },
+        isAiWorking: false,
+        async runAiSynopsis(action) {
+            this.isAiWorking = true;
+            try {
+                const res = await fetch('{{ route('admin.films.ai_synopsis_tools') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        title: this.title || 'Film',
+                        synopsis: this.synopsis,
+                        tone: 'cinematic'
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.synopsis) {
+                    this.synopsis = data.synopsis;
+                } else if (data.message) {
+                    alert(data.message);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isAiWorking = false;
+            }
+        }
+    };
+}
+</script>
 @endsection

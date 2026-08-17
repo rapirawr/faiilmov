@@ -1,5 +1,11 @@
 <!-- Top Navigation Header Component -->
-<header class="fixed top-0 left-0 right-0 z-40 h-20 bg-dark-950/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-2.5 sm:px-8 gap-2 sm:gap-4 pointer-events-none [&>*]:pointer-events-auto shadow-md">
+<header class="fixed top-0 left-0 right-0 z-40 bg-dark-950/90 backdrop-blur-xl border-b border-white/10 shadow-md">
+    
+    <!-- Top Broadcast Bars Integration -->
+    <x-page-elements-renderer :section="'top_bars'" />
+
+    <!-- Main Navigation Bar -->
+    <div class="h-20 flex items-center justify-between px-2.5 sm:px-8 gap-2 sm:gap-4 pointer-events-none [&>*]:pointer-events-auto">
     
     <!-- Left: Circular Toggle & Brand Logo -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -718,5 +724,6 @@ function navProfileState() {
         @endauth
     </div>
 
+    </div>
 </header>
 

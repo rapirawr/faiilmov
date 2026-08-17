@@ -120,9 +120,12 @@
     @endif
 
     @unless(View::hasSection('hide_navbar'))
-        <!-- Top Navigation Header Component -->
+        <!-- Top Navigation Header Component (Includes Integrated Top Broadcast Bar) -->
         <x-navbar />
     @endunless
+
+    <!-- Global Floating Widgets & Popup Modals -->
+    <x-page-elements-renderer :section="'body'" />
 
     @unless(View::hasSection('hide_sidebar'))
         <!-- Left Sidebar Navigation Component -->
