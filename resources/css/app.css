@@ -20,23 +20,11 @@
     --color-amber-900: #646255;
     --color-amber-950: #3a3831;
 
-    --color-dark-950: #161614;
-    --color-dark-900: #1c1c19;
-    --color-dark-850: #20201d;
-    --color-dark-800: #262622;
-    --color-dark-700: #2f2f2a;
-    --color-dark-600: #3f3f39;
-
-    --color-zinc-950: #161614;
-    --color-zinc-900: #1c1c19;
-    --color-zinc-850: #20201d;
-    --color-zinc-800: #262622;
-    --color-zinc-750: #2c2c27;
-    --color-zinc-700: #35352f;
-}
-
-html, body {
-    background-color: #161614 !important;
+    --color-dark-950: #09090b;
+    --color-dark-900: #121217;
+    --color-dark-800: #181820;
+    --color-dark-700: #272730;
+    --color-dark-600: #3f3f46;
 }
 
 body {

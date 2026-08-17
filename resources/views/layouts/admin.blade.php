@@ -25,7 +25,7 @@
     <style>
         [x-cloak] { display: none !important; }
         .glass-shell {
-            background: rgba(22, 22, 20, 0.92);
+            background: rgba(18, 18, 20, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
@@ -34,7 +34,7 @@
             height: 6px;
         }
         .admin-scrollbar::-webkit-scrollbar-track {
-            background: rgba(22, 22, 20, 0.5);
+            background: rgba(0, 0, 0, 0.2);
         }
         .admin-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.15);
