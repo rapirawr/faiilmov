@@ -15,6 +15,7 @@
     $bottomBars = array_map(fn($i) => is_array($i) ? (object)$i : $i, $elementsData['bottom_bars'] ?? []);
     $floatingWidgets = array_map(fn($i) => is_array($i) ? (object)$i : $i, $elementsData['floating_widgets'] ?? []);
     $popupModals = array_map(fn($i) => is_array($i) ? (object)$i : $i, $elementsData['popup_modals'] ?? []);
+    $customBlocks = array_map(fn($i) => is_array($i) ? (object)$i : $i, $elementsData['custom_blocks'] ?? []);
 @endphp
 
 <div x-data="pageElementsRenderer()">
@@ -82,13 +83,22 @@
     @if($section === 'body' || $section === 'all')
         <!-- ==================== FLOATING ACTION WIDGETS ==================== -->
         @foreach($floatingWidgets as $widget)
+            @php
+                $posClass = match($widget->position ?? 'bottom_right') {
+                    'bottom_left'  => 'left-5 bottom-6 items-start lg:left-68',
+                    'top_right'    => 'right-5 top-24 items-end',
+                    'top_left'     => 'left-5 top-24 items-start lg:left-68',
+                    'center_right' => 'right-0 top-1/2 -translate-y-1/2 items-end pr-2',
+                    'center_left'  => 'left-0 top-1/2 -translate-y-1/2 items-start pl-2 lg:left-68',
+                    default        => 'right-5 bottom-6 items-end',
+                };
+            @endphp
             <div x-show="!isDismissed({{ $widget->id }})"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="scale-75 opacity-0 translate-y-4"
                  x-transition:enter-end="scale-100 opacity-100 translate-y-0"
                  x-data="{ showTooltip: false }"
-                 class="fixed z-50 flex flex-col items-end gap-2
-                    {{ $widget->position === 'bottom_left' ? 'left-5 bottom-6 items-start' : 'right-5 bottom-6 items-end' }}
+                 class="fixed z-50 flex flex-col gap-2 {{ $posClass }}
                     {{ $widget->target_device === 'desktop' ? 'hidden md:flex' : '' }}
                     {{ $widget->target_device === 'mobile' ? 'flex md:hidden' : '' }}"
                  style="display: none;">
@@ -136,11 +146,74 @@
             </div>
         @endforeach
 
+        <!-- ==================== STICKY BOTTOM BROADCAST BARS ==================== -->
+        @foreach($bottomBars as $bar)
+            <div x-show="!isDismissed({{ $bar->id }})" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-y-full opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="translate-y-0 opacity-100"
+                 x-transition:leave-end="translate-y-full opacity-0"
+                 class="fixed bottom-0 left-0 right-0 z-40 px-4 py-2.5 text-xs flex items-center justify-between gap-3 shadow-2xl border-t backdrop-blur-xl
+                    {{ $bar->theme_color === 'amber' ? 'bg-zinc-950/95 border-amber-500/30 text-amber-300' : '' }}
+                    {{ $bar->theme_color === 'blue' ? 'bg-zinc-950/95 border-blue-500/30 text-blue-300' : '' }}
+                    {{ $bar->theme_color === 'emerald' ? 'bg-zinc-950/95 border-emerald-500/30 text-emerald-300' : '' }}
+                    {{ $bar->theme_color === 'rose' ? 'bg-zinc-950/95 border-rose-500/30 text-rose-300' : '' }}
+                    {{ $bar->theme_color === 'purple' ? 'bg-zinc-950/95 border-purple-500/30 text-purple-200' : '' }}
+                    {{ $bar->theme_color === 'zinc' ? 'bg-zinc-950/95 border-zinc-750 text-zinc-200' : '' }}
+                    {{ $bar->target_device === 'desktop' ? 'hidden md:flex' : '' }}
+                    {{ $bar->target_device === 'mobile' ? 'flex md:hidden' : '' }}"
+                 style="display: none;">
+                
+                <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <i data-lucide="{{ $bar->icon ?: 'bell' }}" class="w-4 h-4 shrink-0 text-amber-400"></i>
+                        <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                            @if($bar->title)
+                                <strong class="font-bold text-white truncate font-['Outfit']">{{ $bar->title }}</strong>
+                            @endif
+                            @if($bar->content)
+                                <span class="opacity-90 truncate max-w-md sm:max-w-xl text-zinc-200">{{ $bar->content }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        @if($bar->button_text && $bar->button_url)
+                            <a href="{{ $bar->button_url }}" 
+                               target="{{ $bar->button_target ?: '_self' }}" 
+                               class="px-3 py-1 rounded-lg text-xs font-bold transition-transform hover:scale-105 active:scale-95 shadow-sm
+                                    {{ $bar->theme_color === 'amber' ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950' : 'bg-white hover:bg-zinc-200 text-zinc-950' }}">
+                                {{ $bar->button_text }}
+                            </a>
+                        @endif
+
+                        @if($bar->is_dismissible)
+                            <button type="button" 
+                                    @click="dismissElement({{ $bar->id }}, {{ $bar->dismiss_duration_hours }})" 
+                                    class="p-1 rounded-md opacity-70 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer text-zinc-300"
+                                    title="Tutup">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
         <!-- ==================== POPUP / MODAL DIALOGS ==================== -->
         @foreach($popupModals as $modal)
+            @php
+                $modalPosWrapper = match($modal->position ?? 'center') {
+                    'bottom_right' => 'fixed bottom-6 right-6 z-50 p-4 max-w-sm w-full',
+                    'bottom_left'  => 'fixed bottom-6 left-6 z-50 p-4 max-w-sm w-full lg:left-70',
+                    default        => 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md',
+                };
+            @endphp
             <div x-show="!isDismissed({{ $modal->id }}) && showModalMap[{{ $modal->id }}]"
                  x-transition.opacity
-                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                 class="{{ $modalPosWrapper }}"
                  style="display: none;">
                 
                 <div @click.outside="dismissElement({{ $modal->id }}, {{ $modal->dismiss_duration_hours }})"
@@ -199,6 +272,37 @@
                             @endif
                         </div>
                     </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
+
+    @if(($section === 'content_blocks' || $section === 'all' || $section === 'custom_blocks') && count($customBlocks) > 0)
+        <!-- ==================== CUSTOM HTML / IFRAME / EMBED BLOCKS ==================== -->
+        @foreach($customBlocks as $block)
+            @php
+                $blockWrapperClass = match($block->position ?? 'content_top') {
+                    'floating_bottom_right' => 'fixed bottom-6 right-6 z-40 max-w-md w-full p-2',
+                    'floating_bottom_left'  => 'fixed bottom-6 left-6 z-40 max-w-md w-full p-2 lg:left-70',
+                    default                 => 'w-full relative my-4 max-w-5xl mx-auto px-4',
+                };
+            @endphp
+            <div x-show="!isDismissed({{ $block->id }})"
+                 class="{{ $blockWrapperClass }}
+                    {{ $block->target_device === 'desktop' ? 'hidden md:block' : '' }}
+                    {{ $block->target_device === 'mobile' ? 'block md:hidden' : '' }}">
+                @if($block->is_dismissible)
+                    <div class="flex justify-end mb-1">
+                        <button type="button" 
+                                @click="dismissElement({{ $block->id }}, {{ $block->dismiss_duration_hours }})" 
+                                class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 transition-all text-[11px] flex items-center gap-1 cursor-pointer shadow-sm">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                            <span>Tutup</span>
+                        </button>
+                    </div>
+                @endif
+                <div class="w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/60 shadow-xl">
+                    {!! $block->custom_html !!}
                 </div>
             </div>
         @endforeach

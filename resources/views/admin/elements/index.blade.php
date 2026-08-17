@@ -216,6 +216,11 @@
 
                     <!-- Targeting Badges -->
                     <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                        <span class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-center gap-1">
+                            <i data-lucide="layout-grid" class="w-3 h-3 text-amber-400"></i>
+                            <span>{{ ucwords(str_replace('_', ' ', $element->position ?: 'Default')) }}</span>
+                        </span>
+
                         <span class="px-2 py-0.5 rounded-md bg-zinc-800 border border-white/5 flex items-center gap-1">
                             <i data-lucide="globe" class="w-3 h-3 text-zinc-400"></i>
                             <span>{{ $element->target_page === 'all' ? 'Seluruh Web' : ucfirst($element->target_page) }}</span>
@@ -326,7 +331,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-zinc-300 mb-1">Tipe Elemen <span class="text-amber-400">*</span></label>
-                            <select name="type" x-model="formData.type" class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-white/15 text-xs text-[#E4E2DD] focus:border-amber-500 focus:outline-none">
+                            <select name="type" x-model="formData.type" @change="onTypeChange()" class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-white/15 text-xs text-[#E4E2DD] focus:border-amber-500 focus:outline-none">
                                 <option value="broadcast_bar">Announcement / Broadcast Bar</option>
                                 <option value="floating_widget">Floating Action Widget</option>
                                 <option value="popup_modal">Popup / Modal Pengumuman</option>
@@ -415,11 +420,159 @@
                         </div>
                     </div>
 
+                    <!-- Penargetan Posisi Tampil Visual -->
+                    <div class="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                                <span>Pilih Posisi Tampil Pada Layar</span>
+                            </label>
+                            <span class="text-[10px] font-mono text-zinc-400 font-bold" x-text="formData.position ? 'Posisi: ' + formData.position.replace('_', ' ').toUpperCase() : 'Default'"></span>
+                        </div>
+                        <input type="hidden" name="position" x-model="formData.position">
+
+                        <!-- 1. Posisi Floating Widget (6 Visual Grid Cards) -->
+                        <div x-show="formData.type === 'floating_widget'" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <button type="button" @click="formData.position = 'bottom_right'"
+                                    :class="formData.position === 'bottom_right' || !formData.position ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 7v10H7"/></svg>
+                                </span>
+                                <span>Kanan Bawah (Default)</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'bottom_left'"
+                                    :class="formData.position === 'bottom_left' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 7-10 10"/><path d="M17 17H7V7"/></svg>
+                                </span>
+                                <span>Kiri Bawah</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'top_right'"
+                                    :class="formData.position === 'top_right' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+                                </span>
+                                <span>Kanan Atas</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'top_left'"
+                                    :class="formData.position === 'top_left' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 17-10-10"/><path d="M17 7H7v10"/></svg>
+                                </span>
+                                <span>Kiri Atas</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'center_right'"
+                                    :class="formData.position === 'center_right' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                </span>
+                                <span>Kanan Tengah</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'center_left'"
+                                    :class="formData.position === 'center_left' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                                </span>
+                                <span>Kiri Tengah</span>
+                            </button>
+                        </div>
+
+                        <!-- 2. Posisi Broadcast Bar -->
+                        <div x-show="formData.type === 'broadcast_bar'" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button type="button" @click="formData.position = 'top'"
+                                    :class="formData.position === 'top' || !formData.position ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                                </span>
+                                <span>Atas Layar / Navbar (Default)</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'bottom'"
+                                    :class="formData.position === 'bottom' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                                </span>
+                                <span>Bawah Layar (Sticky Bottom Bar)</span>
+                            </button>
+                        </div>
+
+                        <!-- 3. Posisi Custom Block / Promo Banner -->
+                        <div x-show="formData.type === 'custom_block' || formData.type === 'promo_banner'" class="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                            <button type="button" @click="formData.position = 'content_top'"
+                                    :class="formData.position === 'content_top' || !formData.position ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></svg>
+                                </span>
+                                <span>Di Atas Konten Halaman</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'content_bottom'"
+                                    :class="formData.position === 'content_bottom' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 15h18"/></svg>
+                                </span>
+                                <span>Di Bawah Konten Halaman</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'floating_bottom_right'"
+                                    :class="formData.position === 'floating_bottom_right' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 7v10H7"/></svg>
+                                </span>
+                                <span>Floating Kanan Bawah</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'floating_bottom_left'"
+                                    :class="formData.position === 'floating_bottom_left' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 7-10 10"/><path d="M17 17H7V7"/></svg>
+                                </span>
+                                <span>Floating Kiri Bawah</span>
+                            </button>
+                        </div>
+
+                        <!-- 4. Posisi Popup Modal -->
+                        <div x-show="formData.type === 'popup_modal'" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button type="button" @click="formData.position = 'center'"
+                                    :class="formData.position === 'center' || !formData.position ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                                </span>
+                                <span>Tengah Layar (Modal)</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'bottom_right'"
+                                    :class="formData.position === 'bottom_right' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 7v10H7"/></svg>
+                                </span>
+                                <span>Kanan Bawah (Toast)</span>
+                            </button>
+                            <button type="button" @click="formData.position = 'bottom_left'"
+                                    :class="formData.position === 'bottom_left' ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800'"
+                                    class="p-2.5 rounded-xl border text-xs flex items-center gap-2.5 transition-all cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 7-10 10"/><path d="M17 17H7V7"/></svg>
+                                </span>
+                                <span>Kiri Bawah (Toast)</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Penargetan Halaman, Perangkat, dan Audiens -->
                     <div class="p-3.5 rounded-2xl bg-zinc-950 border border-white/5 space-y-3">
                         <div class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                             <i data-lucide="target" class="w-3.5 h-3.5"></i>
-                            <span>Aturan Penargetan & Tampil</span>
+                            <span>Aturan Target Halaman & Pengunjung</span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -503,8 +656,19 @@
                             <span class="text-[10px] font-mono text-zinc-400" x-text="getTypeBadge(formData.type).label"></span>
                         </div>
 
-                        <!-- Interactive Preview Container -->
-                        <div class="min-h-[260px] p-4 rounded-xl bg-zinc-900/90 border border-white/5 flex flex-col justify-center items-center relative overflow-hidden">
+                        <!-- Interactive Preview Container (Simulating Website Viewport) -->
+                        <div class="min-h-[300px] h-[300px] p-4 rounded-xl bg-zinc-900/90 border border-white/5 relative overflow-hidden flex transition-all duration-300"
+                             :class="{
+                                 'items-end justify-end': formData.position === 'bottom_right' || (!formData.position && formData.type === 'floating_widget'),
+                                 'items-end justify-start': formData.position === 'bottom_left',
+                                 'items-start justify-end': formData.position === 'top_right',
+                                 'items-start justify-start': formData.position === 'top_left',
+                                 'items-center justify-end': formData.position === 'center_right',
+                                 'items-center justify-start': formData.position === 'center_left',
+                                 'items-start justify-center': formData.position === 'top' || formData.position === 'content_top',
+                                 'items-end justify-center': formData.position === 'bottom' || formData.position === 'content_bottom',
+                                 'items-center justify-center': formData.position === 'center' || formData.type === 'custom_block' || formData.type === 'popup_modal'
+                             }">
                             
                             <!-- 1. Broadcast Bar Preview -->
                             <template x-if="formData.type === 'broadcast_bar'">
@@ -532,12 +696,16 @@
 
                             <!-- 2. Floating Widget Preview -->
                             <template x-if="formData.type === 'floating_widget'">
-                                <div class="w-full flex flex-col items-end justify-end space-y-2 py-4">
-                                    <div class="p-2.5 rounded-xl bg-zinc-950 border border-white/15 text-xs text-[#E4E2DD] shadow-xl max-w-xs space-y-1">
-                                        <span class="font-bold block text-amber-400" x-text="formData.title || 'Gabung Bersama Kami'"></span>
-                                        <span class="text-[11px] text-zinc-300 block" x-text="formData.content || 'Klik tombol di bawah untuk membuka tautan.'"></span>
+                                <div class="flex flex-col space-y-2 py-1 transition-all duration-300"
+                                     :class="{
+                                         'items-end text-right': ['bottom_right', 'top_right', 'center_right'].includes(formData.position) || !formData.position,
+                                         'items-start text-left': ['bottom_left', 'top_left', 'center_left'].includes(formData.position)
+                                     }">
+                                    <div class="p-2.5 rounded-xl bg-zinc-950 border border-white/15 text-xs text-[#E4E2DD] shadow-xl max-w-[210px] space-y-1">
+                                        <span class="font-bold block text-amber-400 text-[11px]" x-text="formData.title || 'Gabung Bersama Kami'"></span>
+                                        <span class="text-[10px] text-zinc-300 block leading-tight" x-text="formData.content || 'Klik tombol di bawah untuk membuka tautan.'"></span>
                                     </div>
-                                    <div class="px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 font-bold text-xs cursor-pointer border"
+                                    <div class="px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-xs cursor-pointer border"
                                          :class="getThemeClasses(formData.theme_color).widget">
                                         <i :data-lucide="formData.icon || 'send'" class="w-4 h-4"></i>
                                         <span x-text="formData.button_text || formData.title || 'Floating Action'"></span>
@@ -587,9 +755,12 @@
 
                             <!-- 5. Custom Block Preview -->
                             <template x-if="formData.type === 'custom_block'">
-                                <div class="w-full p-3 rounded-xl bg-zinc-950 border border-amber-500/30 text-amber-300 font-mono text-[10px] overflow-x-auto">
-                                    <div class="text-zinc-500 mb-1">// Custom HTML / Embed Container</div>
-                                    <div x-text="formData.custom_html || '<div class=\'my-widget\'>Konten custom...</div>'"></div>
+                                <div class="w-full rounded-2xl overflow-hidden border border-amber-500/30 bg-zinc-950 p-3 shadow-xl">
+                                    <div class="text-zinc-500 text-[10px] font-mono mb-2 flex items-center justify-between">
+                                        <span>// Live Preview Embed</span>
+                                        <span class="text-amber-400 font-bold">HTML / Iframe</span>
+                                    </div>
+                                    <div class="w-full overflow-hidden rounded-xl" x-html="formData.custom_html || '<div class=\'p-4 text-center text-zinc-400 text-xs\'>Masukkan snippet HTML atau embed iframe di formulir sebelah kiri.</div>'"></div>
                                 </div>
                             </template>
 
@@ -833,6 +1004,19 @@
                 dismiss_duration_hours: 24,
                 is_active: true,
                 custom_html: '',
+            },
+
+            onTypeChange() {
+                if (this.formData.type === 'floating_widget' && !['bottom_right', 'bottom_left', 'top_right', 'top_left', 'center_right', 'center_left'].includes(this.formData.position)) {
+                    this.formData.position = 'bottom_right';
+                } else if (this.formData.type === 'broadcast_bar' && !['top', 'bottom'].includes(this.formData.position)) {
+                    this.formData.position = 'top';
+                } else if (this.formData.type === 'popup_modal' && !['center', 'bottom_right', 'bottom_left'].includes(this.formData.position)) {
+                    this.formData.position = 'center';
+                } else if (['custom_block', 'promo_banner'].includes(this.formData.type) && !['content_top', 'content_bottom', 'floating_bottom_right', 'floating_bottom_left'].includes(this.formData.position)) {
+                    this.formData.position = 'content_top';
+                }
+                this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
             },
 
             openCreateModal() {

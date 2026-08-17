@@ -134,6 +134,9 @@
 
     <!-- Main Content Body -->
     <main class="{{ View::hasSection('hide_navbar') ? 'pt-0' : 'pt-20 sm:pt-24' }} {{ View::hasSection('hide_sidebar') ? '' : 'lg:pl-64' }} flex-grow relative z-10">
+        <!-- In-Content Custom HTML / Iframe / Embed Blocks -->
+        <x-page-elements-renderer :section="'content_blocks'" />
+
         @yield('content')
     </main>
 

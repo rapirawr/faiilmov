@@ -105,6 +105,7 @@ class AdminPageElementController extends Controller
         $data['is_dismissible'] = $request->has('is_dismissible');
         $data['is_active'] = $request->has('is_active');
         $data['button_target'] = $data['button_target'] ?? '_self';
+        $data['custom_html'] = $this->normalizeCustomHtml($data['custom_html'] ?? null);
 
         $element = PageElement::create($data);
         $this->elementService->clearCache();
@@ -169,6 +170,7 @@ class AdminPageElementController extends Controller
         $data['is_dismissible'] = $request->has('is_dismissible');
         $data['is_active'] = $request->has('is_active');
         $data['button_target'] = $data['button_target'] ?? '_self';
+        $data['custom_html'] = $this->normalizeCustomHtml($data['custom_html'] ?? null);
 
         $pageElement->update($data);
         $this->elementService->clearCache();
@@ -233,5 +235,31 @@ class AdminPageElementController extends Controller
         );
 
         return redirect()->route('admin.page_elements.index')->with('success', "Elemen '{$name}' berhasil dihapus!");
+    }
+
+    /**
+     * Auto normalize embed URLs (Spotify, YouTube) to proper embed iframe format
+     */
+    protected function normalizeCustomHtml(?string $html): ?string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        // Auto-convert Spotify playlist/track/album/artist/episode URL to Embed URL
+        $html = preg_replace(
+            '/src=["\']https:\/\/open\.spotify\.com\/(?!(?:embed|embed-podcast)\/)(playlist|track|album|artist|show|episode)\/([^"\'\s?]+)([^"\']*)["\']/i',
+            'src="https://open.spotify.com/embed/$1/$2$3"',
+            $html
+        );
+
+        // Auto-convert YouTube watch URLs to embed URLs
+        $html = preg_replace(
+            '/src=["\']https:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)([^"\']*)["\']/i',
+            'src="https://www.youtube.com/embed/$1$2"',
+            $html
+        );
+
+        return $html;
     }
 }
