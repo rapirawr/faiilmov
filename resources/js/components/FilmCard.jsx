@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Film as FilmIcon, Tv } from 'lucide-react';
+import { Play, Film as FilmIcon, Tv, Clock } from 'lucide-react';
 
 function formatDuration(minutes, type) {
   if (type === 'dracin') return 'Dracin';
@@ -90,8 +90,23 @@ export default function FilmCard({ film }) {
           </div>
         )}
 
-        {/* Hover Quick Play Overlay (Tanpa backdrop shadow hitam) */}
-        {!isComingSoon && (
+        {/* Hover Action Overlay: Coming Soon centered text or Quick Play button */}
+        {isComingSoon ? (
+          <motion.div
+            initial={false}
+            animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 flex items-center justify-center z-10 pointer-events-auto p-3"
+          >
+            <a
+              href={showUrl}
+              className="px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs uppercase tracking-wider shadow-2xl backdrop-blur-md border border-amber-300/80 hover:scale-105 transition-all duration-200 flex items-center gap-1.5 cursor-pointer text-center"
+            >
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Coming Soon</span>
+            </a>
+          </motion.div>
+        ) : (
           <motion.div
             initial={false}
             animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.9 }}

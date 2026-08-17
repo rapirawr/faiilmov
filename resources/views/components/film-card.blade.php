@@ -77,6 +77,22 @@
                     {{ $film->max_resolution }}
                 </div>
             @endif
+
+            <!-- Hover Action Overlay -->
+            @if($filmData['is_coming_soon'])
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all duration-200 pointer-events-none p-2">
+                    <span class="px-3.5 py-1.5 rounded-full bg-amber-500 text-zinc-950 font-black text-xs uppercase tracking-wider shadow-2xl border border-amber-300/80 flex items-center gap-1.5 transform group-hover/card:scale-105 transition-transform duration-200">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                        <span>Coming Soon</span>
+                    </span>
+                </div>
+            @else
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all duration-200 pointer-events-none">
+                    <div class="p-3.5 rounded-full bg-white text-zinc-950 shadow-2xl flex items-center justify-center transform group-hover/card:scale-110 transition-transform duration-200">
+                        <i data-lucide="play" class="w-5 h-5 fill-zinc-950 ml-0.5"></i>
+                    </div>
+                </div>
+            @endif
         </a>
 
         <!-- Card Info -->
