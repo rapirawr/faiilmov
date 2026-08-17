@@ -217,7 +217,6 @@
                 
                 <div class="flex items-center justify-between">
                     <h2 class="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
                         <span>Karena Anda Menonton: <span class="text-amber-400">{{ Str::limit($becauseYouWatched['source_film']->title, 25) }}</span></span>
                     </h2>
                 </div>
