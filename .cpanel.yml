@@ -13,3 +13,5 @@ deployment:
     - /bin/touch $REPOPATH/public/version.json
     - /bin/rm -f $DEPLOYPATH/version.json
     - /bin/ln -s -f $REPOPATH/public/version.json $DEPLOYPATH/version.json
+    - /usr/local/bin/php $REPOPATH/artisan migrate --force
+    - /usr/local/bin/php $REPOPATH/artisan optimize
