@@ -40,6 +40,14 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef(null);
 
+    // In-studio local film filter search
+    const [filterQuery, setFilterQuery] = useState('');
+    const inStudioSearchRef = useRef(null);
+
+    // Auto-scroll on drag refs
+    const dragClientYRef = useRef(null);
+    const autoScrollAnimationRef = useRef(null);
+
     // Save & loading states
     const [isSaving, setIsSaving] = useState(false);
     const [toast, setToast] = useState(null);
@@ -82,6 +90,25 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
+
+    // Handle opening add modal with pre-filled query
+    const handleOpenAddModal = (initialQuery = '') => {
+        setIsAddModalOpen(true);
+        if (typeof initialQuery === 'string' && initialQuery.trim()) {
+            setSearchQuery(initialQuery.trim());
+        }
+    };
+
+    // Keyboard shortcut (Escape to clear in-studio search filter)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && filterQuery) {
+                setFilterQuery('');
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [filterQuery]);
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -171,14 +198,85 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
         setFilms(reindexed);
     };
 
+    // Auto-scroll loop engine during Drag & Drop
+    const startAutoScroll = () => {
+        if (autoScrollAnimationRef.current) return;
+
+        const SCROLL_ZONE = 140; // Pixels from top/bottom window edge to trigger scroll
+        const MAX_SPEED = 24;    // Max pixels to scroll per frame
+
+        const scrollLoop = () => {
+            const clientY = dragClientYRef.current;
+            if (clientY !== null && clientY !== undefined) {
+                const viewportHeight = window.innerHeight;
+
+                if (clientY < SCROLL_ZONE && clientY >= 0) {
+                    // Scroll UP: faster the closer to top edge
+                    const ratio = Math.max(0, (SCROLL_ZONE - clientY) / SCROLL_ZONE);
+                    const speed = Math.max(3, Math.round(ratio * MAX_SPEED));
+                    window.scrollBy(0, -speed);
+                } else if (clientY > viewportHeight - SCROLL_ZONE) {
+                    // Scroll DOWN: faster the closer to bottom edge
+                    const ratio = Math.max(0, (clientY - (viewportHeight - SCROLL_ZONE)) / SCROLL_ZONE);
+                    const speed = Math.max(3, Math.round(ratio * MAX_SPEED));
+                    window.scrollBy(0, speed);
+                }
+            }
+            autoScrollAnimationRef.current = requestAnimationFrame(scrollLoop);
+        };
+
+        autoScrollAnimationRef.current = requestAnimationFrame(scrollLoop);
+    };
+
+    const stopAutoScroll = () => {
+        if (autoScrollAnimationRef.current) {
+            cancelAnimationFrame(autoScrollAnimationRef.current);
+            autoScrollAnimationRef.current = null;
+        }
+        dragClientYRef.current = null;
+    };
+
+    // Auto-scroll listener during active drag
+    useEffect(() => {
+        if (draggedIndex === null) {
+            stopAutoScroll();
+            return;
+        }
+
+        startAutoScroll();
+
+        const handleWindowDragOver = (e) => {
+            dragClientYRef.current = e.clientY;
+        };
+
+        const handleWindowDragEnd = () => {
+            stopAutoScroll();
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+        };
+
+        window.addEventListener('dragover', handleWindowDragOver);
+        window.addEventListener('dragend', handleWindowDragEnd);
+        window.addEventListener('drop', handleWindowDragEnd);
+
+        return () => {
+            stopAutoScroll();
+            window.removeEventListener('dragover', handleWindowDragOver);
+            window.removeEventListener('dragend', handleWindowDragEnd);
+            window.removeEventListener('drop', handleWindowDragEnd);
+        };
+    }, [draggedIndex]);
+
     // Drag and Drop Handlers
     const handleDragStart = (e, index) => {
         setDraggedIndex(index);
+        dragClientYRef.current = e.clientY;
         e.dataTransfer.effectAllowed = 'move';
     };
 
     const handleDragOver = (e, index) => {
         e.preventDefault();
+        dragClientYRef.current = e.clientY;
         e.dataTransfer.dropEffect = 'move';
         if (dragOverIndex !== index) {
             setDragOverIndex(index);
@@ -187,6 +285,7 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
 
     const handleDrop = (e, targetIndex) => {
         e.preventDefault();
+        stopAutoScroll();
         if (draggedIndex === null || draggedIndex === targetIndex) {
             setDraggedIndex(null);
             setDragOverIndex(null);
@@ -204,6 +303,7 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
     };
 
     const handleDragEnd = () => {
+        stopAutoScroll();
         setDraggedIndex(null);
         setDragOverIndex(null);
     };
@@ -488,42 +588,105 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
                 {/* Right Column: Prominent Add Film Button & Watch Order Drag & Drop (8 Cols) */}
                 <div className="lg:col-span-8 space-y-5">
                     
-                    {/* Top Action Bar Above Watch Order */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-white/10 backdrop-blur-xl shadow-lg">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                                <Clock className="w-5 h-5" />
+                    {/* Top Action Bar & Studio Film Search */}
+                    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-white/10 backdrop-blur-xl shadow-lg space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                                    <Clock className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-extrabold text-white">Urutan Nonton / Timeline</h2>
+                                    <p className="text-xs text-zinc-400">
+                                        {films.length} Film dalam Koleksi {filterQuery.trim() ? `• ${filteredFilms.length} cocok` : '• Drag & drop untuk atur kronologi'}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-base font-extrabold text-white">Urutan Nonton / Timeline</h2>
-                                <p className="text-xs text-zinc-400">{films.length} Film dalam Koleksi • Drag & drop untuk atur kronologi</p>
-                            </div>
-                        </div>
 
-                        {/* Action Buttons: Add Film & Auto-Sort */}
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                            <button
-                                type="button"
-                                onClick={() => setIsAddModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-extrabold shadow-lg shadow-white/10 transition active:scale-95 cursor-pointer"
-                            >
-                                <PlusCircle className="w-4 h-4" />
-                                <span>Tambah Film</span>
-                            </button>
-
-                            {films.length > 1 && (
+                            {/* Action Buttons: Add Film & Auto-Sort */}
+                            <div className="flex items-center gap-2.5 flex-wrap">
                                 <button
                                     type="button"
-                                    onClick={handleSortByYear}
-                                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-xs font-semibold text-zinc-300 transition cursor-pointer"
-                                    title="Urutkan otomatis dari tahun rilis terlama ke terbaru"
+                                    onClick={() => handleOpenAddModal(filterQuery)}
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-extrabold shadow-lg shadow-white/10 transition active:scale-95 cursor-pointer"
                                 >
-                                    <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                                    <span>Urutkan Thn Rilis</span>
+                                    <PlusCircle className="w-4 h-4" />
+                                    <span>Tambah Film</span>
                                 </button>
-                            )}
+
+                                {films.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleSortByYear}
+                                        className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-xs font-semibold text-zinc-300 transition cursor-pointer"
+                                        title="Urutkan otomatis dari tahun rilis terlama ke terbaru"
+                                    >
+                                        <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                                        <span>Urutkan Thn Rilis</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Search & Filter Bar Inside Studio */}
+                        {films.length > 0 && (
+                            <div className="flex items-center gap-2.5 pt-3 border-t border-white/5">
+                                <div className="relative flex-1">
+                                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                    <input
+                                        ref={inStudioSearchRef}
+                                        type="text"
+                                        value={filterQuery}
+                                        onChange={(e) => setFilterQuery(e.target.value)}
+                                        placeholder="Cari film di koleksi ini (judul, tahun, genre, catatan)..."
+                                        className="w-full pl-10 pr-24 py-2.5 rounded-2xl bg-zinc-800/80 hover:bg-zinc-800 focus:bg-zinc-800 border border-white/10 hover:border-white/20 focus:border-amber-400/80 text-white placeholder-zinc-500 text-xs font-medium focus:outline-none transition"
+                                    />
+                                    {filterQuery && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                                            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                                {filteredFilms.length} / {films.length}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFilterQuery('')}
+                                                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700 transition cursor-pointer"
+                                                title="Hapus filter (Esc)"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleOpenAddModal(filterQuery)}
+                                    className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-zinc-300 hover:text-white text-xs font-semibold transition shrink-0 cursor-pointer"
+                                    title="Cari film baru di seluruh katalog Faiilmov"
+                                >
+                                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>Cari di Katalog</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Filter Active Notice Banner */}
+                    {filterQuery.trim() && filteredFilms.length > 0 && (
+                        <div className="px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-xs text-amber-300">
+                            <div className="flex items-center gap-2">
+                                <Search className="w-3.5 h-3.5" />
+                                <span>Menampilkan <strong>{filteredFilms.length}</strong> film yang cocok dengan "<strong>{filterQuery}</strong>" (urutan <strong>#</strong> tetap sesuai timeline asli).</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFilterQuery('')}
+                                className="underline hover:text-white text-[11px] font-bold cursor-pointer"
+                            >
+                                Reset Filter
+                            </button>
+                        </div>
+                    )}
 
                     {/* Film Draggable List */}
                     {films.length === 0 ? (
@@ -539,23 +702,56 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsAddModalOpen(true)}
+                                onClick={() => handleOpenAddModal()}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-bold transition shadow-lg shadow-white/10 cursor-pointer"
                             >
                                 <Plus className="w-4 h-4" />
                                 <span>Tambah Film Sekarang</span>
                             </button>
                         </div>
+                    ) : filteredFilms.length === 0 ? (
+                        <div className="p-10 text-center rounded-3xl bg-zinc-900/40 border border-dashed border-white/10 space-y-4 animate-in fade-in duration-200">
+                            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center mx-auto text-zinc-600">
+                                <Search className="w-6 h-6" />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-zinc-200">
+                                    Tidak ada film di koleksi ini yang cocok dengan "{filterQuery}"
+                                </h3>
+                                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                                    Film tersebut belum dimasukkan ke koleksi ini. Anda dapat mencarinya di katalog lengkap Faiilmov dan menambahkannya.
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-center gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleOpenAddModal(filterQuery)}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-bold transition shadow-lg shadow-white/10 cursor-pointer"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Cari "{filterQuery}" di Katalog Faiilmov</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterQuery('')}
+                                    className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition cursor-pointer"
+                                >
+                                    Hapus Pencarian
+                                </button>
+                            </div>
+                        </div>
                     ) : (
                         <div className="space-y-3">
-                            {films.map((f, index) => {
+                            {filteredFilms.map((f) => {
+                                const index = f.originalIndex;
                                 const isDragging = draggedIndex === index;
                                 const isOver = dragOverIndex === index;
+                                const isFiltered = Boolean(filterQuery.trim());
 
                                 return (
                                     <div
                                         key={f.id}
-                                        draggable
+                                        draggable={!isFiltered}
                                         onDragStart={(e) => handleDragStart(e, index)}
                                         onDragOver={(e) => handleDragOver(e, index)}
                                         onDrop={(e) => handleDrop(e, index)}
@@ -572,8 +768,12 @@ export default function CollectionStudioEditor({ collection: initialCollection, 
                                             
                                             {/* Drag Grip Handle */}
                                             <div 
-                                                className="cursor-grab active:cursor-grabbing p-2 rounded-xl hover:bg-white/10 text-zinc-500 hover:text-amber-400 transition self-center"
-                                                title="Tahan dan geser (drag & drop) untuk mengubah urutan"
+                                                className={`p-2 rounded-xl text-zinc-500 transition self-center ${
+                                                    isFiltered 
+                                                        ? 'opacity-30 cursor-not-allowed' 
+                                                        : 'cursor-grab active:cursor-grabbing hover:bg-white/10 hover:text-amber-400'
+                                                }`}
+                                                title={isFiltered ? 'Nonaktifkan filter untuk drag & drop susunan bebas' : 'Tahan dan geser (drag & drop) untuk mengubah urutan'}
                                             >
                                                 <GripVertical className="w-5 h-5" />
                                             </div>
