@@ -17,6 +17,8 @@ import WatchOrderTimeline from './components/collections/WatchOrderTimeline';
 import AdminSmartCollections from './components/admin/collections/AdminSmartCollections';
 import VisualSearchModal from './components/search/VisualSearchModal';
 import CollectionStudioEditor from './components/collections/CollectionStudioEditor';
+import EpisodeComments from './components/EpisodeComments';
+import SpoilerText from './components/SpoilerText';
 
 // Make initEcho available globally and auto-initialize Echo
 window.initEcho = initEcho;
@@ -316,6 +318,48 @@ function initReactComponents() {
       console.error('Failed to mount CollectionStudioEditor', e);
     }
   }
+
+  // 14. Mount Episode Comments Component (Series Watch Page with spoiled library)
+  const episodeCommentsContainer = document.getElementById('react-episode-comments');
+  if (episodeCommentsContainer && !episodeCommentsContainer.dataset.mounted) {
+    try {
+      const filmId = parseInt(episodeCommentsContainer.dataset.filmId, 10);
+      const initialSeason = parseInt(episodeCommentsContainer.dataset.season || '1', 10);
+      const initialEpisode = parseInt(episodeCommentsContainer.dataset.episode || '1', 10);
+      const isLoggedIn = episodeCommentsContainer.dataset.isLoggedIn === 'true';
+      const userName = episodeCommentsContainer.dataset.userName || '';
+      const loginUrl = episodeCommentsContainer.dataset.loginUrl || '/login';
+      const csrfToken = episodeCommentsContainer.dataset.csrf || '';
+
+      episodeCommentsContainer.dataset.mounted = 'true';
+      createRoot(episodeCommentsContainer).render(
+        <EpisodeComments
+          filmId={filmId}
+          initialSeason={initialSeason}
+          initialEpisode={initialEpisode}
+          isLoggedIn={isLoggedIn}
+          userName={userName}
+          loginUrl={loginUrl}
+          csrfToken={csrfToken}
+        />
+      );
+    } catch (e) {
+      console.error('Failed to mount EpisodeComments', e);
+    }
+  }
+
+  // 15. Mount any standalone [data-react-spoiler] elements
+  const spoilerElements = document.querySelectorAll('[data-react-spoiler]');
+  spoilerElements.forEach((el) => {
+    if (el.dataset.mounted) return;
+    try {
+      el.dataset.mounted = 'true';
+      const text = el.textContent || '';
+      createRoot(el).render(<SpoilerText>{text}</SpoilerText>);
+    } catch (e) {
+      console.error('Failed to mount SpoilerText', e);
+    }
+  });
 }
 
 // Auto mount when DOM is ready

@@ -36,6 +36,37 @@
     <link rel="apple-touch-icon" href="{{ $siteGlobalSetting->logo_url }}">
     <link rel="shortcut icon" href="{{ $siteGlobalSetting->favicon_url }}">
 
+    @if($siteGlobalSetting->page_transition_enabled)
+        @if($siteGlobalSetting->page_transition_gif_isload_url)
+            <!-- Preload isLoad Transition Animation -->
+            <link rel="preload" as="image" href="{{ $siteGlobalSetting->page_transition_gif_isload_url }}" fetchpriority="high">
+        @endif
+        @if($siteGlobalSetting->page_transition_gif_loaded_url)
+            <!-- Preload load Transition Animation -->
+            <link rel="preload" as="image" href="{{ $siteGlobalSetting->page_transition_gif_loaded_url }}" fetchpriority="high">
+        @endif
+
+        @if($siteGlobalSetting->page_transition_gif_isload_url || $siteGlobalSetting->page_transition_gif_loaded_url)
+            <!-- Early Head Sync: Keep loader solid active while browser is loading next page -->
+            <script>
+                (function() {
+                    try {
+                        if (sessionStorage.getItem('faiilmov_nav_loading') === '1') {
+                            document.documentElement.classList.add('faiilmov-nav-loading');
+                        }
+                    } catch(e) {}
+                })();
+            </script>
+            <style>
+                .faiilmov-nav-loading #page-transition-loader {
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    pointer-events: auto !important;
+                }
+            </style>
+        @endif
+    @endif
+
     <!-- Dynamic CMS Theme Custom Properties -->
     <style>
         :root {
@@ -340,6 +371,177 @@
     <!-- Adsterra Social Bar & Anti-Adblock Module -->
     <x-ad-social-bar />
     <x-anti-adblock />
+
+    @if($siteGlobalSetting->page_transition_enabled && ($siteGlobalSetting->page_transition_gif_isload_url || $siteGlobalSetting->page_transition_gif_loaded_url))
+        <!-- Fullscreen Page Transition Loader Overlay (Bulletproof & Non-Glitching) -->
+        <div id="page-transition-loader" 
+             class="fixed inset-0 z-[999999] flex items-center justify-center bg-black opacity-0 invisible pointer-events-none transition-all duration-200 ease-out transform-gpu will-change-[opacity,visibility]"
+             aria-hidden="true">
+            <div class="relative flex items-center justify-center w-48 h-48 p-4 transform-gpu">
+                @if($siteGlobalSetting->page_transition_gif_isload_url)
+                    <img id="trans-img-isload"
+                         src="{{ $siteGlobalSetting->page_transition_gif_isload_url }}" 
+                         alt="Loading..." 
+                         decoding="async"
+                         loading="eager"
+                         class="absolute max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px] object-contain drop-shadow-2xl select-none pointer-events-none transition-opacity duration-300 opacity-100 transform-gpu">
+                @endif
+
+                @if($siteGlobalSetting->page_transition_gif_loaded_url)
+                    <img id="trans-img-loaded"
+                         src="{{ $siteGlobalSetting->page_transition_gif_loaded_url }}" 
+                         alt="Loaded..." 
+                         decoding="async"
+                         loading="eager"
+                         class="absolute max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px] object-contain drop-shadow-2xl select-none pointer-events-none transition-opacity duration-300 opacity-0 transform-gpu">
+                @endif
+            </div>
+        </div>
+
+        <script>
+            (function() {
+                const loader = document.getElementById('page-transition-loader');
+                if (!loader) return;
+
+                const imgIsload = document.getElementById('trans-img-isload');
+                const imgLoaded = document.getElementById('trans-img-loaded');
+
+                let hideTimer = null;
+                let isShowing = false;
+
+                function showTransition() {
+                    if (isShowing) return;
+                    isShowing = true;
+
+                    // Set session flag so incoming page keeps the overlay seamless from frame 0
+                    try {
+                        sessionStorage.setItem('faiilmov_nav_loading', '1');
+                    } catch(e) {}
+
+                    // Reset initial images state (isLoad visible, loaded hidden)
+                    if (imgIsload) imgIsload.classList.replace('opacity-0', 'opacity-100');
+                    if (imgLoaded) imgLoaded.classList.replace('opacity-100', 'opacity-0');
+
+                    // Reveal overlay
+                    loader.classList.remove('invisible', 'opacity-0', 'pointer-events-none');
+                    loader.classList.add('opacity-100', 'pointer-events-auto');
+
+                    // Safety timeout (5s) in case navigation is cancelled or network fails
+                    if (hideTimer) clearTimeout(hideTimer);
+                    hideTimer = setTimeout(forceHide, 5000);
+                }
+
+                function finishTransition() {
+                    let wasNavigating = false;
+                    try {
+                        wasNavigating = sessionStorage.getItem('faiilmov_nav_loading') === '1';
+                        sessionStorage.removeItem('faiilmov_nav_loading');
+                    } catch(e) {}
+
+                    // If incoming page was part of a transition and has 'load' GIF
+                    if (wasNavigating && imgLoaded && imgIsload) {
+                        // Switch from isLoad to load GIF smoothly
+                        imgIsload.classList.replace('opacity-100', 'opacity-0');
+                        imgLoaded.classList.replace('opacity-0', 'opacity-100');
+
+                        // Let the 'load' celebration animation play for 600ms, then fade out
+                        setTimeout(function() {
+                            forceHide();
+                        }, 600);
+                    } else if (wasNavigating) {
+                        // Minimal smooth delay so the page doesn't pop abruptly
+                        setTimeout(function() {
+                            forceHide();
+                        }, 250);
+                    } else {
+                        forceHide();
+                    }
+                }
+
+                function forceHide() {
+                    isShowing = false;
+                    if (hideTimer) clearTimeout(hideTimer);
+
+                    try {
+                        sessionStorage.removeItem('faiilmov_nav_loading');
+                    } catch(e) {}
+                    document.documentElement.classList.remove('faiilmov-nav-loading');
+
+                    loader.classList.remove('opacity-100', 'pointer-events-auto');
+                    loader.classList.add('opacity-0', 'pointer-events-none');
+
+                    // Completely halt GPU decoding frames when invisible
+                    setTimeout(function() {
+                        if (!isShowing && !document.documentElement.classList.contains('faiilmov-nav-loading')) {
+                            loader.classList.add('invisible');
+                        }
+                    }, 250);
+                }
+
+                // Check when page is genuinely finished loading
+                if (document.readyState === 'complete') {
+                    finishTransition();
+                } else {
+                    window.addEventListener('load', finishTransition);
+                    // Fallback in case external 3rd party scripts take too long
+                    setTimeout(finishTransition, 2500);
+                }
+
+                // Back / Forward cache support
+                window.addEventListener('pageshow', function(e) {
+                    if (e.persisted) {
+                        forceHide();
+                    }
+                });
+
+                // User dismissals
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') forceHide();
+                });
+                loader.addEventListener('click', forceHide);
+
+                // Smart click listener strictly for real HTML navigations
+                document.addEventListener('click', function(e) {
+                    // Ignore if other JS called preventDefault
+                    if (e.defaultPrevented) return;
+
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    if (link.getAttribute('role') === 'button' || link.hasAttribute('onclick')) return;
+                    if (link.hasAttribute('data-no-transition') || link.closest('[data-no-transition]') || link.closest('[role="dialog"]')) return;
+
+                    const href = link.getAttribute('href');
+                    if (!href) return;
+
+                    const cleanHref = href.trim();
+                    if (cleanHref === '' || cleanHref === '#' || cleanHref.startsWith('#') || 
+                        cleanHref.startsWith('javascript:') || cleanHref.startsWith('mailto:') || 
+                        cleanHref.startsWith('tel:') || cleanHref.startsWith('blob:')) {
+                        return;
+                    }
+
+                    if (link.target && link.target !== '_self') return;
+                    if (link.hasAttribute('download')) return;
+
+                    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+                    try {
+                        const targetUrl = new URL(link.href, window.location.origin);
+                        if (targetUrl.origin !== window.location.origin) return;
+                        if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) {
+                            return;
+                        }
+
+                        showTransition();
+                    } catch (err) {}
+                });
+
+                window.addEventListener('show-page-transition', showTransition);
+                window.addEventListener('hide-page-transition', forceHide);
+            })();
+        </script>
+    @endif
 
     @stack('scripts')
 </body>

@@ -79,6 +79,26 @@ class SiteSettingsService
                 $setting->update(['seo_og_image' => $path]);
                 $url = $setting->seo_og_image_url;
                 break;
+            case 'transition_gif':
+            case 'page_transition_gif':
+            case 'transition_gif_isload':
+            case 'page_transition_gif_isload':
+                if (!empty($setting->page_transition_gif_path) && Storage::disk('public')->exists($setting->page_transition_gif_path)) {
+                    Storage::disk('public')->delete($setting->page_transition_gif_path);
+                }
+                $setting->update(['page_transition_gif_path' => $path]);
+                $url = $setting->page_transition_gif_url;
+                break;
+            case 'transition_gif_load':
+            case 'transition_gif_loaded':
+            case 'page_transition_gif_load':
+            case 'page_transition_gif_loaded':
+                if (!empty($setting->page_transition_gif_loaded_path) && Storage::disk('public')->exists($setting->page_transition_gif_loaded_path)) {
+                    Storage::disk('public')->delete($setting->page_transition_gif_loaded_path);
+                }
+                $setting->update(['page_transition_gif_loaded_path' => $path]);
+                $url = $setting->page_transition_gif_loaded_url;
+                break;
             default:
                 $setting->update(['logo_path' => $path]);
                 $url = $setting->logo_url;
@@ -87,6 +107,30 @@ class SiteSettingsService
 
         SiteSetting::clearCache();
         return $url;
+    }
+
+    /**
+     * Delete page transition custom GIF (isLoad, load, or all)
+     */
+    public function deleteTransitionGif(string $target = 'all'): bool
+    {
+        $setting = $this->get();
+        if ($target === 'all' || $target === 'isload') {
+            if (!empty($setting->page_transition_gif_path) && Storage::disk('public')->exists($setting->page_transition_gif_path)) {
+                Storage::disk('public')->delete($setting->page_transition_gif_path);
+            }
+            $setting->update(['page_transition_gif_path' => null]);
+        }
+
+        if ($target === 'all' || $target === 'load' || $target === 'loaded') {
+            if (!empty($setting->page_transition_gif_loaded_path) && Storage::disk('public')->exists($setting->page_transition_gif_loaded_path)) {
+                Storage::disk('public')->delete($setting->page_transition_gif_loaded_path);
+            }
+            $setting->update(['page_transition_gif_loaded_path' => null]);
+        }
+
+        SiteSetting::clearCache();
+        return true;
     }
 
     /**

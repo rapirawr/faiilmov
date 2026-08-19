@@ -88,6 +88,13 @@ class AdminSettingController extends Controller
                 'contact_email' => $siteSetting->contact_email,
                 'maintenance_mode' => (bool)$siteSetting->maintenance_mode,
                 'maintenance_message' => $siteSetting->maintenance_message,
+                'page_transition_enabled' => (bool)$siteSetting->page_transition_enabled,
+                'page_transition_gif_path' => $siteSetting->page_transition_gif_path,
+                'page_transition_gif_url' => $siteSetting->page_transition_gif_url,
+                'page_transition_gif_isload_url' => $siteSetting->page_transition_gif_isload_url,
+                'page_transition_gif_loaded_path' => $siteSetting->page_transition_gif_loaded_path,
+                'page_transition_gif_loaded_url' => $siteSetting->page_transition_gif_loaded_url,
+                'page_transition_gif_load_url' => $siteSetting->page_transition_gif_load_url,
             ],
             'features' => [
                 'feature_watch_party' => Setting::get('feature_watch_party', '1') === '1',
@@ -135,6 +142,9 @@ class AdminSettingController extends Controller
             'maintenance_mode' => 'nullable|boolean',
             'maintenance_message' => 'nullable|string|max:1000',
 
+            // Page Transition Loader
+            'page_transition_enabled' => 'nullable|boolean',
+
             // Features & API keys (Optional)
             'feature_watch_party' => 'nullable|boolean',
             'feature_dracin' => 'nullable|boolean',
@@ -163,6 +173,7 @@ class AdminSettingController extends Controller
             'contact_email' => $validated['contact_email'] ?? null,
             'maintenance_mode' => (bool)($validated['maintenance_mode'] ?? false),
             'maintenance_message' => $validated['maintenance_message'] ?? null,
+            'page_transition_enabled' => (bool)($validated['page_transition_enabled'] ?? false),
         ];
 
         $updatedSetting = $this->settingsService->update($siteData);
@@ -194,7 +205,7 @@ class AdminSettingController extends Controller
             Setting::set('featured_film_ids', json_encode(array_values(array_map('intval', $validated['featured_film_ids'] ?? []))));
         }
 
-        AdminActivityLog::log('updated_settings', 'Memperbarui CMS Global Settings (Branding, Warna, SEO, Tampilan, Maintenance).');
+        AdminActivityLog::log('updated_settings', 'Memperbarui CMS Global Settings (Branding, Warna, SEO, Tampilan, Transisi Halaman, Maintenance).');
 
         return response()->json([
             'success' => true,
@@ -204,14 +215,14 @@ class AdminSettingController extends Controller
     }
 
     /**
-     * API: Dedicated instant upload for Logo, Favicon, and OG Image
+     * API: Dedicated instant upload for Logo, Favicon, OG Image, and Page Transition GIFs
      * POST /admin/api/settings/logo
      */
     public function apiUploadLogo(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:png,jpg,jpeg,svg,webp,ico|max:5120',
-            'type' => 'required|string|in:logo,logo_dark,favicon,og_image',
+            'file' => 'required|file|mimes:png,jpg,jpeg,svg,webp,ico,gif|max:5120',
+            'type' => 'required|string|in:logo,logo_dark,favicon,og_image,transition_gif,page_transition_gif,transition_gif_isload,page_transition_gif_isload,transition_gif_load,page_transition_gif_load,transition_gif_loaded,page_transition_gif_loaded',
         ]);
 
         $url = $this->settingsService->uploadLogo($request->file('file'), $request->input('type'));
@@ -220,9 +231,26 @@ class AdminSettingController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'File branding berhasil diunggah!',
+            'message' => 'File aset berhasil diunggah!',
             'url' => $url,
             'type' => $request->input('type'),
+        ]);
+    }
+
+    /**
+     * API: Delete Page Transition GIF
+     * DELETE /admin/api/settings/transition-gif
+     */
+    public function apiDeleteTransitionGif(Request $request): JsonResponse
+    {
+        $target = $request->input('target', 'all');
+        $this->settingsService->deleteTransitionGif($target);
+        AdminActivityLog::log('deleted_transition_gif', "Menghapus file GIF animasi transisi halaman ({$target}).");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'GIF animasi transisi berhasil dihapus!',
+            'target' => $target,
         ]);
     }
 
@@ -248,6 +276,9 @@ class AdminSettingController extends Controller
             'logo_dark' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:5120',
             'favicon' => 'nullable|file|mimes:png,ico,svg|max:2048',
             'seo_og_image' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:5120',
+            'page_transition_enabled' => 'nullable|boolean',
+            'page_transition_gif' => 'nullable|file|mimes:gif,webp,png|max:5120',
+            'page_transition_gif_loaded' => 'nullable|file|mimes:gif,webp,png|max:5120',
         ]);
 
         $siteData = [
@@ -263,6 +294,7 @@ class AdminSettingController extends Controller
             'contact_email' => $validated['contact_email'] ?? null,
             'maintenance_mode' => $request->has('maintenance_mode'),
             'maintenance_message' => $validated['maintenance_message'] ?? null,
+            'page_transition_enabled' => $request->has('page_transition_enabled'),
         ];
 
         // Process Social links array from inputs
@@ -284,6 +316,18 @@ class AdminSettingController extends Controller
         }
         if ($request->hasFile('seo_og_image')) {
             $this->settingsService->uploadLogo($request->file('seo_og_image'), 'og_image');
+        }
+        if ($request->hasFile('page_transition_gif')) {
+            $this->settingsService->uploadLogo($request->file('page_transition_gif'), 'page_transition_gif');
+        }
+        if ($request->hasFile('page_transition_gif_loaded')) {
+            $this->settingsService->uploadLogo($request->file('page_transition_gif_loaded'), 'page_transition_gif_loaded');
+        }
+        if ($request->has('delete_page_transition_gif')) {
+            $this->settingsService->deleteTransitionGif('isload');
+        }
+        if ($request->has('delete_page_transition_gif_loaded')) {
+            $this->settingsService->deleteTransitionGif('loaded');
         }
 
         // Feature flags

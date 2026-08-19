@@ -7,6 +7,135 @@
 @section('og_image', $film->backdrop_url ?: $film->poster_url)
 
 @section('content')
+<style>
+    /* Telegram-Style Monochrome Gray Animated Particle Shimmer Spoiler */
+    .tg-spoiler-box {
+        position: relative;
+        border-radius: 0.875rem;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tg-spoiler-mask {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.875rem;
+        background: rgba(18, 18, 22, 0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px dashed rgba(255, 255, 255, 0.18);
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .tg-spoiler-mask:hover {
+        border-color: rgba(255, 255, 255, 0.35);
+        background: rgba(24, 24, 28, 0.92);
+    }
+    
+    /* Layer 1 - Primary Continuous Dust Particles */
+    .tg-spoiler-mask::before {
+        content: '';
+        position: absolute;
+        inset: -30px;
+        background-image: 
+            radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.75) 1px, transparent 1.3px),
+            radial-gradient(circle at 75% 25%, rgba(210, 210, 225, 0.6) 1.2px, transparent 1.6px),
+            radial-gradient(circle at 20% 80%, rgba(160, 160, 175, 0.65) 1px, transparent 1.4px),
+            radial-gradient(circle at 85% 70%, rgba(240, 240, 250, 0.5) 1.3px, transparent 1.7px);
+        background-size: 17px 17px, 23px 23px, 19px 19px, 13px 13px;
+        animation: tg-dust-flow-1 4s linear infinite;
+        opacity: 0.92;
+        pointer-events: none;
+    }
+
+    /* Layer 2 - Secondary Continuous Cross-Drifting Grain */
+    .tg-spoiler-mask::after {
+        content: '';
+        position: absolute;
+        inset: -30px;
+        background-image: 
+            radial-gradient(circle at 60% 60%, rgba(255, 255, 255, 0.7) 0.9px, transparent 1.2px),
+            radial-gradient(circle at 15% 35%, rgba(185, 185, 200, 0.55) 1.1px, transparent 1.5px),
+            radial-gradient(circle at 80% 85%, rgba(225, 225, 235, 0.6) 0.8px, transparent 1.2px),
+            radial-gradient(circle at 45% 15%, rgba(150, 150, 165, 0.5) 1.2px, transparent 1.6px);
+        background-size: 15px 15px, 21px 21px, 27px 27px, 11px 11px;
+        animation: tg-dust-flow-2 4s linear infinite;
+        opacity: 0.88;
+        pointer-events: none;
+    }
+
+    /* Seamless continuous circular/wandering flow - Layer 1 (NO PAUSE, CONSTANT VELOCITY) */
+    @keyframes tg-dust-flow-1 {
+        0% {
+            background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+        }
+        25% {
+            background-position: 9px -12px, -11px 14px, 13px 8px, -10px -9px;
+        }
+        50% {
+            background-position: -8px -23px, 14px 28px, -12px 19px, 15px -17px;
+        }
+        75% {
+            background-position: -17px -11px, 23px 14px, -19px 9px, 13px -8px;
+        }
+        100% {
+            background-position: -34px 0px, 46px 0px, -38px 0px, 26px 0px;
+        }
+    }
+
+    /* Seamless continuous cross-wandering flow - Layer 2 (NO PAUSE, CONSTANT VELOCITY) */
+    @keyframes tg-dust-flow-2 {
+        0% {
+            background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+        }
+        25% {
+            background-position: -11px 8px, 15px -12px, -9px 17px, 8px -14px;
+        }
+        50% {
+            background-position: -15px 19px, 21px -27px, -18px 27px, 11px -22px;
+        }
+        75% {
+            background-position: -8px 23px, 11px -15px, -14px 14px, 17px -11px;
+        }
+        100% {
+            background-position: 0px 30px, 0px -42px, 0px 54px, 0px -22px;
+        }
+    }
+
+    .tg-spoiler-pill {
+        position: relative;
+        z-index: 11;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.35rem 0.75rem;
+        background: rgba(24, 24, 27, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #e4e4e7;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+        pointer-events: none;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .tg-spoiler-mask:hover .tg-spoiler-pill {
+        transform: scale(1.05);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .tg-spoiler-blurred-text {
+        filter: blur(7px);
+        opacity: 0.25;
+        user-select: none;
+        pointer-events: none;
+    }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 @php
     $selectedSeasonNumber = $season ?? 0;
@@ -103,13 +232,13 @@
                 <span>Kembali ke Detail Film</span>
             </a>
 
-            @if(\App\Services\AdService::isDirectLinkOnServerVip())
+            {{-- @if(\App\Services\AdService::isDirectLinkOnServerVip())
                 <a href="{{ \App\Services\AdService::getDirectLinkUrl() }}" target="_blank" rel="noopener noreferrer"
                    class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 border border-amber-500/40 text-amber-300 hover:text-white hover:border-amber-400 text-xs font-bold transition-all shadow-md">
                     <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-pulse"></i>
                     <span>Server VIP Turbo (Fast)</span>
                 </a>
-            @endif
+            @endif --}}
         </div>
     </div>
 
@@ -1000,159 +1129,175 @@
 
         <!-- Synopsis & Info Section Below Player -->
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Interactive Synopsis & AI Insights Glass Panel -->
-            <div class="lg:col-span-2 glass-panel p-6 sm:p-7 rounded-3xl border border-white/10 space-y-4 relative overflow-hidden" 
-                 x-data="synopsisWidget()">
-                
-                <!-- Ambient AI Top Glow (active when AI summary is open) -->
-                <div x-show="showAiSummary" x-transition 
-                     class="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" style="display: none;"></div>
-
-                <!-- Header Bar with Title & Action Chips -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <i data-lucide="book-open" class="w-4 h-4"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-serif font-bold text-lg sm:text-xl text-white">Sinopsis & Alur Cerita</h3>
-                        </div>
-                    </div>
-
-                    <!-- AI & Translation Action Buttons -->
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <!-- Translate Button -->
-                        <button type="button" 
-                                @click="toggleTranslate()"
-                                :disabled="isTranslating"
-                                :class="isTranslated ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30'"
-                                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm disabled:opacity-50 group">
-                            <template x-if="isTranslating">
-                                <svg class="animate-spin w-3.5 h-3.5 text-amber-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </template>
-                            <template x-if="!isTranslating">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0" :class="isTranslated ? 'text-zinc-950' : 'text-amber-400'">
-                                    <path d="m5 8 6 6"/>
-                                    <path d="m4 14 6-6 2-3"/>
-                                    <path d="M2 5h12"/>
-                                    <path d="M7 2h1"/>
-                                    <path d="m22 22-5-10-5 10"/>
-                                    <path d="M14 18h6"/>
-                                </svg>
-                            </template>
-                            <span x-text="isTranslating ? 'Menerjemahkan...' : (isTranslated ? 'Tampilkan Asli' : 'Terjemahkan (ID)')"></span>
-                        </button>
-
-                        <!-- AI Summary Toggle Button -->
-                        <button type="button" 
-                                @click="toggleAiSummary()"
-                                :class="showAiSummary ? 'bg-amber-500 text-zinc-950 font-extrabold shadow-lg shadow-amber-500/25 border-amber-400' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 hover:border-amber-400/50'"
-                                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-sm group">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" :class="showAiSummary ? 'text-zinc-950 fill-zinc-950' : 'text-amber-400 fill-amber-400'">
-                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                            </svg>
-                            <span>Ringkasan AI</span>
-                            <span :class="showAiSummary ? 'bg-zinc-950/20 text-zinc-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'" 
-                                  class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none tracking-wide">TL;DR</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Main Synopsis Body -->
-                <div class="relative space-y-3">
-                    <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed whitespace-pre-line transition-all duration-300"
-                       :class="!isExpanded && currentText.length > 350 ? 'line-clamp-4' : ''"
-                       x-text="currentText"></p>
-
-                    <!-- Expand/Collapse Button for Long Synopsis -->
-                    <button type="button" 
-                            x-show="currentText.length > 350" 
-                            @click="isExpanded = !isExpanded"
-                            class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1 cursor-pointer">
-                        <span x-text="isExpanded ? 'Sembunyikan Sebagian' : 'Baca Selengkapnya'"></span>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="isExpanded ? 'rotate-180' : ''"></i>
-                    </button>
-                </div>
-
-                <!-- AI SUMMARY & STORY INSIGHTS PANEL (Expandable) -->
-                <div x-show="showAiSummary" 
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2 scale-98"
-                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 -translate-y-2 scale-98"
-                     class="mt-4 p-5 rounded-2xl bg-zinc-950/80 border border-amber-500/30 space-y-4 shadow-xl backdrop-blur-md relative"
-                     style="display: none;">
+            <!-- Left Column: Synopsis & Episode Comments (2 cols) -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Interactive Synopsis & AI Insights Glass Panel -->
+                <div class="glass-panel p-6 sm:p-7 rounded-3xl border border-white/10 space-y-4 relative overflow-hidden" 
+                     x-data="synopsisWidget()">
                     
-                    <!-- AI Panel Badge Header -->
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="p-1 rounded-lg bg-amber-500/20 text-amber-400">
-                                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                            </span>
-                            <span class="text-xs font-extrabold text-white font-['Outfit'] uppercase tracking-wider">AI Story Insights & Poin Kunci</span>
-                        </div>
-                        <span class="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">Llama 3.1 AI</span>
-                    </div>
+                    <!-- Ambient AI Top Glow (active when AI summary is open) -->
+                    <div x-show="showAiSummary" x-transition 
+                         class="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" style="display: none;"></div>
 
-                    <!-- Loading State -->
-                    <div x-show="isLoadingSummary" class="py-8 flex flex-col items-center justify-center space-y-3">
-                        <div class="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
-                        <p class="text-xs text-zinc-400 animate-pulse">Sedang menganalisis alur dan membuat poin ringkasan AI...</p>
-                    </div>
-
-                    <!-- AI Content Result -->
-                    <div x-show="!isLoadingSummary && aiData" class="space-y-4">
-                        
-                        <!-- 1. Quick Recap Summary -->
-                        <div class="space-y-1.5">
-                            <h4 class="text-[11px] font-extrabold uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
-                                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                                <span>Ringkasan Kilat</span>
-                            </h4>
-                            <p class="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium" x-text="aiData?.summary"></p>
-                        </div>
-
-                        <!-- 2. Key Story Hooks / Highlights (3 Bullets) -->
-                        <div class="space-y-2">
-                            <h4 class="text-[11px] font-extrabold uppercase text-purple-400 tracking-wider flex items-center gap-1.5">
-                                <i data-lucide="target" class="w-3.5 h-3.5"></i>
-                                <span>Poin Kunci Cerita</span>
-                            </h4>
-                            <div class="space-y-2">
-                                <template x-for="(point, pIdx) in (aiData?.key_points || [])" :key="pIdx">
-                                    <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
-                                        <span class="w-5 h-5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5" x-text="pIdx + 1"></span>
-                                        <p class="text-xs text-zinc-300 leading-relaxed" x-text="point"></p>
-                                    </div>
-                                </template>
+                    <!-- Header Bar with Title & Action Chips -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                                <i data-lucide="book-open" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-serif font-bold text-lg sm:text-xl text-white">Sinopsis & Alur Cerita</h3>
                             </div>
                         </div>
 
-                        <!-- 3. Mood & Vibes + Why to Watch -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                            <!-- Vibes -->
-                            <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
-                                <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Mood & Atmosfer:</span>
-                                <div class="flex flex-wrap gap-1.5">
-                                    <template x-for="v in (aiData?.vibes || [])" :key="v">
-                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-300" x-text="v"></span>
+                        <!-- AI & Translation Action Buttons -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <!-- Translate Button -->
+                            <button type="button" 
+                                    @click="toggleTranslate()"
+                                    :disabled="isTranslating"
+                                    :class="isTranslated ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-md' : 'bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30'"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm disabled:opacity-50 group">
+                                <template x-if="isTranslating">
+                                    <svg class="animate-spin w-3.5 h-3.5 text-amber-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </template>
+                                <template x-if="!isTranslating">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0" :class="isTranslated ? 'text-zinc-950' : 'text-amber-400'">
+                                        <path d="m5 8 6 6"/>
+                                        <path d="m4 14 6-6 2-3"/>
+                                        <path d="M2 5h12"/>
+                                        <path d="M7 2h1"/>
+                                        <path d="m22 22-5-10-5 10"/>
+                                        <path d="M14 18h6"/>
+                                    </svg>
+                                </template>
+                                <span x-text="isTranslating ? 'Menerjemahkan...' : (isTranslated ? 'Tampilkan Asli' : 'Terjemahkan (ID)')"></span>
+                            </button>
+
+                            <!-- AI Summary Toggle Button -->
+                            <button type="button" 
+                                    @click="toggleAiSummary()"
+                                    :class="showAiSummary ? 'bg-amber-500 text-zinc-950 font-extrabold shadow-lg shadow-amber-500/25 border-amber-400' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 hover:border-amber-400/50'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-sm group">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" :class="showAiSummary ? 'text-zinc-950 fill-zinc-950' : 'text-amber-400 fill-amber-400'">
+                                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                                </svg>
+                                <span>Ringkasan AI</span>
+                                <span :class="showAiSummary ? 'bg-zinc-950/20 text-zinc-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'" 
+                                      class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none tracking-wide">TL;DR</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Synopsis Body -->
+                    <div class="relative space-y-3">
+                        <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed whitespace-pre-line transition-all duration-300"
+                           :class="!isExpanded && currentText.length > 350 ? 'line-clamp-4' : ''"
+                           x-text="currentText"></p>
+
+                        <!-- Expand/Collapse Button for Long Synopsis -->
+                        <button type="button" 
+                                x-show="currentText.length > 350" 
+                                @click="isExpanded = !isExpanded"
+                                class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1 cursor-pointer">
+                            <span x-text="isExpanded ? 'Sembunyikan Sebagian' : 'Baca Selengkapnya'"></span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="isExpanded ? 'rotate-180' : ''"></i>
+                        </button>
+                    </div>
+
+                    <!-- AI SUMMARY & STORY INSIGHTS PANEL (Expandable) -->
+                    <div x-show="showAiSummary" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 -translate-y-2 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 -translate-y-2 scale-98"
+                         class="mt-4 p-5 rounded-2xl bg-zinc-950/80 border border-amber-500/30 space-y-4 shadow-xl backdrop-blur-md relative"
+                         style="display: none;">
+                        
+                        <!-- AI Panel Badge Header -->
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="p-1 rounded-lg bg-amber-500/20 text-amber-400">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                </span>
+                                <span class="text-xs font-extrabold text-white font-['Outfit'] uppercase tracking-wider">AI Story Insights & Poin Kunci</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">Llama 3.1 AI</span>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div x-show="isLoadingSummary" class="py-8 flex flex-col items-center justify-center space-y-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                            <p class="text-xs text-zinc-400 animate-pulse">Sedang menganalisis alur dan membuat poin ringkasan AI...</p>
+                        </div>
+
+                        <!-- AI Content Result -->
+                        <div x-show="!isLoadingSummary && aiData" class="space-y-4">
+                            
+                            <!-- 1. Quick Recap Summary -->
+                            <div class="space-y-1.5">
+                                <h4 class="text-[11px] font-extrabold uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                    <span>Ringkasan Kilat</span>
+                                </h4>
+                                <p class="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium" x-text="aiData?.summary"></p>
+                            </div>
+
+                            <!-- 2. Key Story Hooks / Highlights (3 Bullets) -->
+                            <div class="space-y-2">
+                                <h4 class="text-[11px] font-extrabold uppercase text-purple-400 tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="target" class="w-3.5 h-3.5"></i>
+                                    <span>Poin Kunci Cerita</span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <template x-for="(point, pIdx) in (aiData?.key_points || [])" :key="pIdx">
+                                        <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
+                                            <span class="w-5 h-5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5" x-text="pIdx + 1"></span>
+                                            <p class="text-xs text-zinc-300 leading-relaxed" x-text="point"></p>
+                                        </div>
                                     </template>
                                 </div>
                             </div>
 
-                            <!-- Why Watch -->
-                            <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
-                                <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Alasan Nonton:</span>
-                                <p class="text-xs text-zinc-300 italic" x-text="'“' + (aiData?.why_watch || '') + '”'"></p>
+                            <!-- 3. Mood & Vibes + Why to Watch -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <!-- Vibes -->
+                                <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+                                    <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Mood & Atmosfer:</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <template x-for="v in (aiData?.vibes || [])" :key="v">
+                                            <span class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-300" x-text="v"></span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Why Watch -->
+                                <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+                                    <span class="text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider block">Alasan Nonton:</span>
+                                    <p class="text-xs text-zinc-300 italic" x-text="'“' + (aiData?.why_watch || '') + '”'"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- EPISODE COMMENTS & DISCUSSION SECTION (Series Only - React + spoiled) -->
+                @if($film->subject_type === 'series')
+                    <div id="react-episode-comments"
+                         data-film-id="{{ $film->id }}"
+                         data-season="{{ $season ?? 1 }}"
+                         data-episode="{{ $episode ?? 1 }}"
+                         data-is-logged-in="{{ Auth::check() ? 'true' : 'false' }}"
+                         data-user-name="{{ Auth::check() ? Auth::user()->name : '' }}"
+                         data-login-url="{{ route('login') }}"
+                         data-csrf="{{ csrf_token() }}">
+                    </div>
+                @endif
             </div>
 
             <!-- Sidebar Related -->
@@ -1360,6 +1505,19 @@
                         video.currentTime = parseFloat(timeParam);
                         this.showResumePrompt = false;
                     }
+
+                    // Seek video listener from comments timestamp click
+                    window.addEventListener('seek-video', (e) => {
+                        if (e.detail && typeof e.detail.time === 'number') {
+                            video.currentTime = e.detail.time;
+                            if (video.paused) {
+                                video.play().catch(() => {});
+                            }
+                            if (this.$refs.theaterPlaceholder) {
+                                this.$refs.theaterPlaceholder.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }
+                    });
 
                     // Attach HTML5 Video Event Listeners
                     video.addEventListener('timeupdate', () => {
@@ -1596,6 +1754,9 @@
                 this.currentEpisode = episodeNum;
                 this.selectedSeasonNumber = seasonNum;
                 
+                // Notify Episode Comments component about episode change
+                window.dispatchEvent(new CustomEvent('episode-changed', { detail: { season: seasonNum, episode: episodeNum } }));
+
                 // CRITICAL: Reset countdown and timer when switching episode
                 this.cancelAutoPlay();
                 this.isIntroSkipped = false;

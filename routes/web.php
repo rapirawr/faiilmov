@@ -13,6 +13,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MovieBoxController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\EpisodeCommentController;
 
 // Storage Symlink Utility Route for cPanel Deployment
 Route::get('/create-storage-link', function () {
@@ -47,6 +48,7 @@ Route::get('/browse', [BrowseController::class, 'index'])->name('browse');
 Route::get('/genre/{slug}', [BrowseController::class, 'genre'])->name('genre.show');
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
+Route::get('/api/series/comments', [EpisodeCommentController::class, 'index'])->name('api.series.comments');
 
 // Smart Collections & User Studio (AI Curation & Drag-and-Drop Watch Order Studio)
 Route::get('/collections', [\App\Http\Controllers\CollectionController::class, 'index'])->name('collections.index');
@@ -175,6 +177,7 @@ use App\Http\Controllers\Admin\AdminFilmController;
 use App\Http\Controllers\Admin\AdminGenreController;
 use App\Http\Controllers\Admin\AdminActorController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminEpisodeCommentController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminActivityLogController;
@@ -197,6 +200,12 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::delete('/review/{review}', [ReviewController::class, 'destroy'])->name('review.destroy');
+
+    // Episode Comments (Series Watch)
+    Route::post('/api/series/comments', [EpisodeCommentController::class, 'store'])->middleware('throttle:30,1')->name('api.series.comments.store');
+    Route::post('/api/series/comments/{comment}/like', [EpisodeCommentController::class, 'toggleLike'])->name('api.series.comments.like');
+    Route::post('/api/series/comments/{comment}/report', [EpisodeCommentController::class, 'report'])->name('api.series.comments.report');
+    Route::delete('/api/series/comments/{comment}', [EpisodeCommentController::class, 'destroy'])->name('api.series.comments.destroy');
 
     Route::post('/film/{film}/watchlist', [WatchlistController::class, 'toggle'])->name('watchlist.toggle');
     Route::post('/watch-history/progress', [MovieDetailController::class, 'updateProgress'])->name('watch-history.progress');
@@ -321,6 +330,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::post('/reviews/{review}/dismiss-reports', [AdminReviewController::class, 'dismissReports'])->name('reviews.dismiss_reports');
 
+    // Episode Comments Moderation
+    Route::get('/comments', [AdminEpisodeCommentController::class, 'index'])->name('comments.index');
+    Route::delete('/comments/{comment}', [AdminEpisodeCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/{comment}/dismiss-reports', [AdminEpisodeCommentController::class, 'dismissReports'])->name('comments.dismiss_reports');
+
     // User Management
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
@@ -365,6 +379,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/api/settings', [AdminSettingController::class, 'apiGet'])->name('settings.api.get');
     Route::put('/api/settings', [AdminSettingController::class, 'apiUpdate'])->name('settings.api.update');
     Route::post('/api/settings/logo', [AdminSettingController::class, 'apiUploadLogo'])->name('settings.api.logo');
+    Route::delete('/api/settings/transition-gif', [AdminSettingController::class, 'apiDeleteTransitionGif'])->name('settings.api.transition_gif.delete');
 
     // Ads Management (Adsterra & Monetization)
     Route::get('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'index'])->name('ads.index');

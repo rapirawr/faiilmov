@@ -30,6 +30,9 @@ class SiteSetting extends Model
         'contact_email',
         'maintenance_mode',
         'maintenance_message',
+        'page_transition_enabled',
+        'page_transition_gif_path',
+        'page_transition_gif_loaded_path',
     ];
 
     protected function casts(): array
@@ -37,6 +40,7 @@ class SiteSetting extends Model
         return [
             'social_links' => 'array',
             'maintenance_mode' => 'boolean',
+            'page_transition_enabled' => 'boolean',
         ];
     }
 
@@ -110,9 +114,10 @@ class SiteSetting extends Model
     public function getLogoUrlAttribute(): string
     {
         if (!empty($this->logo_path)) {
-            return str_starts_with($this->logo_path, 'http') 
-                ? $this->logo_path 
-                : Storage::disk('public')->url($this->logo_path);
+            if (str_starts_with($this->logo_path, 'http://') || str_starts_with($this->logo_path, 'https://') || str_starts_with($this->logo_path, '/')) {
+                return $this->logo_path;
+            }
+            return '/storage/' . ltrim($this->logo_path, '/');
         }
         return asset('images/logo.png');
     }
@@ -123,9 +128,10 @@ class SiteSetting extends Model
     public function getLogoDarkUrlAttribute(): string
     {
         if (!empty($this->logo_dark_path)) {
-            return str_starts_with($this->logo_dark_path, 'http') 
-                ? $this->logo_dark_path 
-                : Storage::disk('public')->url($this->logo_dark_path);
+            if (str_starts_with($this->logo_dark_path, 'http://') || str_starts_with($this->logo_dark_path, 'https://') || str_starts_with($this->logo_dark_path, '/')) {
+                return $this->logo_dark_path;
+            }
+            return '/storage/' . ltrim($this->logo_dark_path, '/');
         }
         return $this->logo_url;
     }
@@ -136,9 +142,10 @@ class SiteSetting extends Model
     public function getFaviconUrlAttribute(): string
     {
         if (!empty($this->favicon_path)) {
-            return str_starts_with($this->favicon_path, 'http') 
-                ? $this->favicon_path 
-                : Storage::disk('public')->url($this->favicon_path);
+            if (str_starts_with($this->favicon_path, 'http://') || str_starts_with($this->favicon_path, 'https://') || str_starts_with($this->favicon_path, '/')) {
+                return $this->favicon_path;
+            }
+            return '/storage/' . ltrim($this->favicon_path, '/');
         }
         return asset('favicon.ico');
     }
@@ -149,10 +156,49 @@ class SiteSetting extends Model
     public function getSeoOgImageUrlAttribute(): string
     {
         if (!empty($this->seo_og_image)) {
-            return str_starts_with($this->seo_og_image, 'http') 
-                ? $this->seo_og_image 
-                : Storage::disk('public')->url($this->seo_og_image);
+            if (str_starts_with($this->seo_og_image, 'http://') || str_starts_with($this->seo_og_image, 'https://') || str_starts_with($this->seo_og_image, '/')) {
+                return $this->seo_og_image;
+            }
+            return '/storage/' . ltrim($this->seo_og_image, '/');
         }
         return $this->logo_url;
+    }
+
+    /**
+     * Resolve Page Transition GIF URL (isLoad / Saat Memuat)
+     */
+    public function getPageTransitionGifUrlAttribute(): ?string
+    {
+        if (!empty($this->page_transition_gif_path)) {
+            if (str_starts_with($this->page_transition_gif_path, 'http://') || str_starts_with($this->page_transition_gif_path, 'https://') || str_starts_with($this->page_transition_gif_path, '/')) {
+                return $this->page_transition_gif_path;
+            }
+            return '/storage/' . ltrim($this->page_transition_gif_path, '/');
+        }
+        return null;
+    }
+
+    public function getPageTransitionGifIsloadUrlAttribute(): ?string
+    {
+        return $this->page_transition_gif_url;
+    }
+
+    /**
+     * Resolve Page Transition Loaded GIF URL (load / Saat Selesai Memuat)
+     */
+    public function getPageTransitionGifLoadedUrlAttribute(): ?string
+    {
+        if (!empty($this->page_transition_gif_loaded_path)) {
+            if (str_starts_with($this->page_transition_gif_loaded_path, 'http://') || str_starts_with($this->page_transition_gif_loaded_path, 'https://') || str_starts_with($this->page_transition_gif_loaded_path, '/')) {
+                return $this->page_transition_gif_loaded_path;
+            }
+            return '/storage/' . ltrim($this->page_transition_gif_loaded_path, '/');
+        }
+        return null;
+    }
+
+    public function getPageTransitionGifLoadUrlAttribute(): ?string
+    {
+        return $this->page_transition_gif_loaded_url;
     }
 }

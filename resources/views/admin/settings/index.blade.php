@@ -16,12 +16,69 @@
         logoDarkUrl: '{{ $siteSetting->logo_dark_url }}',
         faviconUrl: '{{ $siteSetting->favicon_url }}',
         seoOgImageUrl: '{{ $siteSetting->seo_og_image_url }}',
+        pageTransitionEnabled: {{ $siteSetting->page_transition_enabled ? 'true' : 'false' }},
+        pageTransitionGifIsloadUrl: '{{ $siteSetting->page_transition_gif_isload_url }}',
+        pageTransitionGifLoadedUrl: '{{ $siteSetting->page_transition_gif_loaded_url }}',
+        simulatingTransition: false,
+        simulatingPhase: 'isLoad',
         uploading: false,
         toast: null,
         
         showToast(message, type = 'success') {
             this.toast = { message, type };
+            this.$nextTick(() => {
+                if (window.lucide) lucide.createIcons();
+            });
             setTimeout(() => { this.toast = null; }, 3500);
+        },
+
+        playSimulation() {
+            if (!this.pageTransitionGifIsloadUrl && !this.pageTransitionGifLoadedUrl) {
+                this.showToast('Silakan unggah minimal salah satu file GIF (isLoad atau load).', 'error');
+                return;
+            }
+            this.simulatingTransition = true;
+            this.simulatingPhase = this.pageTransitionGifIsloadUrl ? 'isLoad' : 'load';
+
+            if (this.pageTransitionGifIsloadUrl && this.pageTransitionGifLoadedUrl) {
+                setTimeout(() => {
+                    this.simulatingPhase = 'load';
+                    setTimeout(() => {
+                        this.simulatingTransition = false;
+                    }, 1200);
+                }, 1400);
+            } else {
+                setTimeout(() => {
+                    this.simulatingTransition = false;
+                }, 2000);
+            }
+        },
+
+        async deleteTransitionGif(target = 'all') {
+            const label = target === 'isload' ? 'isLoad (saat memuat)' : (target === 'loaded' || target === 'load' ? 'load (saat selesai)' : 'seluruh');
+            if (!confirm(`Hapus file GIF animasi transisi ${label}?`)) return;
+            this.uploading = true;
+            try {
+                const res = await fetch(`{{ route('admin.settings.api.transition_gif.delete') }}?target=${target}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (target === 'all' || target === 'isload') this.pageTransitionGifIsloadUrl = '';
+                    if (target === 'all' || target === 'loaded' || target === 'load') this.pageTransitionGifLoadedUrl = '';
+                    this.showToast(data.message);
+                } else {
+                    this.showToast(data.message || 'Gagal menghapus file.', 'error');
+                }
+            } catch (err) {
+                this.showToast('Terjadi kesalahan saat menghapus file.', 'error');
+            } finally {
+                this.uploading = false;
+            }
         },
 
         async uploadFile(event, type) {
@@ -48,6 +105,8 @@
                     if (type === 'logo_dark') this.logoDarkUrl = data.url;
                     if (type === 'favicon') this.faviconUrl = data.url;
                     if (type === 'og_image') this.seoOgImageUrl = data.url;
+                    if (type === 'transition_gif' || type === 'page_transition_gif' || type === 'page_transition_gif_isload') this.pageTransitionGifIsloadUrl = data.url;
+                    if (type === 'page_transition_gif_loaded' || type === 'page_transition_gif_load') this.pageTransitionGifLoadedUrl = data.url;
                     this.showToast(data.message || 'File berhasil diunggah!');
                 } else {
                     this.showToast(data.message || 'Gagal mengunggah file.', 'error');
@@ -60,12 +119,20 @@
         }
      }">
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (Top-Right Floating Toast) -->
     <template x-if="toast">
-        <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl border transition-all duration-300"
-             :class="toast.type === 'error' ? 'bg-red-500/20 border-red-500/40 text-red-200' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'">
-            <i :data-lucide="toast.type === 'error' ? 'alert-circle' : 'check-circle-2'" class="w-5 h-5 flex-shrink-0"></i>
-            <span class="text-xs font-bold" x-text="toast.message"></span>
+        <div class="fixed top-6 right-6 z-[99999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all duration-300 animate-in fade-in slide-in-from-top-4"
+             :class="toast.type === 'error' ? 'bg-red-950/95 border-red-500/40 text-red-200 shadow-red-500/20' : 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200 shadow-emerald-500/20'">
+            <div class="w-6 h-6 rounded-xl flex items-center justify-center shrink-0"
+                 :class="toast.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'">
+                <template x-if="toast.type === 'error'">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                </template>
+                <template x-if="toast.type !== 'error'">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                </template>
+            </div>
+            <span class="text-xs font-bold tracking-wide" x-text="toast.message"></span>
         </div>
     </template>
 
@@ -123,6 +190,13 @@
                 class="px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap">
             <i data-lucide="layout" class="w-4 h-4"></i>
             <span>Tampilan & Medsos</span>
+        </button>
+
+        <button type="button" @click="activeTab = 'transition'" 
+                :class="activeTab === 'transition' ? 'bg-white text-zinc-950 shadow-md' : 'bg-zinc-900/90 text-zinc-400 hover:text-white border border-white/10'" 
+                class="px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+            <span>Transisi Halaman</span>
         </button>
 
         <button type="button" @click="activeTab = 'maintenance'" 
@@ -556,6 +630,156 @@
             </div>
         </div>
 
+        <!-- ==================== TAB: TRANSISI HALAMAN (PAGE TRANSITION LOADER) ==================== -->
+        <div x-show="activeTab === 'transition'" class="space-y-6" x-cloak>
+            <div class="p-6 rounded-3xl bg-zinc-900/90 border border-white/10 shadow-xl space-y-6">
+                <!-- Section Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">Animasi Transisi Halaman (2 Kondisi: isLoad & load)</h3>
+                            <p class="text-xs text-zinc-400">Atur 2 animasi GIF berbeda untuk fase mulai memuat (<code class="text-amber-400 font-mono">isLoad</code>) dan fase selesai memuat (<code class="text-emerald-400 font-mono">load</code>).</p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="playSimulation()" 
+                            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-lg shadow-amber-500/20 shrink-0">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                        <span>Simulasi Rangkaian Transisi</span>
+                    </button>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="p-4 rounded-2xl bg-zinc-950 border border-white/10 flex items-start gap-3 text-zinc-300 text-xs">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-amber-400"></i>
+                    <div class="space-y-1">
+                        <strong class="font-bold text-white">Alur Kerja 2 Animasi Transisi:</strong>
+                        <ul class="list-disc list-inside text-zinc-400 space-y-0.5 text-[11px] leading-relaxed">
+                            <li><span class="text-amber-300 font-bold">1. Fase isLoad:</span> Diputar saat penonton mengklik tautan navigasi dan meninggalkan halaman sebelumnya.</li>
+                            <li><span class="text-emerald-300 font-bold">2. Fase load:</span> Diputar sesaat begitu halaman baru berhasil dimuat sebelum overlay menghilang secara mulus.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Enable / Disable Switch -->
+                <div class="p-5 rounded-2xl bg-zinc-950 border border-white/10 flex items-center justify-between">
+                    <div class="space-y-1">
+                        <span class="font-bold text-sm text-white">Aktifkan Animasi Transisi Halaman</span>
+                        <p class="text-xs text-zinc-400">Jika dimatikan, halaman akan berganti secara standar tanpa efek animasi overlay.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="page_transition_enabled" value="1" 
+                               x-model="pageTransitionEnabled"
+                               {{ $siteSetting->page_transition_enabled ? 'checked' : '' }} 
+                               class="sr-only peer">
+                        <div class="w-12 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+
+                <!-- Dual GIF Upload & Preview Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    
+                    <!-- 1. isLoad GIF (Saat Mulai Memuat) -->
+                    <div class="p-5 rounded-2xl bg-zinc-950 border border-white/10 space-y-4">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold uppercase">Kondisi 1</span>
+                                <h4 class="text-xs font-bold text-white">Animasi Saat Memuat (isLoad)</h4>
+                            </div>
+                            <span class="text-[10px] text-zinc-500">Mulai Navigasi</span>
+                        </div>
+
+                        <!-- Upload Area -->
+                        <div class="p-4 rounded-xl bg-zinc-900/60 border-2 border-dashed border-white/10 hover:border-amber-400/40 transition text-center space-y-2 group">
+                            <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-amber-400 mx-auto">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white">Upload GIF isLoad</p>
+                                <p class="text-[10px] text-zinc-500">.gif, .webp (Maks 5 MB)</p>
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition cursor-pointer">
+                                <span>Pilih File GIF</span>
+                                <input type="file" name="page_transition_gif" accept=".gif,.webp,image/gif,image/webp" 
+                                       @change="uploadFile($event, 'page_transition_gif_isload')" class="hidden">
+                            </label>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div class="min-h-[140px] rounded-xl bg-black border border-white/10 flex flex-col items-center justify-center p-4 text-center">
+                            <template x-if="pageTransitionGifIsloadUrl">
+                                <div class="space-y-3 flex flex-col items-center">
+                                    <img :src="pageTransitionGifIsloadUrl" alt="isLoad GIF Preview" class="max-h-20 max-w-[120px] object-contain mx-auto rounded">
+                                    <button type="button" @click="deleteTransitionGif('isload')" 
+                                            class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                        <span>Hapus GIF isLoad</span>
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="!pageTransitionGifIsloadUrl">
+                                <div class="space-y-1 py-2 text-zinc-600">
+                                    <i data-lucide="image-off" class="w-5 h-5 mx-auto"></i>
+                                    <p class="text-[11px] font-bold text-zinc-500">Belum ada GIF isLoad</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 2. load GIF (Saat Selesai Memuat) -->
+                    <div class="p-5 rounded-2xl bg-zinc-950 border border-white/10 space-y-4">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase">Kondisi 2</span>
+                                <h4 class="text-xs font-bold text-white">Animasi Selesai Memuat (load)</h4>
+                            </div>
+                            <span class="text-[10px] text-zinc-500">Tiba di Halaman Baru</span>
+                        </div>
+
+                        <!-- Upload Area -->
+                        <div class="p-4 rounded-xl bg-zinc-900/60 border-2 border-dashed border-white/10 hover:border-emerald-400/40 transition text-center space-y-2 group">
+                            <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-emerald-400 mx-auto">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white">Upload GIF load</p>
+                                <p class="text-[10px] text-zinc-500">.gif, .webp (Maks 5 MB)</p>
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition cursor-pointer">
+                                <span>Pilih File GIF</span>
+                                <input type="file" name="page_transition_gif_loaded" accept=".gif,.webp,image/gif,image/webp" 
+                                       @change="uploadFile($event, 'page_transition_gif_loaded')" class="hidden">
+                            </label>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div class="min-h-[140px] rounded-xl bg-black border border-white/10 flex flex-col items-center justify-center p-4 text-center">
+                            <template x-if="pageTransitionGifLoadedUrl">
+                                <div class="space-y-3 flex flex-col items-center">
+                                    <img :src="pageTransitionGifLoadedUrl" alt="load GIF Preview" class="max-h-20 max-w-[120px] object-contain mx-auto rounded">
+                                    <button type="button" @click="deleteTransitionGif('loaded')" 
+                                            class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                        <span>Hapus GIF load</span>
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="!pageTransitionGifLoadedUrl">
+                                <div class="space-y-1 py-2 text-zinc-600">
+                                    <i data-lucide="image-off" class="w-5 h-5 mx-auto"></i>
+                                    <p class="text-[11px] font-bold text-zinc-500">Belum ada GIF load</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== TAB 5: MAINTENANCE MODE ==================== -->
         <div x-show="activeTab === 'maintenance'" class="space-y-6" x-cloak>
             <div class="p-6 rounded-3xl bg-zinc-900/90 border border-red-500/30 shadow-xl space-y-6">
@@ -815,5 +1039,42 @@
         </div>
 
     </form>
+
+    <!-- Admin Fullscreen Simulation Overlay (Supports isLoad and load Phases) -->
+    <div x-show="simulatingTransition" x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-black">
+        
+        <div class="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <!-- Dynamic GIF based on simulatingPhase -->
+            <template x-if="simulatingPhase === 'isLoad' && pageTransitionGifIsloadUrl">
+                <img :src="pageTransitionGifIsloadUrl" alt="isLoad Simulation" class="max-w-[170px] max-h-[170px] object-contain drop-shadow-2xl">
+            </template>
+            <template x-if="simulatingPhase === 'load' && pageTransitionGifLoadedUrl">
+                <img :src="pageTransitionGifLoadedUrl" alt="load Simulation" class="max-w-[170px] max-h-[170px] object-contain drop-shadow-2xl">
+            </template>
+
+            <!-- Fallback if one of the phase GIFs is not uploaded -->
+            <template x-if="simulatingPhase === 'isLoad' && !pageTransitionGifIsloadUrl && pageTransitionGifLoadedUrl">
+                <img :src="pageTransitionGifLoadedUrl" alt="load Simulation" class="max-w-[170px] max-h-[170px] object-contain drop-shadow-2xl">
+            </template>
+            <template x-if="simulatingPhase === 'load' && !pageTransitionGifLoadedUrl && pageTransitionGifIsloadUrl">
+                <img :src="pageTransitionGifIsloadUrl" alt="isLoad Simulation" class="max-w-[170px] max-h-[170px] object-contain drop-shadow-2xl">
+            </template>
+
+            <!-- Phase Badge -->
+            <div class="flex items-center gap-2 mt-2">
+                <span class="text-[10px] uppercase tracking-widest font-mono font-extrabold px-3 py-1 rounded-full shadow-lg border"
+                      :class="simulatingPhase === 'isLoad' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
+                      x-text="simulatingPhase === 'isLoad' ? '1. Fase isLoad (Mulai Memuat / Meninggalkan Halaman)' : '2. Fase load (Selesai Memuat / Tiba di Halaman Baru)'">
+                </span>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

@@ -102,22 +102,6 @@
                 },
 
                 async probeNetwork() {
-                    const probes = [
-                        'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
-                        'https://adservice.google.com/adsid/integrator.js?domain=' + window.location.hostname,
-                    ];
-
-                    for (const url of probes) {
-                        try {
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 2500);
-                            await fetch(new Request(url, { method: 'HEAD', mode: 'no-cors' }), { signal: controller.signal });
-                            clearTimeout(timeoutId);
-                        } catch (e) {
-                            // Fetch failed or blocked by extension
-                            return true;
-                        }
-                    }
                     return false;
                 },
 

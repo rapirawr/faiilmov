@@ -80,6 +80,16 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function episodeComments()
+    {
+        return $this->hasMany(EpisodeComment::class);
+    }
+
+    public function episodeCommentLikes()
+    {
+        return $this->hasMany(EpisodeCommentLike::class);
+    }
+
     public function watchlists()
     {
         return $this->hasMany(Watchlist::class);

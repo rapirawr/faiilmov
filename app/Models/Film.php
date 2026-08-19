@@ -163,6 +163,11 @@ class Film extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function episodeComments()
+    {
+        return $this->hasMany(EpisodeComment::class);
+    }
+
     public function watchlists()
     {
         return $this->hasMany(Watchlist::class);

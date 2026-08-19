@@ -252,8 +252,8 @@
                     </div>
 
                     <!-- Group 2: MODERASI & USER -->
-                    <div x-data="{ open: {{ (request()->routeIs('admin.watch_parties.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.notifications.*')) ? 'true' : 'true' }} }" 
-                         x-show="groupHasMatch(['Moderasi & User', 'Watch Parties Nobar Live Room Ruangan', 'Moderasi Ulasan Review Komentar Laporan Report', 'Kelola Pengguna User Akun Ban Banned Role Admin', 'Broadcast Notifikasi Push Notification Pesan Blast'])" 
+                    <div x-data="{ open: {{ (request()->routeIs('admin.watch_parties.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.comments.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.notifications.*')) ? 'true' : 'true' }} }" 
+                         x-show="groupHasMatch(['Moderasi & User', 'Watch Parties Nobar Live Room Ruangan', 'Moderasi Ulasan Review Komentar Laporan Report', 'Komentar Episode Series Diskusi Spoiler', 'Kelola Pengguna User Akun Ban Banned Role Admin', 'Broadcast Notifikasi Push Notification Pesan Blast'])" 
                          x-init="$watch('sidebarQuery', q => { if (q && q.trim()) open = true; })"
                          class="space-y-1">
                         <button @click="open = !open" 
@@ -264,7 +264,7 @@
                                 <span>Moderasi & User</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">4</span>
+                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">5</span>
                                 <i data-lucide="chevron-up" :class="open ? '' : 'rotate-180'" class="w-4 h-4 text-zinc-400 transition-transform duration-200"></i>
                             </div>
                         </button>
@@ -301,6 +301,18 @@
                                             {{ $adminPendingReportsCount }}
                                         </span>
                                     @endif
+                                </a>
+                            </div>
+
+                            <!-- Komentar Episode -->
+                            <div x-show="matches('Komentar Episode Series Diskusi Spoiler')" class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.comments.index') }}" 
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.comments.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="messages-square" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Komentar Episode</span>
+                                    </div>
                                 </a>
                             </div>
 
