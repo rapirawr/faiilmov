@@ -342,7 +342,9 @@ class MovieDetailController extends Controller
             'progress_seconds' => 'required|integer',
         ]);
 
+        $gamificationResult = null;
         if (Auth::check()) {
+            $film = Film::find($request->film_id);
             \DB::transaction(function () use ($request) {
                 $history = \App\Models\WatchHistory::where('user_id', Auth::id())
                     ->where('profile_id', session('active_profile_id'))
@@ -376,9 +378,25 @@ class MovieDetailController extends Controller
                     ]);
                 }
             });
+
+            if ($film) {
+                try {
+                    $gamificationResult = app(\App\Services\GamificationService::class)->handleWatchProgress(
+                        Auth::user(),
+                        $film,
+                        (int)$request->progress_seconds,
+                        session('active_profile_id')
+                    );
+                } catch (\Exception $e) {
+                    \Log::error('Gamification watch error: ' . $e->getMessage());
+                }
+            }
         }
 
-        return response()->json(['status' => 'ok']);
+        return response()->json([
+            'status'       => 'ok',
+            'gamification' => $gamificationResult,
+        ]);
     }
 
     /**

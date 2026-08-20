@@ -64,6 +64,10 @@
                         <i data-lucide="flame" class="w-3 h-3 text-rose-400"></i>
                         <span>Genre Favorit: {{ $topGenre }}</span>
                     </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl {{ $levelInfo['bg_class'] }} text-[10px] font-extrabold uppercase tracking-wider border">
+                        <i data-lucide="{{ $levelInfo['icon'] }}" class="w-3 h-3"></i>
+                        <span>Lv. {{ $levelInfo['level'] }} • {{ $levelInfo['title'] }}</span>
+                    </span>
                     <a href="{{ route('profiles.index') }}" class="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition-all">
                         <i data-lucide="users" class="w-3 h-3"></i>
                         <span>Kelola / Ganti Profil</span>
@@ -92,6 +96,52 @@
         </div>
     </div>
 
+    <!-- Cinephile Level Progress & Gamification Quick Banner -->
+    <div class="glass-panel p-5 sm:p-6 rounded-3xl mb-8 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-dark-900/80 to-dark-950 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0 shadow-lg">
+                <i data-lucide="{{ $levelInfo['icon'] }}" class="w-7 h-7"></i>
+            </div>
+            <div class="space-y-1 min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-extrabold text-base text-white truncate">{{ $levelInfo['title'] }}</h3>
+                    <span class="px-2 py-0.5 rounded-md bg-amber-500 text-zinc-950 font-black text-xs">Level {{ $levelInfo['level'] }}</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-zinc-400">
+                    <span class="font-mono font-bold text-amber-300">{{ number_format($user->xp_total ?? 0) }} Total XP</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1 text-amber-400 font-bold">
+                        <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                        <span>Streak {{ $user->streak_count ?? 0 }} Hari</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar to Next Level -->
+        <div class="w-full md:w-80 space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-semibold">
+                <span class="text-zinc-400">Menuju Level {{ $levelInfo['level'] + 1 }}</span>
+                <span class="font-mono text-amber-300">{{ $levelInfo['current_level_xp'] }} / {{ $levelInfo['next_level_xp'] }} XP ({{ $levelInfo['progress_percent'] }}%)</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-500" style="width: {{ $levelInfo['progress_percent'] }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Quick CTAs: Leaderboard & Wrapped -->
+        <div class="flex items-center gap-2.5 w-full md:w-auto justify-end">
+            <a href="{{ route('leaderboard') }}" class="px-3.5 py-2 rounded-xl glass-card border border-white/15 hover:border-amber-400/50 text-zinc-200 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Leaderboard</span>
+            </a>
+            <a href="{{ route('wrapped') }}" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition-all flex items-center gap-1.5 shadow-md">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-zinc-950"></i>
+                <span>Movie Wrapped</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Responsive Horizontal Scroll Tab Navigation Pills -->
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-dark-900/90 border border-white/10 mb-8 shadow-xl">
         <button @click="tab = 'history'" 
@@ -117,6 +167,12 @@
                 class="px-5 py-2.5 rounded-full text-xs transition-all duration-200 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap">
             <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
             <span>Statistik Nonton</span>
+        </button>
+        <button @click="tab = 'badges'" 
+                :class="tab === 'badges' ? 'bg-white text-zinc-950 font-bold shadow-md' : 'text-zinc-400 hover:text-white'"
+                class="px-5 py-2.5 rounded-full text-xs transition-all duration-200 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap">
+            <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+            <span>Pencapaian & Badges ({{ count($unlockedBadgeIds) }}/{{ $allBadges->count() }})</span>
         </button>
         <button @click="tab = 'requests'" 
                 :class="tab === 'requests' ? 'bg-white text-zinc-950 font-bold shadow-md' : 'text-zinc-400 hover:text-white'"
@@ -461,7 +517,154 @@
         </div>
     </div>
 
-    <!-- Tab 5: Account & Security Settings -->
+    <!-- Tab 5: Badges & Cinephile Achievements -->
+    <div x-show="tab === 'badges'" style="display: none;" x-data="{ badgeCategory: 'all' }" class="space-y-8">
+        
+        <!-- Top Stats Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-panel p-5 rounded-3xl border border-white/10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="award" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-black font-mono text-white">{{ count($unlockedBadgeIds) }} / {{ $allBadges->count() }}</div>
+                    <div class="text-[11px] text-zinc-400 uppercase font-bold">Lencana Terbuka</div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-3xl border border-white/10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-black font-mono text-amber-400">{{ number_format($user->xp_total ?? 0) }}</div>
+                    <div class="text-[11px] text-zinc-400 uppercase font-bold">Total Cinephile XP</div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-3xl border border-white/10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="flame" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-black font-mono text-rose-400">{{ $user->streak_count ?? 0 }} Hari</div>
+                    <div class="text-[11px] text-zinc-400 uppercase font-bold">Streak Nonton Harian</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Badges Showcase Section -->
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="award" class="w-5 h-5 text-amber-400"></i>
+                        <span>Koleksi Lencana Sinema</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400 mt-0.5">Lencana yang Anda peroleh berdasarkan aktivitas menonton di faiilmov</p>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-dark-900/80 border border-white/10 overflow-x-auto text-xs">
+                    <button @click="badgeCategory = 'all'" :class="badgeCategory === 'all' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap">Semua</button>
+                    <button @click="badgeCategory = 'milestone'" :class="badgeCategory === 'milestone' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap">Pencapaian</button>
+                    <button @click="badgeCategory = 'genre'" :class="badgeCategory === 'genre' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap">Genre</button>
+                    <button @click="badgeCategory = 'habit'" :class="badgeCategory === 'habit' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap">Kebiasaan</button>
+                    <button @click="badgeCategory = 'community'" :class="badgeCategory === 'community' ? 'bg-white text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'" class="px-3 py-1 rounded-xl transition-all cursor-pointer whitespace-nowrap">Komunitas</button>
+                </div>
+            </div>
+
+            <!-- Badges Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($allBadges as $badge)
+                    @php $isUnlocked = in_array($badge->id, $unlockedBadgeIds); @endphp
+                    <div x-show="badgeCategory === 'all' || badgeCategory === '{{ $badge->category }}'" 
+                         class="glass-card rounded-2xl p-4 border transition-all flex items-start gap-4 {{ $isUnlocked ? 'border-amber-500/40 bg-amber-500/5 shadow-md' : 'border-white/10 opacity-60 bg-dark-900/60' }}">
+                        
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border {{ $isUnlocked ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500' }}">
+                            <i data-lucide="{{ $badge->lucide_icon }}" class="w-6 h-6"></i>
+                        </div>
+
+                        <div class="space-y-1 min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-1">
+                                <h4 class="font-bold text-xs text-white truncate">{{ $badge->name }}</h4>
+                                @if($isUnlocked)
+                                    <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase">Terbuka</span>
+                                @else
+                                    <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 text-[9px] font-bold">Terkunci</span>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-zinc-400 leading-relaxed">{{ $badge->description }}</p>
+                            <div class="text-[10px] font-mono font-bold text-amber-400 pt-1">
+                                +{{ $badge->xp_reward }} XP Reward
+                            </div>
+                        </div>
+
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Recent XP Logs Table -->
+        @if($recentXpLogs->count() > 0)
+            <div class="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="activity" class="w-4 h-4 text-amber-400"></i>
+                    <span>Riwayat Perolehan XP Terbaru</span>
+                </h3>
+
+                <div class="divide-y divide-white/5">
+                    @foreach($recentXpLogs as $log)
+                        <div class="py-3 flex items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-300">
+                                    @if($log->source === 'watch_time')
+                                        <i data-lucide="clock" class="w-4 h-4 text-cyan-400"></i>
+                                    @elseif($log->source === 'daily_streak')
+                                        <i data-lucide="flame" class="w-4 h-4 text-rose-400"></i>
+                                    @elseif($log->source === 'review')
+                                        <i data-lucide="pen-tool" class="w-4 h-4 text-blue-400"></i>
+                                    @elseif($log->source === 'comment')
+                                        <i data-lucide="message-square" class="w-4 h-4 text-teal-400"></i>
+                                    @elseif($log->source === 'watch_party')
+                                        <i data-lucide="users" class="w-4 h-4 text-purple-400"></i>
+                                    @else
+                                        <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white">
+                                        @if($log->source === 'watch_time')
+                                            Menonton: {{ $log->metadata['film_title'] ?? 'Film / Series' }}
+                                        @elseif($log->source === 'daily_streak')
+                                            Bonus Streak Hari ke-{{ $log->metadata['streak_day'] ?? 1 }}
+                                        @elseif($log->source === 'review')
+                                            Ulasan Film: {{ $log->metadata['film_title'] ?? '' }}
+                                        @elseif($log->source === 'comment')
+                                            Komentar Diskusi Episode
+                                        @elseif($log->source === 'watch_party')
+                                            Sesi Watch Party
+                                        @elseif($log->source === 'badge_unlock')
+                                            Buka Lencana: {{ $log->metadata['badge_name'] ?? '' }}
+                                        @else
+                                            Aktivitas Sinematik
+                                        @endif
+                                    </div>
+                                    <div class="text-[10px] text-zinc-500">{{ $log->created_at->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                            <div class="font-mono font-black text-amber-400 text-sm">
+                                +{{ $log->amount }} XP
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+    </div>
+
+    <!-- Tab 6: Account & Security Settings -->
     <div x-show="tab === 'settings'" style="display: none;">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Edit Profile Form -->

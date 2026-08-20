@@ -19,6 +19,80 @@ import VisualSearchModal from './components/search/VisualSearchModal';
 import CollectionStudioEditor from './components/collections/CollectionStudioEditor';
 import EpisodeComments from './components/EpisodeComments';
 import SpoilerText from './components/SpoilerText';
+import GlobalModal from './components/GlobalModal';
+import { createMorph } from 'morphicons/dom';
+import * as LucideIcons from 'lucide';
+
+// Expose Morphicons & Lucide Icons globally
+window.createMorph = createMorph;
+window.morphIcons = LucideIcons;
+
+// Register Alpine x-morph directive
+Alpine.directive('morph', (el, { expression, modifiers }, { evaluateLater, effect, cleanup }) => {
+  let pathEl;
+
+  if (el.tagName.toLowerCase() === 'svg') {
+    el.innerHTML = '';
+    pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.appendChild(pathEl);
+  } else if (el.tagName.toLowerCase() === 'path') {
+    pathEl = el;
+  } else {
+    el.innerHTML = '';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', el.getAttribute('data-stroke-width') || '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('class', 'w-full h-full');
+    pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svg.appendChild(pathEl);
+    el.appendChild(svg);
+  }
+
+  const getIconData = (iconVal) => {
+    if (!iconVal) return null;
+    if (typeof iconVal === 'string') {
+      return LucideIcons[iconVal] || null;
+    }
+    return iconVal;
+  };
+
+  // Default spring physics preset to 'bouncy'
+  let springPreset = 'bouncy';
+  if (modifiers.includes('smooth')) springPreset = 'smooth';
+  else if (modifiers.includes('snappy')) springPreset = 'snappy';
+  else if (modifiers.includes('bouncy')) springPreset = 'bouncy';
+  else if (modifiers.includes('superbounce')) springPreset = { k: 260, c: 10 };
+
+  let morphInstance = null;
+  let currentTarget = null;
+  const getValue = evaluateLater(expression);
+
+  effect(() => {
+    getValue((val) => {
+      const targetIcon = getIconData(val);
+      if (!targetIcon || !pathEl) return;
+
+      if (!morphInstance) {
+        currentTarget = targetIcon;
+        morphInstance = createMorph(pathEl, targetIcon);
+      } else if (currentTarget !== targetIcon) {
+        currentTarget = targetIcon;
+        morphInstance.morphTo(targetIcon, springPreset);
+      }
+    });
+  });
+
+  cleanup(() => {
+    if (morphInstance) {
+      morphInstance.destroy();
+      morphInstance = null;
+    }
+  });
+});
 
 // Make initEcho available globally and auto-initialize Echo
 window.initEcho = initEcho;
@@ -360,6 +434,22 @@ function initReactComponents() {
       console.error('Failed to mount SpoilerText', e);
     }
   });
+
+  // 16. Mount Global React Modal System (Auto-append container if not present)
+  let globalModalEl = document.getElementById('react-global-modal');
+  if (!globalModalEl && document.body) {
+    globalModalEl = document.createElement('div');
+    globalModalEl.id = 'react-global-modal';
+    document.body.appendChild(globalModalEl);
+  }
+  if (globalModalEl && !globalModalEl.dataset.mounted) {
+    try {
+      globalModalEl.dataset.mounted = 'true';
+      createRoot(globalModalEl).render(<GlobalModal />);
+    } catch (e) {
+      console.error('Failed to mount GlobalModal', e);
+    }
+  }
 }
 
 // Auto mount when DOM is ready

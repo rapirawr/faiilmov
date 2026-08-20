@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'is_admin', 'is_ad_free', 'is_banned', 'banned_reason', 'banned_until', 'parental_pin', 'max_allowed_rating', 'has_seen_welcome_modal', 'provider', 'provider_id', 'email_verified_at', 'last_active_at'])]
+#[Fillable(['name', 'email', 'password', 'avatar', 'bio', 'phone', 'role', 'is_admin', 'is_ad_free', 'is_banned', 'banned_reason', 'banned_until', 'parental_pin', 'max_allowed_rating', 'has_seen_welcome_modal', 'provider', 'provider_id', 'email_verified_at', 'last_active_at', 'xp_total', 'current_level', 'streak_count', 'last_watch_date', 'is_anonymous_leaderboard'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -42,9 +42,44 @@ class User extends Authenticatable
         return $query->where('last_active_at', '>=', now()->startOfDay());
     }
 
+    /**
+     * Check if user is either an Admin or an Administrator.
+     */
     public function isAdmin(): bool
     {
-        return (bool) $this->is_admin;
+        return in_array($this->role, ['admin', 'administrator', 'superadmin'], true) || (bool) $this->is_admin;
+    }
+
+    /**
+     * Check if user is a full Administrator (Superadmin).
+     */
+    public function isAdministrator(): bool
+    {
+        return in_array($this->role, ['administrator', 'superadmin'], true) 
+            || ((bool) $this->is_admin && $this->role !== 'admin');
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isAdministrator();
+    }
+
+    public function hasRole(string|array $roles): bool
+    {
+        $roles = (array) $roles;
+        if ($this->isAdministrator()) {
+            return true;
+        }
+        return in_array($this->role, $roles, true);
+    }
+
+    public function getRoleLabelAttribute(): string
+    {
+        return match ($this->role) {
+            'administrator', 'superadmin' => 'Administrator',
+            'admin' => 'Admin',
+            default => 'Pengguna',
+        };
     }
 
     public function isAdFree(): bool
@@ -169,4 +204,48 @@ class User extends Authenticatable
     {
         $this->notify(new ResetPasswordNotification($token));
     }
+
+    public function xpLogs()
+    {
+        return $this->hasMany(UserXpLog::class);
+    }
+
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')
+            ->withPivot('unlocked_at');
+    }
+
+    /**
+     * Get computed level info array
+     */
+    public function getLevelInfoAttribute(): array
+    {
+        return app(\App\Services\GamificationService::class)->calculateLevelInfo((int)($this->xp_total ?? 0));
+    }
+
+    /**
+     * Get tier title (e.g. Cinephile Buff)
+     */
+    public function getLevelTitleAttribute(): string
+    {
+        return $this->level_info['title'] ?? 'Film Novice';
+    }
+
+    /**
+     * Get tier Lucide icon name
+     */
+    public function getLevelIconAttribute(): string
+    {
+        return $this->level_info['icon'] ?? 'film';
+    }
+
+    /**
+     * Get tier badge CSS classes
+     */
+    public function getLevelBadgeClassAttribute(): string
+    {
+        return $this->level_info['bg_class'] ?? 'bg-zinc-700/40 text-zinc-300 border-zinc-600/40';
+    }
 }
+

@@ -16,6 +16,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Preload Chillax Brand Font -->
+    <link rel="preload" href="{{ asset('fonts/chillax/Chillax-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Chillax Font Definition -->
+    <style>
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Variable.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Variable.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Variable.ttf') }}') format('truetype');
+            font-weight: 200 700;
+            font-display: swap;
+            font-style: normal;
+        }
+        .font-chillax {
+            font-family: 'Chillax', 'Outfit', sans-serif !important;
+        }
+    </style>
+    
     <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     
@@ -76,7 +95,7 @@
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
                         <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 shrink-0">
                         <div>
-                            <h1 class="font-extrabold text-sm tracking-wider text-white uppercase font-['Outfit'] group-hover:text-amber-400 transition-colors">FAIILMOV</h1>
+                            <h1 class="font-chillax font-bold text-base tracking-tight text-white group-hover:text-amber-400 transition-colors">faiilmov</h1>
                             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">ADMIN PANEL</p>
                         </div>
                     </a>
@@ -335,6 +354,21 @@
                                     <span>Broadcast Notifikasi</span>
                                 </a>
                             </div>
+
+                            <!-- Gamification & Badges CMS -->
+                            <div x-show="matches('Gamification Badges Lencana XP Leaderboard Peringkat Wrapped Cinephile')" class="relative flex items-center">
+                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                <a href="{{ route('admin.gamification.index') }}" 
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.gamification.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                                        <span>Gamification & Badges</span>
+                                    </div>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                        XP
+                                    </span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -351,31 +385,33 @@
                                 <span>Sistem & Log</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">8</span>
+                                <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold flex items-center justify-center">{{ Auth::user()?->isAdministrator() ? '8' : '2' }}</span>
                                 <i data-lucide="chevron-up" :class="open ? '' : 'rotate-180'" class="w-4 h-4 text-zinc-400 transition-transform duration-200"></i>
                             </div>
                         </button>
 
                         <div x-show="open" class="ml-6 pl-3 border-l border-zinc-800 space-y-1 py-1">
-                            <!-- API Tester & Docs -->
-                            <div x-show="matches('API Tester Docs Endpoint Swagger Dokumentasi')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.api_tester.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="terminal" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>API Tester & Docs</span>
-                                </a>
-                            </div>
+                            @if(Auth::user()?->isAdministrator())
+                                <!-- API Tester & Docs -->
+                                <div x-show="matches('API Tester Docs Endpoint Swagger Dokumentasi')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.api_tester.index') }}" 
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <i data-lucide="terminal" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>API Tester & Docs</span>
+                                    </a>
+                                </div>
 
-                            <!-- PHP Script Runner -->
-                            <div x-show="matches('PHP Script Runner Eksekusi Script Terminal Artisan')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.scripts.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.scripts.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="code" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>PHP Script Runner</span>
-                                </a>
-                            </div>
+                                <!-- PHP Script Runner -->
+                                <div x-show="matches('PHP Script Runner Eksekusi Script Terminal Artisan')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.scripts.index') }}" 
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.scripts.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <i data-lucide="code" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>PHP Script Runner</span>
+                                    </a>
+                                </div>
+                            @endif
 
                             <!-- Changelog & Updates -->
                             <div x-show="matches('Changelog & Updates Rilis Versi Pembaruan Update')" class="relative flex items-center">
@@ -397,50 +433,52 @@
                                 </a>
                             </div>
 
-                            <!-- Rilis APK Mobile -->
-                            <div x-show="matches('Rilis APK Mobile Download Android App Release')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.app_release.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="smartphone" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>Rilis APK Mobile</span>
-                                </a>
-                            </div>
+                            @if(Auth::user()?->isAdministrator())
+                                <!-- Rilis APK Mobile -->
+                                <div x-show="matches('Rilis APK Mobile Download Android App Release')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.app_release.index') }}" 
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <i data-lucide="smartphone" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Rilis APK Mobile</span>
+                                    </a>
+                                </div>
 
-                            <!-- Kelola Menu Sidebar -->
-                            <div x-show="matches('Kelola Menu Sidebar Navigasi Navigation Urutan')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.navigation.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.navigation.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>Kelola Menu Sidebar</span>
-                                </a>
-                            </div>
+                                <!-- Kelola Menu Sidebar -->
+                                <div x-show="matches('Kelola Menu Sidebar Navigasi Navigation Urutan')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.navigation.index') }}" 
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.navigation.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Kelola Menu Sidebar</span>
+                                    </a>
+                                </div>
 
-                            <!-- Pengaturan Umum -->
-                            <div x-show="matches('Pengaturan Umum Settings Konfigurasi Web Website')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.settings.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="sliders" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>Pengaturan Umum</span>
-                                </a>
-                            </div>
+                                <!-- Pengaturan Umum -->
+                                <div x-show="matches('Pengaturan Umum Settings Konfigurasi Web Website')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.settings.index') }}" 
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <i data-lucide="sliders" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Pengaturan Umum</span>
+                                    </a>
+                                </div>
 
-                            <!-- Manajemen Iklan -->
-                            <div x-show="matches('Manajemen Iklan Ads Adsterra Banner Popunder Socialbar')" class="relative flex items-center">
-                                <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
-                                <a href="{{ route('admin.ads.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <div class="flex items-center gap-2.5">
-                                        <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-400"></i>
-                                        <span>Manajemen Iklan</span>
-                                    </div>
-                                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                        ADS
-                                    </span>
-                                </a>
-                            </div>
+                                <!-- Manajemen Iklan -->
+                                <div x-show="matches('Manajemen Iklan Ads Adsterra Banner Popunder Socialbar')" class="relative flex items-center">
+                                    <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
+                                    <a href="{{ route('admin.ads.index') }}" 
+                                       class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-400"></i>
+                                            <span>Manajemen Iklan</span>
+                                        </div>
+                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                            ADS
+                                        </span>
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -466,8 +504,15 @@
                             {{ strtoupper(substr(Auth::user()?->name ?? 'RA', 0, 2)) }}
                         </div>
                         <div class="min-w-0">
-                            <p class="font-bold text-white text-xs truncate">{{ Auth::user()?->name ?? 'Rafi Af' }}</p>
-                            <p class="text-[11px] text-zinc-400 truncate">{{ Auth::user()?->email ?? 'rabdillahf09@gmail.com' }}</p>
+                            <div class="flex items-center gap-1.5">
+                                <p class="font-bold text-white text-xs truncate">{{ Auth::user()?->name ?? 'Admin' }}</p>
+                                @if(Auth::user()?->isAdministrator())
+                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Superadmin</span>
+                                @else
+                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30">Admin</span>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-zinc-400 truncate">{{ Auth::user()?->email }}</p>
                         </div>
                     </div>
                     
@@ -650,6 +695,9 @@
 
         </div>
     </div>
+
+    <!-- React Global Modal Portal Container -->
+    <div id="react-global-modal"></div>
 
     @stack('scripts')
 

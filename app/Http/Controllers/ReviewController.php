@@ -39,7 +39,20 @@ class ReviewController extends Controller
 
         $film->updateAverageRating();
 
-        return back()->with('success', 'Ulasan dan rating berhasil disimpan!');
+        // Award Cinephile XP
+        try {
+            app(\App\Services\GamificationService::class)->awardXp(
+                Auth::user(),
+                50,
+                'review',
+                null,
+                ['film_id' => $film->id, 'film_title' => $film->title, 'rating' => $validated['rating']]
+            );
+        } catch (\Exception $e) {
+            \Log::error('Gamification review XP error: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Ulasan berhasil disimpan! +50 Cinephile XP diperoleh.');
     }
 
     public function destroy(Review $review)

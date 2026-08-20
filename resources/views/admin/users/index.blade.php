@@ -28,6 +28,26 @@
             <span class="font-extrabold text-emerald-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['active'] ?? 0) }}</span>
         </a>
 
+        <!-- Administrator (Superadmin) Shortcut -->
+        <a href="{{ route('admin.users.index', ['status' => 'administrator']) }}" 
+           class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'administrator' ? 'border-amber-500/50 bg-amber-500/15' : 'border-zinc-800 hover:border-amber-500/30' }}">
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-400 font-semibold group-hover:text-amber-300 transition-colors">Administrator</span>
+                <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+            </div>
+            <span class="font-extrabold text-amber-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['administrator'] ?? 0) }}</span>
+        </a>
+
+        <!-- Admin Konten Shortcut -->
+        <a href="{{ route('admin.users.index', ['status' => 'admin']) }}" 
+           class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'admin' ? 'border-sky-500/50 bg-sky-500/15' : 'border-zinc-800 hover:border-sky-500/30' }}">
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-400 font-semibold group-hover:text-sky-300 transition-colors">Admin Konten</span>
+                <i data-lucide="shield" class="w-4 h-4 text-sky-400"></i>
+            </div>
+            <span class="font-extrabold text-sky-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['admin'] ?? 0) }}</span>
+        </a>
+
         <!-- Ad-Free Users Shortcut -->
         <a href="{{ route('admin.users.index', ['status' => 'ad_free']) }}" 
            class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'ad_free' ? 'border-amber-400/50 bg-amber-400/10' : 'border-zinc-800 hover:border-amber-400/30' }}">
@@ -42,30 +62,10 @@
         <a href="{{ route('admin.users.index', ['status' => 'banned']) }}" 
            class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'banned' ? 'border-rose-500/40 bg-rose-500/10' : 'border-zinc-800 hover:border-rose-500/30' }}">
             <div class="flex items-center justify-between">
-                <span class="text-zinc-400 font-semibold group-hover:text-rose-300 transition-colors">Pengguna Banned</span>
+                <span class="text-zinc-400 font-semibold group-hover:text-rose-300 transition-colors">Banned</span>
                 <i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i>
             </div>
             <span class="font-extrabold text-rose-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['banned'] ?? 0) }}</span>
-        </a>
-
-        <!-- Admin Role Shortcut -->
-        <a href="{{ route('admin.users.index', ['status' => 'admin']) }}" 
-           class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'admin' ? 'border-amber-500/40 bg-amber-500/10' : 'border-zinc-800 hover:border-amber-500/30' }}">
-            <div class="flex items-center justify-between">
-                <span class="text-zinc-400 font-semibold group-hover:text-amber-300 transition-colors">Administrator</span>
-                <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-            </div>
-            <span class="font-extrabold text-amber-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['admin'] ?? 0) }}</span>
-        </a>
-
-        <!-- Trashed / Soft Deleted Shortcut -->
-        <a href="{{ route('admin.users.index', ['status' => 'trashed']) }}" 
-           class="p-4 rounded-2xl bg-zinc-900/90 border transition-all flex flex-col justify-between hover:scale-[1.01] shadow-md group {{ request('status') === 'trashed' ? 'border-rose-500/40 bg-rose-500/10' : 'border-zinc-800 hover:border-rose-500/30' }}">
-            <div class="flex items-center justify-between">
-                <span class="text-zinc-400 font-semibold group-hover:text-rose-300 transition-colors">Sampah / Dihapus</span>
-                <i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i>
-            </div>
-            <span class="font-extrabold text-rose-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['trashed'] ?? 0) }}</span>
         </a>
     </div>
 
@@ -89,11 +89,13 @@
                     :options="[
                         '' => 'Semua Pengguna Aktif',
                         'active' => 'Aktif (Tidak Dibanned)',
-                        'ad_free' => 'Bebas Iklan (No Ads)',
-                        'banned' => 'Banned / Suspend',
-                        'admin' => 'Administrator',
-                        'trashed' => 'Dihapus (Soft Deleted)',
-                        'all_with_trashed' => 'Semua (Termasuk Terhapus)',
+                        'administrator' => '👑 Administrator (Superadmin)',
+                        'admin' => '🛡️ Admin Konten',
+                        'user' => '👤 Pengguna Biasa',
+                        'ad_free' => '✨ Bebas Iklan (No Ads)',
+                        'banned' => '🚫 Banned / Suspend',
+                        'trashed' => '🗑️ Dihapus (Soft Deleted)',
+                        'all_with_trashed' => '🌐 Semua (Termasuk Terhapus)',
                     ]" 
                     placeholder="Semua Pengguna" 
                     :autoSubmit="true"
@@ -118,106 +120,83 @@
     <!-- Users Table Container with Sticky Header & Zebra Hover -->
     <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="overflow-x-auto max-h-[75vh] scrollbar-thin">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 sticky top-0 z-20 backdrop-blur-md tracking-wider">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-zinc-950/95 sticky top-0 z-10 border-b border-zinc-800 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                     <tr>
+                        <th class="px-4 py-3.5">ID</th>
                         <th class="px-4 py-3.5">Pengguna</th>
-                        <th class="px-4 py-3.5">Role</th>
+                        <th class="px-4 py-3.5">Role / Akses</th>
                         <th class="px-4 py-3.5">Bebas Iklan</th>
                         <th class="px-4 py-3.5">Ulasan</th>
                         <th class="px-4 py-3.5">Watchlist</th>
-                        <th class="px-4 py-3.5">Tgl Terdaftar</th>
-                        <th class="px-4 py-3.5">Status Akun</th>
+                        <th class="px-4 py-3.5">Bergabung</th>
+                        <th class="px-4 py-3.5">Status</th>
                         <th class="px-4 py-3.5 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-800/60">
                     @forelse($users as $user)
-                        <tr class="hover:bg-zinc-800/40 transition-colors group {{ $user->trashed() ? 'opacity-65 bg-rose-500/[0.02]' : '' }}">
-                            <td class="px-4 py-3.5 flex items-center gap-3">
-                                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" 
-                                     class="w-9 h-9 rounded-full object-cover border border-zinc-700 shrink-0 bg-zinc-950 {{ $user->trashed() ? 'grayscale' : '' }}" 
-                                     onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
+                        <tr class="hover:bg-zinc-800/40 transition-colors {{ $user->trashed() ? 'opacity-60 bg-rose-950/10' : '' }}">
+                            <td class="px-4 py-3.5 font-mono text-zinc-500 font-bold">
+                                #{{ $user->id }}
+                            </td>
+                            <td class="px-4 py-3.5">
                                 <div class="min-w-0">
-                                    <p class="font-bold text-white text-xs line-clamp-1 flex items-center gap-1.5">
-                                        <span class="{{ $user->trashed() ? 'line-through text-zinc-400' : '' }}">{{ $user->name }}</span>
-                                        @if($user->isAdmin())
-                                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400 shrink-0" title="Administrator"></i>
-                                        @endif
-                                        @if($user->is_ad_free)
-                                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0" title="Akun Bebas Iklan"></i>
+                                    <p class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                                        <span>{{ $user->name }}</span>
+                                        @if($user->trashed())
+                                            <span class="text-[9px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 font-mono">Dihapus</span>
                                         @endif
                                     </p>
                                     <p class="text-[11px] text-zinc-400 truncate">{{ $user->email }}</p>
                                 </div>
                             </td>
                             <td class="px-4 py-3.5">
-                                <div x-data="{ roleModal: false }">
-                                    @if($user->id === auth()->id())
-                                        <span class="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30 flex items-center gap-1.5 w-max" title="Akun Anda Saat Ini">
+                                @if($user->id === auth()->id())
+                                    <span class="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30 flex items-center gap-1.5 w-max" title="Akun Anda Saat Ini">
+                                        <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
+                                        <span>{{ $user->isAdministrator() ? 'Superadmin (Anda)' : 'Admin (Anda)' }}</span>
+                                    </span>
+                                @elseif($user->trashed() || !auth()->user()->isAdministrator())
+                                    @if($user->isAdministrator())
+                                        <span class="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-300 font-bold text-[10px] border border-amber-500/30 flex items-center gap-1.5 w-max">
                                             <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
-                                            <span>Admin (Anda)</span>
+                                            <span>Administrator</span>
                                         </span>
-                                    @elseif($user->trashed())
-                                        <span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-medium text-[10px] border border-zinc-700/50">
-                                            {{ $user->isAdmin() ? 'Admin' : 'Pengguna' }}
+                                    @elseif($user->role === 'admin')
+                                        <span class="px-2.5 py-1 rounded-xl bg-sky-500/15 text-sky-300 font-bold text-[10px] border border-sky-500/30 flex items-center gap-1.5 w-max">
+                                            <i data-lucide="shield" class="w-3 h-3 text-sky-400"></i>
+                                            <span>Admin Konten</span>
                                         </span>
                                     @else
-                                        <button type="button" 
-                                                @click="roleModal = true"
-                                                class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all flex items-center gap-1.5 cursor-pointer {{ $user->isAdmin() ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25 shadow-sm' : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60 hover:text-white hover:border-zinc-500' }}"
-                                                title="Klik untuk mengubah role akun ini (Admin / Pengguna)">
-                                            <i data-lucide="{{ $user->isAdmin() ? 'crown' : 'user' }}" class="w-3 h-3 {{ $user->isAdmin() ? 'text-amber-400' : 'text-zinc-500' }}"></i>
-                                            <span>{{ $user->isAdmin() ? 'Admin' : 'Pengguna' }}</span>
-                                            <i data-lucide="chevrons-up-down" class="w-2.5 h-2.5 opacity-60"></i>
-                                        </button>
-
-                                        <!-- Role Change Confirmation Modal -->
-                                        <div x-show="roleModal" x-cloak 
-                                             x-transition:enter="transition ease-out duration-200"
-                                             x-transition:enter-start="opacity-0 scale-95"
-                                             x-transition:enter-end="opacity-100 scale-100"
-                                             x-transition:leave="transition ease-in duration-150"
-                                             x-transition:leave-start="opacity-100 scale-100"
-                                             x-transition:leave-end="opacity-0 scale-95"
-                                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                                            <div @click.away="roleModal = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl">
-                                                <div class="flex items-center gap-3 text-amber-400 border-b border-zinc-800 pb-3">
-                                                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-                                                        <i data-lucide="{{ $user->isAdmin() ? 'shield-minus' : 'shield-check' }}" class="w-5 h-5 text-amber-400"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h4 class="font-bold text-white text-sm font-['Outfit']">
-                                                            {{ $user->isAdmin() ? 'Cabut Akses Administrator' : 'Jadikan Pengguna sebagai Admin' }}
-                                                        </h4>
-                                                        <p class="text-[11px] text-zinc-400">Konfirmasi perubahan hak akses</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <p class="text-xs text-zinc-300 leading-relaxed">
-                                                    @if($user->isAdmin())
-                                                        Apakah Anda yakin ingin mencabut hak akses Admin untuk pengguna <strong class="text-white">{{ $user->name }}</strong> ({{ $user->email }})? Akun ini tidak akan dapat mengakses panel Admin lagi.
-                                                    @else
-                                                        Apakah Anda yakin ingin mengangkat <strong class="text-white">{{ $user->name }}</strong> ({{ $user->email }}) menjadi <strong>Administrator</strong>? Akun ini akan memiliki akses penuh ke seluruh pengelolaan film, iklan, dan pengaturan situs.
-                                                    @endif
-                                                </p>
-
-                                                <form action="{{ route('admin.users.toggle_admin', $user->id) }}" method="POST" class="pt-2">
-                                                    @csrf
-                                                    <div class="flex justify-end gap-2.5 pt-3 border-t border-zinc-800">
-                                                        <button type="button" @click="roleModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">
-                                                            Batal
-                                                        </button>
-                                                        <button type="submit" class="px-4 py-2 rounded-xl {{ $user->isAdmin() ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20' : 'bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-amber-500/20' }} text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center gap-1.5">
-                                                            <i data-lucide="{{ $user->isAdmin() ? 'shield-minus' : 'crown' }}" class="w-3.5 h-3.5"></i>
-                                                            <span>{{ $user->isAdmin() ? 'Cabut Akses Admin' : 'Jadikan Admin' }}</span>
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-medium text-[10px] border border-zinc-700/50">
+                                            Pengguna
+                                        </span>
                                     @endif
-                                </div>
+                                @else
+                                    <!-- Interactive Role Switcher Trigger (Powered by React GlobalModal) -->
+                                    <button type="button" 
+                                            data-modal-role
+                                            data-user-id="{{ $user->id }}"
+                                            data-user-name="{{ $user->name }}"
+                                            data-user-email="{{ $user->email }}"
+                                            data-current-role="{{ $user->isAdministrator() ? 'administrator' : ($user->role === 'admin' ? 'admin' : 'user') }}"
+                                            data-action="{{ route('admin.users.update_role', $user->id) }}"
+                                            class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all flex items-center gap-1.5 cursor-pointer {{ $user->isAdministrator() ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25 shadow-sm' : ($user->role === 'admin' ? 'bg-sky-500/15 text-sky-300 border-sky-500/30 hover:bg-sky-500/25 shadow-sm' : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60 hover:text-white hover:border-zinc-500') }}"
+                                            title="Klik untuk mengubah role akun ini">
+                                        @if($user->isAdministrator())
+                                            <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
+                                            <span>Administrator</span>
+                                        @elseif($user->role === 'admin')
+                                            <i data-lucide="shield" class="w-3 h-3 text-sky-400"></i>
+                                            <span>Admin Konten</span>
+                                        @else
+                                            <i data-lucide="user" class="w-3 h-3 text-zinc-500"></i>
+                                            <span>Pengguna</span>
+                                        @endif
+                                        <i data-lucide="chevrons-up-down" class="w-2.5 h-2.5 opacity-60"></i>
+                                    </button>
+                                @endif
                             </td>
                             <td class="px-4 py-3.5">
                                 <form action="{{ route('admin.users.toggle_ad_free', $user->id) }}" method="POST">

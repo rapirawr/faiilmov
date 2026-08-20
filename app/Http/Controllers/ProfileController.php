@@ -56,7 +56,19 @@ class ProfileController extends Controller
 
         $filmRequests = $user->filmRequests()->with('matchedFilm')->orderByDesc('created_at')->get();
 
-        return view('profile', compact('user', 'activeProfile', 'watchlists', 'reviews', 'watchHistories', 'totalHoursWatched', 'topGenre', 'filmRequests'));
+        // Gamification & Cinephile Level Stats
+        $gamificationService = app(\App\Services\GamificationService::class);
+        $levelInfo = $gamificationService->calculateLevelInfo((int)$user->xp_total);
+        $allBadges = \App\Models\Badge::orderBy('category')->get();
+        $userBadges = $user->badges()->get();
+        $unlockedBadgeIds = $userBadges->pluck('id')->toArray();
+        $recentXpLogs = $user->xpLogs()->latest('created_at')->limit(8)->get();
+
+        return view('profile', compact(
+            'user', 'activeProfile', 'watchlists', 'reviews', 'watchHistories', 
+            'totalHoursWatched', 'topGenre', 'filmRequests',
+            'levelInfo', 'allBadges', 'userBadges', 'unlockedBadgeIds', 'recentXpLogs'
+        ));
     }
 
     public function update(Request $request)

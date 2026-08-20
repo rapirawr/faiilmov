@@ -14,6 +14,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MovieBoxController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\EpisodeCommentController;
+use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\MovieWrappedController;
 
 // Storage Symlink Utility Route for cPanel Deployment
 Route::get('/create-storage-link', function () {
@@ -49,6 +51,7 @@ Route::get('/genre/{slug}', [BrowseController::class, 'genre'])->name('genre.sho
 Route::get('/film/{slug}', [MovieDetailController::class, 'show'])->name('film.show');
 Route::get('/film/{slug}/watch', [MovieDetailController::class, 'watch'])->name('film.watch');
 Route::get('/api/series/comments', [EpisodeCommentController::class, 'index'])->name('api.series.comments');
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 
 // Smart Collections & User Studio (AI Curation & Drag-and-Drop Watch Order Studio)
 Route::get('/collections', [\App\Http\Controllers\CollectionController::class, 'index'])->name('collections.index');
@@ -212,6 +215,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/watch-history/clear-all', [ProfileController::class, 'clearHistory'])->name('watch-history.clear-all');
     Route::delete('/watch-history/{watchHistory}', [ProfileController::class, 'destroyHistory'])->name('watch-history.destroy');
 
+    // Gamification & Cinephile Wrapped
+    Route::post('/leaderboard/toggle-privacy', [LeaderboardController::class, 'togglePrivacy'])->name('leaderboard.toggle-privacy');
+    Route::get('/wrapped', [MovieWrappedController::class, 'index'])->name('wrapped');
+    Route::get('/api/wrapped/stats', [MovieWrappedController::class, 'apiStats'])->name('api.wrapped.stats');
+
     // Profiles (Multi-Profile)
     Route::get('/profiles', [ProfileSwitchController::class, 'index'])->name('profiles.index');
     Route::post('/profiles', [ProfileSwitchController::class, 'store'])->name('profiles.store');
@@ -338,13 +346,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // User Management
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
-    Route::post('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle_admin');
+    Route::post('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.update_role')->middleware('administrator');
+    Route::post('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle_admin')->middleware('administrator');
     Route::post('/users/{user}/toggle-ad-free', [AdminUserController::class, 'toggleAdFree'])->name('users.toggle_ad_free');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::post('/users/{id}/restore', [AdminUserController::class, 'restore'])->name('users.restore');
-    Route::delete('/users/{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('users.force_delete');
+    Route::delete('/users/{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('users.force_delete')->middleware('administrator');
 
     // Push Notifications Broadcast Center
     Route::get('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('notifications.index');
@@ -361,45 +370,60 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Activity Log
     Route::get('/activity-log', [AdminActivityLogController::class, 'index'])->name('activity_logs.index');
-    Route::delete('/activity-log/clear-old', [AdminActivityLogController::class, 'clearOldLogs'])->name('activity_logs.clear_old');
+    Route::delete('/activity-log/clear-old', [AdminActivityLogController::class, 'clearOldLogs'])->name('activity_logs.clear_old')->middleware('administrator');
+
+    // Gamification & Cinephile Badges CMS
+    Route::get('/gamification', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'index'])->name('gamification.index');
+    Route::post('/gamification/badges', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'storeBadge'])->name('gamification.badges.store');
+    Route::put('/gamification/badges/{badge}', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'updateBadge'])->name('gamification.badges.update');
+    Route::patch('/gamification/badges/{badge}/toggle', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'toggleBadge'])->name('gamification.badges.toggle');
+    Route::delete('/gamification/badges/{badge}', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'destroyBadge'])->name('gamification.badges.destroy');
+    Route::post('/gamification/settings', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'updateSettings'])->name('gamification.settings.update');
+    Route::post('/gamification/users/award-xp', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'awardUserXp'])->name('gamification.users.award_xp');
+    Route::post('/gamification/users/award-badge', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'awardUserBadge'])->name('gamification.users.award_badge');
+    Route::delete('/gamification/users/{user}/badges/{badge}', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'revokeUserBadge'])->name('gamification.users.revoke_badge');
+    Route::post('/gamification/recompute', [\App\Http\Controllers\Admin\AdminGamificationController::class, 'recomputeAll'])->name('gamification.recompute');
 
     // Changelog & System Updates Management
     Route::post('/changelogs/import', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'import'])->name('changelogs.import');
     Route::post('/changelogs/{changelog}/toggle-publish', [\App\Http\Controllers\Admin\AdminChangelogController::class, 'togglePublish'])->name('changelogs.toggle_publish');
     Route::resource('changelogs', \App\Http\Controllers\Admin\AdminChangelogController::class);
 
-    // Navigation Menu Management (Drag & Drop Reorder)
-    Route::get('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'index'])->name('navigation.index');
-    Route::post('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'update'])->name('navigation.update');
-    Route::post('/navigation/reset', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'reset'])->name('navigation.reset');
+    // ==================== RESTRICTED: SUPERADMIN / ADMINISTRATOR ONLY ====================
+    Route::middleware('administrator')->group(function () {
+        // Navigation Menu Management (Drag & Drop Reorder)
+        Route::get('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'index'])->name('navigation.index');
+        Route::post('/navigation', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'update'])->name('navigation.update');
+        Route::post('/navigation/reset', [\App\Http\Controllers\Admin\AdminNavigationController::class, 'reset'])->name('navigation.reset');
 
-    // Site Settings (CMS Global Settings & Configuration)
-    Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
-    Route::get('/api/settings', [AdminSettingController::class, 'apiGet'])->name('settings.api.get');
-    Route::put('/api/settings', [AdminSettingController::class, 'apiUpdate'])->name('settings.api.update');
-    Route::post('/api/settings/logo', [AdminSettingController::class, 'apiUploadLogo'])->name('settings.api.logo');
-    Route::delete('/api/settings/transition-gif', [AdminSettingController::class, 'apiDeleteTransitionGif'])->name('settings.api.transition_gif.delete');
+        // Site Settings (CMS Global Settings & Configuration)
+        Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+        Route::get('/api/settings', [AdminSettingController::class, 'apiGet'])->name('settings.api.get');
+        Route::put('/api/settings', [AdminSettingController::class, 'apiUpdate'])->name('settings.api.update');
+        Route::post('/api/settings/logo', [AdminSettingController::class, 'apiUploadLogo'])->name('settings.api.logo');
+        Route::delete('/api/settings/transition-gif', [AdminSettingController::class, 'apiDeleteTransitionGif'])->name('settings.api.transition_gif.delete');
 
-    // Ads Management (Adsterra & Monetization)
-    Route::get('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'index'])->name('ads.index');
-    Route::post('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'update'])->name('ads.update');
+        // Ads Management (Adsterra & Monetization)
+        Route::get('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'index'])->name('ads.index');
+        Route::post('/ads', [\App\Http\Controllers\Admin\AdminAdController::class, 'update'])->name('ads.update');
 
-    // Custom PHP Script Runner & Saved Scripts
-    Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
-    Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');
-    Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->name('scripts.execute');
-    Route::post('/scripts/generate', [\App\Http\Controllers\Admin\AdminScriptController::class, 'generateScript'])->name('scripts.generate');
-    Route::delete('/scripts/{script}', [\App\Http\Controllers\Admin\AdminScriptController::class, 'destroy'])->name('scripts.destroy');
+        // Custom PHP Script Runner & Saved Scripts
+        Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
+        Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');
+        Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->name('scripts.execute');
+        Route::post('/scripts/generate', [\App\Http\Controllers\Admin\AdminScriptController::class, 'generateScript'])->name('scripts.generate');
+        Route::delete('/scripts/{script}', [\App\Http\Controllers\Admin\AdminScriptController::class, 'destroy'])->name('scripts.destroy');
 
-    // API Tester & Postman Suite
-    Route::get('/api-tester', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'index'])->name('api_tester.index');
-    Route::get('/api-tester/export-postman', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'exportPostman'])->name('api_tester.export_postman');
+        // API Tester & Postman Suite
+        Route::get('/api-tester', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'index'])->name('api_tester.index');
+        Route::get('/api-tester/export-postman', [\App\Http\Controllers\Admin\AdminApiTesterController::class, 'exportPostman'])->name('api_tester.export_postman');
 
-    // APK Mobile Release Management
-    Route::get('/app-release', [AdminAppReleaseController::class, 'index'])->name('app_release.index');
-    Route::post('/app-release', [AdminAppReleaseController::class, 'store'])->name('app_release.store');
-    Route::delete('/app-release/file/{filename}', [AdminAppReleaseController::class, 'destroyFile'])->name('app_release.destroy_file');
+        // APK Mobile Release Management
+        Route::get('/app-release', [AdminAppReleaseController::class, 'index'])->name('app_release.index');
+        Route::post('/app-release', [AdminAppReleaseController::class, 'store'])->name('app_release.store');
+        Route::delete('/app-release/file/{filename}', [AdminAppReleaseController::class, 'destroyFile'])->name('app_release.destroy_file');
+    });
 });
 
 // MovieBox API Proxy Routes (For Stream Player & Modal) - ADD RATE LIMITING    

@@ -48,8 +48,20 @@
                     @if($user->trashed())
                         <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-extrabold text-[10px] uppercase border border-rose-500/30">Terhapus</span>
                     @endif
-                    @if($user->isAdmin())
-                        <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30">Admin</span>
+                    @if($user->isAdministrator())
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-500/30 flex items-center gap-1">
+                            <i data-lucide="crown" class="w-3 h-3 text-amber-400"></i>
+                            <span>Administrator</span>
+                        </span>
+                    @elseif($user->role === 'admin')
+                        <span class="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-extrabold text-[10px] uppercase border border-sky-500/30 flex items-center gap-1">
+                            <i data-lucide="shield" class="w-3 h-3 text-sky-400"></i>
+                            <span>Admin Konten</span>
+                        </span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-medium text-[10px] border border-zinc-700/50">
+                            Pengguna Biasa
+                        </span>
                     @endif
                     @if($user->is_ad_free)
                         <span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-[10px] uppercase border border-amber-400/40 flex items-center gap-1">
@@ -78,17 +90,19 @@
                     </button>
                 </form>
 
-                @if($user->id !== auth()->id())
-                    <!-- Toggle Admin Role Button -->
-                    <form action="{{ route('admin.users.toggle_admin', $user->id) }}" method="POST" onsubmit="return confirm('{{ $user->isAdmin() ? "Cabut hak akses Administrator dari pengguna ini?" : "Angkat pengguna ini menjadi Administrator dengan akses penuh ke Admin Panel?" }}');">
-                        @csrf
-                        <button type="submit" 
-                                class="px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer {{ $user->isAdmin() ? 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/30' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/40 shadow-sm' }}"
-                                title="{{ $user->isAdmin() ? 'Cabut hak akses admin' : 'Angkat menjadi Administrator' }}">
-                            <i data-lucide="{{ $user->isAdmin() ? 'shield-minus' : 'crown' }}" class="w-4 h-4 {{ $user->isAdmin() ? 'text-rose-400' : 'text-amber-400' }}"></i>
-                            <span>{{ $user->isAdmin() ? 'Cabut Akses Admin' : 'Jadikan Admin' }}</span>
-                        </button>
-                    </form>
+                @if($user->id !== auth()->id() && auth()->user()->isAdministrator())
+                    <!-- Role Switcher Button (Powered by React GlobalModal) -->
+                    <button type="button" 
+                            data-modal-role
+                            data-user-id="{{ $user->id }}"
+                            data-user-name="{{ $user->name }}"
+                            data-user-email="{{ $user->email }}"
+                            data-current-role="{{ $user->isAdministrator() ? 'administrator' : ($user->role === 'admin' ? 'admin' : 'user') }}"
+                            data-action="{{ route('admin.users.update_role', $user->id) }}"
+                            class="px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-white/10 shadow-sm">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+                        <span>Ubah Role ({{ $user->getRoleLabelAttribute() }})</span>
+                    </button>
                 @endif
 
                 @if(!$user->isAdmin())

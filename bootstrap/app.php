@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'administrator' => \App\Http\Middleware\AdministratorMiddleware::class,
+            'superadmin' => \App\Http\Middleware\AdministratorMiddleware::class,
             'check.banned' => \App\Http\Middleware\CheckBannedMiddleware::class,
             'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
         ]);

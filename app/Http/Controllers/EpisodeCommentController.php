@@ -108,6 +108,19 @@ class EpisodeCommentController extends Controller
             'likes_count' => 0,
         ]);
 
+        // Award XP
+        try {
+            app(\App\Services\GamificationService::class)->awardXp(
+                Auth::user(),
+                15,
+                'comment',
+                null,
+                ['film_id' => $film->id, 'comment_id' => $comment->id]
+            );
+        } catch (\Exception $e) {
+            \Log::error('Gamification comment XP error: ' . $e->getMessage());
+        }
+
         $comment->load(['user:id,name,avatar', 'replies.user:id,name,avatar', 'likes']);
 
         return response()->json([

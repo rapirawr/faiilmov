@@ -38,8 +38,19 @@ class AdminUserController extends Controller
                 $query->where('is_banned', true);
             } elseif ($request->status === 'active') {
                 $query->where('is_banned', false);
+            } elseif ($request->status === 'administrator') {
+                $query->where(function ($q) {
+                    $q->where('role', 'administrator')
+                      ->orWhere(function ($sub) {
+                          $sub->where('is_admin', true)->where('role', '!=', 'admin');
+                      });
+                });
             } elseif ($request->status === 'admin') {
-                $query->where('is_admin', true);
+                $query->where('role', 'admin');
+            } elseif ($request->status === 'user') {
+                $query->where(function ($q) {
+                    $q->where('role', 'user')->orWhereNull('role');
+                })->where('is_admin', false);
             } elseif ($request->status === 'ad_free') {
                 $query->where('is_ad_free', true);
             }
@@ -49,15 +60,55 @@ class AdminUserController extends Controller
 
         // Statistical counts for the shortcut buttons
         $stats = [
-            'total'   => User::count(),
-            'active'  => User::where('is_banned', false)->count(),
-            'banned'  => User::where('is_banned', true)->count(),
-            'admin'   => User::where('is_admin', true)->count(),
-            'ad_free' => User::where('is_ad_free', true)->count(),
-            'trashed' => User::onlyTrashed()->count(),
+            'total'         => User::count(),
+            'active'        => User::where('is_banned', false)->count(),
+            'banned'        => User::where('is_banned', true)->count(),
+            'administrator' => User::where('role', 'administrator')->orWhere(fn($q) => $q->where('is_admin', true)->where('role', '!=', 'admin'))->count(),
+            'admin'         => User::where('role', 'admin')->count(),
+            'user'          => User::where(fn($q) => $q->where('role', 'user')->orWhereNull('role'))->where('is_admin', false)->count(),
+            'ad_free'       => User::where('is_ad_free', true)->count(),
+            'trashed'       => User::onlyTrashed()->count(),
         ];
 
         return view('admin.users.index', compact('users', 'stats'));
+    }
+
+    /**
+     * Update user role (user, admin, administrator). Only Superadmin/Administrator can perform this.
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        if (!auth()->user()->isAdministrator()) {
+            return redirect()->back()->with('error', 'Hanya Administrator Utama yang berhak mengubah role pengguna.');
+        }
+
+        $validated = $request->validate([
+            'role' => 'required|in:user,admin,administrator',
+        ]);
+
+        $newRole = $validated['role'];
+
+        if ($user->id === auth()->id() && $newRole !== 'administrator') {
+            $otherAdminCount = User::where('role', 'administrator')->where('id', '!=', $user->id)->count();
+            if ($otherAdminCount === 0) {
+                return redirect()->back()->with('error', 'Tidak dapat mencabut hak Administrator dari satu-satunya Administrator Utama di sistem.');
+            }
+        }
+
+        $user->update([
+            'role' => $newRole,
+            'is_admin' => in_array($newRole, ['admin', 'administrator'], true),
+        ]);
+
+        $roleLabel = match ($newRole) {
+            'administrator' => 'Administrator Utama',
+            'admin' => 'Admin Konten',
+            default => 'Pengguna Biasa',
+        };
+
+        AdminActivityLog::log('updated_user_role', "Mengubah role user '{$user->name}' ({$user->email}) menjadi {$roleLabel}.", 'User', $user->id);
+
+        return redirect()->back()->with('success', "Role pengguna '{$user->name}' berhasil diubah menjadi {$roleLabel}.");
     }
 
     /**
@@ -76,20 +127,25 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Toggle admin role for a specific user.
+     * Toggle admin role for backward compatibility.
      */
     public function toggleAdmin(User $user)
     {
+        if (!auth()->user()->isAdministrator()) {
+            return redirect()->back()->with('error', 'Hanya Administrator Utama yang berhak mengubah role pengguna.');
+        }
+
         if ($user->id === auth()->id()) {
             return redirect()->back()->with('error', 'Anda tidak dapat mencabut hak akses Administrator pada akun Anda sendiri.');
         }
 
-        $newRole = !$user->is_admin;
+        $newRole = $user->isAdmin() ? 'user' : 'admin';
         $user->update([
-            'is_admin' => $newRole,
+            'role' => $newRole,
+            'is_admin' => ($newRole !== 'user'),
         ]);
 
-        $roleText = $newRole ? 'Administrator' : 'Pengguna Biasa';
+        $roleText = ($newRole === 'admin') ? 'Admin Konten' : 'Pengguna Biasa';
         AdminActivityLog::log('updated_user_role', "Mengubah role user '{$user->name}' ({$user->email}) menjadi {$roleText}.", 'User', $user->id);
 
         return redirect()->back()->with('success', "Role pengguna '{$user->name}' berhasil diubah menjadi {$roleText}.");

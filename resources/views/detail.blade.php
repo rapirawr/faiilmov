@@ -125,9 +125,7 @@
                                 :disabled="isLoadingWatchlist"
                                 :class="inWatchlist ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'glass-card hover:border-white/20 text-white'"
                                 class="px-6 py-3 rounded-2xl text-xs font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer border border-white/10">
-                            <i :data-lucide="inWatchlist ? 'bookmark-check' : 'bookmark'" 
-                               :class="inWatchlist ? 'text-amber-300 fill-amber-300' : 'text-zinc-400'"
-                               class="w-4 h-4 transition-colors"></i>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 transition-colors" :class="inWatchlist ? 'text-amber-300' : 'text-zinc-400'" x-morph="inWatchlist ? 'BookmarkCheck' : 'Bookmark'"></svg>
                             <span x-text="inWatchlist ? 'Di Watchlist' : '+ Tambah ke Watchlist'"></span>
                         </button>
                     @else
@@ -192,11 +190,16 @@
                                     <span>Telegram</span>
                                 </button>
                                 <button type="button" @click="doShare('tw')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 transition-colors cursor-pointer">
-                                    <i data-lucide="twitter" class="w-3.5 h-3.5"></i>
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+                                        <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+                                    </svg>
                                     <span>Twitter / X</span>
                                 </button>
                                 <button type="button" @click="doShare('fb')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-colors cursor-pointer">
-                                    <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                    </svg>
                                     <span>Facebook</span>
                                 </button>
                             </div>
@@ -207,7 +210,7 @@
                                         <i data-lucide="link" class="w-3.5 h-3.5 text-amber-400"></i>
                                         <span x-text="copied ? 'Tautan Tersalin!' : 'Salin Tautan'"></span>
                                     </div>
-                                    <i data-lucide="copy" class="w-3 h-3 text-zinc-400"></i>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 transition-colors" :class="copied ? 'text-emerald-400' : 'text-zinc-400'" x-morph="copied ? 'Check' : 'Copy'"></svg>
                                 </button>
                             </div>
                         </div>

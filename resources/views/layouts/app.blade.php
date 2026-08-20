@@ -265,6 +265,9 @@
     <!-- Real-time Device Push Notification & In-App Toast Manager -->
     <x-device-notification-manager />
 
+    <!-- React Global Modal Portal Container -->
+    <div id="react-global-modal"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();

@@ -562,7 +562,11 @@
                         <!-- Instagram -->
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                                <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                                <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+                                </svg>
                                 <span>Instagram URL</span>
                             </label>
                             <input type="url" name="social_links[instagram]" value="{{ old('social_links.instagram', $socials['instagram'] ?? '') }}" 
@@ -573,7 +577,10 @@
                         <!-- Twitter / X -->
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                                <i data-lucide="twitter" class="w-3.5 h-3.5"></i>
+                                <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+                                    <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+                                </svg>
                                 <span>Twitter / X URL</span>
                             </label>
                             <input type="url" name="social_links[twitter]" value="{{ old('social_links.twitter', $socials['twitter'] ?? '') }}" 

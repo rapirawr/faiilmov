@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Spoiler } from 'spoiled';
+import { MorphIcon } from 'morphicons/react';
+import { 
+  Reply as ReplyIconData, 
+  X as XIconData, 
+  Eye as EyeIconData, 
+  EyeOff as EyeOffIconData 
+} from 'lucide';
 import { 
   MessageSquare, 
   Send, 
@@ -490,7 +497,7 @@ export default function EpisodeComments({
                   onChange={(e) => setIsSpoiler(e.target.checked)}
                   className="hidden"
                 />
-                <AlertTriangle className={`w-3.5 h-3.5 ${isSpoiler ? 'text-rose-400' : 'text-zinc-500'}`} />
+                <MorphIcon icon={isSpoiler ? EyeOffIconData : EyeIconData} size={14} strokeWidth={2} className={isSpoiler ? 'text-rose-400' : 'text-zinc-500'} />
                 <span>Mengandung Spoiler</span>
               </label>
             </div>
@@ -606,8 +613,8 @@ export default function EpisodeComments({
                         replyingTo === comment.id ? 'text-amber-300 font-bold' : ''
                       }`}
                     >
-                      <Reply className="w-3.5 h-3.5" />
-                      <span>Balas</span>
+                      <MorphIcon icon={replyingTo === comment.id ? XIconData : ReplyIconData} size={14} strokeWidth={2} />
+                      <span>{replyingTo === comment.id ? 'Batal' : 'Balas'}</span>
                     </button>
                   )}
                 </div>
@@ -651,7 +658,7 @@ export default function EpisodeComments({
                     <span>
                       Membalas <strong className="text-white">{comment.user?.name}</strong>
                     </span>
-                    <button type="button" onClick={() => setReplyingTo(null)} className="text-zinc-500 hover:text-white">
+                    <button type="button" onClick={() => setReplyingTo(null)} className="text-zinc-500 hover:text-white cursor-pointer">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -676,7 +683,7 @@ export default function EpisodeComments({
                       </button>
 
                       <label
-                        className={`px-2.5 py-1 rounded-lg text-[10px] border flex items-center gap-1 cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] border flex items-center gap-1 cursor-pointer transition-all ${
                           replyIsSpoiler ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold' : 'bg-white/5 text-zinc-400 border-white/10'
                         }`}
                       >
@@ -686,6 +693,7 @@ export default function EpisodeComments({
                           onChange={(e) => setReplyIsSpoiler(e.target.checked)}
                           className="hidden"
                         />
+                        <MorphIcon icon={replyIsSpoiler ? EyeOffIconData : EyeIconData} size={12} strokeWidth={2} className={replyIsSpoiler ? 'text-rose-400' : 'text-zinc-500'} />
                         <span>Spoiler</span>
                       </label>
                     </div>

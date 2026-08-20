@@ -74,6 +74,20 @@ class WatchPartyController extends Controller
             'is_system'      => true,
         ]);
 
+        if ($hostUser) {
+            try {
+                app(\App\Services\GamificationService::class)->awardXp(
+                    $hostUser,
+                    30,
+                    'watch_party',
+                    null,
+                    ['watch_party_id' => $watchParty->id, 'role' => 'host']
+                );
+            } catch (\Exception $e) {
+                \Log::error('Gamification watch party error: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->route('watch-party.show', $watchParty->room_code);
     }
 
@@ -150,6 +164,20 @@ class WatchPartyController extends Controller
                 'message'        => "{$participant->display_name} bergabung ke room",
                 'is_system'      => true,
             ]);
+
+            if ($user) {
+                try {
+                    app(\App\Services\GamificationService::class)->awardXp(
+                        $user,
+                        20,
+                        'watch_party',
+                        null,
+                        ['watch_party_id' => $watchParty->id, 'role' => 'participant']
+                    );
+                } catch (\Exception $e) {
+                    \Log::error('Gamification join party error: ' . $e->getMessage());
+                }
+            }
         } else {
             $isHost = (bool)$participant->is_host;
         }
