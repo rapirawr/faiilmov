@@ -60,7 +60,14 @@ class MobileApiController extends Controller
             ], 401);
         }
 
-        $token = base64_encode($user->id . '|' . Str::random(40));
+        if ($user->isBanned()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda sedang ditangguhkan.',
+            ], 403);
+        }
+
+        $token = $this->generateApiToken($user);
 
         return response()->json([
             'success' => true,
@@ -69,7 +76,7 @@ class MobileApiController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->is_admin ? 'admin' : 'user',
+                'role' => $user->isAdmin() ? 'admin' : 'user',
             ],
         ]);
     }
@@ -96,7 +103,7 @@ class MobileApiController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = base64_encode($user->id . '|' . Str::random(40));
+        $token = $this->generateApiToken($user);
 
         return response()->json([
             'success' => true,
@@ -873,27 +880,49 @@ class MobileApiController extends Controller
         return $data;
     }
 
+    private function generateApiToken(User $user): string
+    {
+        $salt = Str::random(32);
+        $signature = hash_hmac('sha256', $user->id . '|' . $salt, config('app.key'));
+        return base64_encode($user->id . '|' . $salt . '|' . $signature);
+    }
+
     private function resolveUser(Request $request): User
     {
         $user = $request->user();
-        if ($user) return $user;
+        if ($user) {
+            if ($user->isBanned()) {
+                abort(response()->json(['success' => false, 'message' => 'Akun Anda sedang ditangguhkan.'], 403));
+            }
+            return $user;
+        }
 
         $authHeader = $request->header('Authorization');
         if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
             $token = substr($authHeader, 7);
-            $decoded = base64_decode($token);
-            if (str_contains($decoded, '|')) {
-                $userId = explode('|', $decoded)[0];
-                $found = User::find($userId);
-                if ($found) return $found;
+            $decoded = base64_decode($token, true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                if (count($parts) === 3) {
+                    [$userId, $salt, $signature] = $parts;
+                    $expectedSig = hash_hmac('sha256', $userId . '|' . $salt, config('app.key'));
+                    if (hash_equals($expectedSig, $signature)) {
+                        $found = User::find($userId);
+                        if ($found) {
+                            if ($found->isBanned()) {
+                                abort(response()->json(['success' => false, 'message' => 'Akun Anda sedang ditangguhkan.'], 403));
+                            }
+                            return $found;
+                        }
+                    }
+                }
             }
         }
 
-        return User::first() ?? User::create([
-            'name' => 'Demo User',
-            'email' => 'support@faiilmov.my.id',
-            'password' => Hash::make('password123'),
-        ]);
+        abort(response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated. Token otentikasi tidak valid atau telah kedaluwarsa.',
+        ], 401));
     }
 
     // ==========================================
@@ -1298,6 +1327,11 @@ class MobileApiController extends Controller
 
     public function getUsers(Request $request)
     {
+        $user = $this->resolveUser($request);
+        if (!$user->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden: Administrator privileges required.'], 403);
+        }
+
         $limit = (int)$request->query('limit', 20);
         $users = User::select('id', 'name', 'email', 'avatar', 'is_admin', 'created_at')
             ->latest()
@@ -1338,6 +1372,11 @@ class MobileApiController extends Controller
 
     public function getReviewReports(Request $request)
     {
+        $user = $this->resolveUser($request);
+        if (!$user->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden: Administrator privileges required.'], 403);
+        }
+
         $reports = ReviewReport::with(['review', 'user'])->latest()->paginate((int)$request->query('limit', 20));
 
         return response()->json([
@@ -1353,6 +1392,11 @@ class MobileApiController extends Controller
 
     public function getAdminActivityLogs(Request $request)
     {
+        $user = $this->resolveUser($request);
+        if (!$user->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden: Administrator privileges required.'], 403);
+        }
+
         $logs = AdminActivityLog::with('admin')->latest()->paginate((int)$request->query('limit', 20));
 
         return response()->json([

@@ -52,6 +52,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perDay(5)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('pin-verify', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Shared Welcome Modal Visibility Logic (Disabled on auth pages & error pages)
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
             $viewName = $view->getName();

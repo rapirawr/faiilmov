@@ -120,35 +120,25 @@
                     <p class="text-[11px] text-zinc-500">Aksi eksekusi ini akan otomatis tercatat ke <strong>AdminActivityLog</strong>.</p>
                 </div>
 
-                <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
-                    <button type="button" @click="confirmModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="button" @click="executeScript()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5">
-                        <i data-lucide="play" class="w-3.5 h-3.5 fill-zinc-950"></i>
-                        <span>Saya Mengerti, Jalankan</span>
-                    </button>
+                <div class="flex items-center justify-between pt-3 border-t border-zinc-800">
+                    <label class="flex items-center gap-2 text-[11px] text-zinc-400 cursor-pointer select-none">
+                        <input type="checkbox" x-model="bypassConfirm" @change="saveBypassSetting()" class="rounded border-zinc-700 bg-zinc-950 text-amber-500 focus:ring-0">
+                        <span>Jangan tanya lagi</span>
+                    </label>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="confirmModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="button" @click="confirmAndRun()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                            <i data-lucide="play" class="w-3.5 h-3.5 fill-zinc-950"></i>
+                            <span>Eksekusi</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </template>
-
-            <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
-                <label class="flex items-center gap-2 text-[11px] text-zinc-400 cursor-pointer select-none">
-                    <input type="checkbox" x-model="bypassConfirm" @change="saveBypassSetting()" class="rounded border-zinc-700 bg-zinc-950 text-amber-500 focus:ring-0">
-                    <span>Jangan tanya lagi</span>
-                </label>
-
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="confirmModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
-                    <button type="button" @click="confirmAndRun()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer">
-                        <i data-lucide="zap" class="w-4 h-4"></i>
-                        <span>Eksekusi</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- AI Generate Panel Card -->
     <div class="bg-zinc-900/90 rounded-3xl border border-white/10 shadow-xl overflow-hidden">
@@ -437,8 +427,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('scriptRunner', () => ({
+function scriptRunner() {
+    return {
         scripts: @json($scripts),
         searchQuery: '',
         selectedScriptId: null,
@@ -777,8 +767,8 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.isGenerating = false;
             }
-        },
-    }));
-});
+        }
+    };
+}
 </script>
 @endsection

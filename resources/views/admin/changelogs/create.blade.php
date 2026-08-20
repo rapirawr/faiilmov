@@ -215,8 +215,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('changelogCreateForm', () => ({
+function changelogCreateForm() {
+    return {
         version: @json(old('version', $nextVersion)),
         title: @json(old('title', '')),
         type: @json(old('type', 'minor')),
@@ -351,7 +351,7 @@ document.addEventListener('alpine:init', () => {
                 this.changes.splice(index, 1);
             }
         }
-    }));
-});
+    };
+}
 </script>
 @endsection

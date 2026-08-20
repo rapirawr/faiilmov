@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\MovieBoxService;
+use App\Services\SsrfGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Exception;
@@ -154,6 +155,10 @@ class MovieBoxController extends Controller
             return response()->json(['error' => 'URL parameter is required.'], 400);
         }
 
+        if (!SsrfGuard::isSafeUrl($targetUrl)) {
+            return response()->json(['error' => 'Target stream URL is forbidden or invalid.'], 403);
+        }
+
         // Automatic DB/API lookup if title is missing from URL query
         if (empty($rawTitle) && $subjectId) {
             $filmInDb = \App\Models\Film::where('moviebox_subject_id', $subjectId)->first();
@@ -267,8 +272,8 @@ class MovieBoxController extends Controller
     public function proxySubtitle(Request $request)
     {
         $targetUrl = $request->query('url');
-        if (!$targetUrl) {
-            return response("WEBVTT\n\n", 200, [
+        if (!$targetUrl || !SsrfGuard::isSafeUrl($targetUrl)) {
+            return response("WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\n[Subtitle URL tidak valid atau diblokir]", 200, [
                 'Content-Type' => 'text/vtt; charset=utf-8',
                 'Access-Control-Allow-Origin' => '*',
             ]);

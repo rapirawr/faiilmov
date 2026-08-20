@@ -92,7 +92,7 @@ Route::get('/soundtrack/download', function (\Illuminate\Http\Request $request) 
         }
     }
 
-    if (filter_var($url, FILTER_VALIDATE_URL)) {
+    if (filter_var($url, FILTER_VALIDATE_URL) && \App\Services\SsrfGuard::isSafeUrl($url)) {
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
             if ($response->successful()) {
@@ -224,7 +224,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profiles', [ProfileSwitchController::class, 'index'])->name('profiles.index');
     Route::post('/profiles', [ProfileSwitchController::class, 'store'])->name('profiles.store');
     Route::post('/profiles/switch-main', [ProfileSwitchController::class, 'switchMain'])->name('profiles.switch-main');
-    Route::post('/profiles/{profile}/switch', [ProfileSwitchController::class, 'switch'])->name('profiles.switch');
+    Route::post('/profiles/{profile}/switch', [ProfileSwitchController::class, 'switch'])->middleware('throttle:pin-verify')->name('profiles.switch');
     Route::put('/profiles/{profile}/pin', [ProfileSwitchController::class, 'updatePin'])->name('profiles.update-pin');
     Route::delete('/profiles/{profile}', [ProfileSwitchController::class, 'destroy'])->name('profiles.destroy');
 
@@ -235,7 +235,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
 
     // Parental Control
-    Route::post('/parental/verify-pin', [ParentalControlController::class, 'verifyPin'])->name('parental.verify-pin');
+    Route::post('/parental/verify-pin', [ParentalControlController::class, 'verifyPin'])->middleware('throttle:pin-verify')->name('parental.verify-pin');
     Route::post('/parental/set-pin', [ParentalControlController::class, 'setPin'])->name('parental.set-pin');
     Route::post('/parental/set-max-rating', [ParentalControlController::class, 'setMaxRating'])->name('parental.set-max-rating');
     Route::get('/parental/check-content/{film}', [ParentalControlController::class, 'isContentAllowed'])->name('parental.check-content');
@@ -414,7 +414,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Custom PHP Script Runner & Saved Scripts
         Route::get('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'index'])->name('scripts.index');
         Route::post('/scripts', [\App\Http\Controllers\Admin\AdminScriptController::class, 'store'])->name('scripts.store');
-        Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->name('scripts.execute');
+        Route::post('/scripts/execute', [\App\Http\Controllers\Admin\AdminScriptController::class, 'execute'])->middleware('throttle:10,1')->name('scripts.execute');
         Route::post('/scripts/generate', [\App\Http\Controllers\Admin\AdminScriptController::class, 'generateScript'])->name('scripts.generate');
         Route::delete('/scripts/{script}', [\App\Http\Controllers\Admin\AdminScriptController::class, 'destroy'])->name('scripts.destroy');
 

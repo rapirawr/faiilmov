@@ -13,8 +13,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     // ---------------------------------------------------------
     // 1. AUTH & USER MANAGEMENT
     // ---------------------------------------------------------
-    Route::post('/login', [MobileApiController::class, 'login']);
-    Route::post('/register', [MobileApiController::class, 'register']);
+    Route::post('/login', [MobileApiController::class, 'login'])->middleware('throttle:auth');
+    Route::post('/register', [MobileApiController::class, 'register'])->middleware('throttle:auth');
     Route::post('/logout', [MobileApiController::class, 'logout']);
     Route::get('/user', [MobileApiController::class, 'user']);
     Route::post('/user/profile', [MobileApiController::class, 'updateProfile']);

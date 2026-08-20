@@ -108,7 +108,25 @@ class AdminAppReleaseController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'version_name' => 'nullable|string|max:20',
             'build_number' => 'nullable|integer|min:1',
-            'apk_file'     => 'nullable|file|max:204800', // Max 200MB (204800 KB)
+            'apk_file'     => ['nullable', 'file', 'max:204800', function ($attribute, $value, $fail) {
+                if ($value instanceof \Illuminate\Http\UploadedFile) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['apk', 'zip'], true)) {
+                        $fail('File yang diunggah harus berekstensi .apk atau .zip.');
+                        return;
+                    }
+                    // Validate ZIP/APK container magic bytes (starts with 'PK\x03\x04' or 'PK')
+                    $handle = @fopen($value->getRealPath(), 'rb');
+                    if ($handle) {
+                        $header = fread($handle, 4);
+                        fclose($handle);
+                        if (!str_starts_with($header, "PK")) {
+                            $fail('Struktur file APK/ZIP tidak valid atau rusak.');
+                            return;
+                        }
+                    }
+                }
+            }],
             'release_notes'=> 'required|string|max:2000',
         ], [
             'apk_file.file'         => 'File yang diunggah bukan file valid.',

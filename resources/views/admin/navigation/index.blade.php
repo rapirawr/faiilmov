@@ -455,8 +455,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('navigationManager', () => ({
+function navigationManager() {
+    return {
         sidebarList: @json($sidebarItems ?? []),
         sidebarWidget: @json($sidebarWidget ?? \App\Services\NavigationService::getDefaultSidebarWidget()),
 
@@ -673,7 +673,7 @@ document.addEventListener('alpine:init', () => {
                 alert(e.message);
             }
         }
-    }));
-});
+    };
+}
 </script>
 @endsection

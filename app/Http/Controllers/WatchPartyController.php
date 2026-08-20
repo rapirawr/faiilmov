@@ -380,7 +380,7 @@ class WatchPartyController extends Controller
         }
 
         $senderName = $participant->display_name;
-        $message = e($request->message);
+        $message = trim($request->message);
 
         $savedMsg = WatchPartyMessage::create([
             'watch_party_id' => $watchParty->id,
@@ -849,7 +849,7 @@ class WatchPartyController extends Controller
         $watchParty = WatchParty::where('room_code', strtoupper($roomCode))->firstOrFail();
         $user = Auth::user();
         $sessionId = session()->getId();
-        $newNickname = trim(e($request->nickname));
+        $newNickname = trim($request->nickname);
 
         $participant = WatchPartyParticipant::where('watch_party_id', $watchParty->id)
             ->where(function ($q) use ($user, $sessionId) {

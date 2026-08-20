@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AnichinService;
+use App\Services\SsrfGuard;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -40,10 +41,12 @@ class AnichinController extends Controller
             if ($streamLink) {
                 if (str_contains($streamLink, '.m3u8')) {
                     try {
-                        $m3u8Res = \Illuminate\Support\Facades\Http::timeout(5)->get($streamLink);
-                        if ($m3u8Res->successful() && str_contains($m3u8Res->body(), '#EXTM3U')) {
-                            $m3u8 = $m3u8Res->body();
-                            $baseUrl = (string)$m3u8Res->effectiveUri();
+                        if (SsrfGuard::isSafeUrl($streamLink)) {
+                            $m3u8Res = \Illuminate\Support\Facades\Http::timeout(5)->get($streamLink);
+                            if ($m3u8Res->successful() && str_contains($m3u8Res->body(), '#EXTM3U')) {
+                                $m3u8 = $m3u8Res->body();
+                                $baseUrl = (string)$m3u8Res->effectiveUri();
+                            }
                         }
                     } catch (\Exception $e) {}
                 }
@@ -133,8 +136,8 @@ class AnichinController extends Controller
     {
         $targetUrl = $request->query('url');
 
-        if (empty($targetUrl) || !filter_var($targetUrl, FILTER_VALIDATE_URL)) {
-            return response('Invalid TS Segment URL', 400);
+        if (empty($targetUrl) || !SsrfGuard::isSafeUrl($targetUrl)) {
+            return response('Invalid or Forbidden TS Segment URL', 403);
         }
 
         try {

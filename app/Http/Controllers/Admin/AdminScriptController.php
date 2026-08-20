@@ -83,6 +83,42 @@ class AdminScriptController extends Controller
         $cleanCode = preg_replace("/^\\\$app\s*=\s*require_once\s+.*?;\s*\n/m", '', $cleanCode);
         $cleanCode = preg_replace("/^\\\$app->make\(.*?Kernel.*?\)->bootstrap\(\);\s*\n/m", '', $cleanCode);
 
+        // Security Sandbox Check: Blacklist dangerous OS execution & system compromise functions
+        $dangerousTokens = [
+            '/\b(shell_exec|exec|system|passthru|proc_open|popen|pcntl_exec|pcntl_fork)\b/i' => 'System Command Execution',
+            '/\b(dl|posix_kill|posix_mkfifo|apache_child_terminate)\b/i' => 'Process & OS Signal Control',
+            '/\b(base64_decode|gzinflate|str_rot13)\s*\(\s*(["\']).*?\1\s*\)/i' => 'Obfuscated Code Execution',
+            '/\.env\b/i' => 'Direct .env Access',
+        ];
+
+        foreach ($dangerousTokens as $pattern => $description) {
+            if (preg_match($pattern, $cleanCode)) {
+                $blockMsg = "AKSES DITOLAK: Kode diblokir oleh Security Sandbox Faiilmov ({$description}). Penggunaan fungsi eksekusi shell dan akses file sistem dilarang.";
+                
+                try {
+                    AdminActivityLog::create([
+                        'admin_id' => Auth::id() ?? 1,
+                        'action' => 'blocked_script_execution',
+                        'target_type' => 'AdminScript',
+                        'target_id' => $scriptId ? (int)$scriptId : null,
+                        'details' => [
+                            'reason' => $description,
+                            'ip' => $request->ip(),
+                            'snippet' => substr($cleanCode, 0, 200),
+                        ],
+                    ]);
+                } catch (\Throwable $e) {}
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'blocked',
+                    'output' => $blockMsg,
+                    'duration_ms' => 0,
+                    'memory_kb' => 0,
+                ], 403);
+            }
+        }
+
         $startTime = microtime(true);
         $startMemory = memory_get_usage();
 

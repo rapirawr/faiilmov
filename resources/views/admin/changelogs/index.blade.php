@@ -215,8 +215,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('changelogIndexImporter', () => ({
+function changelogIndexImporter() {
+    return {
         showImportModal: false,
         importFormat: 'json',
         rawImportText: '',
@@ -254,7 +254,7 @@ document.addEventListener('alpine:init', () => {
             this.copiedPrompt = true;
             setTimeout(() => this.copiedPrompt = false, 2500);
         }
-    }));
-});
+    };
+}
 </script>
 @endsection

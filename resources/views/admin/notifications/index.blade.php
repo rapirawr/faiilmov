@@ -668,8 +668,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('notificationManager', () => ({
+function notificationManager() {
+    return {
         filmPickerOpen: false,
         filmSearch: '',
         
@@ -813,7 +813,7 @@ document.addEventListener('alpine:init', () => {
             this.filmPickerOpen = false;
             this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         }
-    }));
-});
+    };
+}
 </script>
 @endsection

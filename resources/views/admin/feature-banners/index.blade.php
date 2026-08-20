@@ -470,8 +470,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('alpine:init', () => {
-    const ICONS_DICT = {
+const ICONS_DICT = {
         'send': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
         'arrow-right': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
         'play': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
@@ -504,7 +503,8 @@ document.addEventListener('alpine:init', () => {
         'external-link': '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
     };
 
-    Alpine.data('featureBannerCMS', () => ({
+    function featureBannerCMS() {
+        return {
         showModal: false, 
         iconPickerOpen: false,
         iconSearchQuery: '',
@@ -693,7 +693,7 @@ document.addEventListener('alpine:init', () => {
                 default: return 'from-indigo-950/60 via-zinc-950 to-amber-950/60 border-amber-500/30';
             }
         }
-    }));
-});
+    };
+}
 </script>
 @endpush

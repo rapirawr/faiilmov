@@ -8,7 +8,7 @@
 @section('content')
 <!-- Safe JSON Payload Container -->
 <script id="wrapped-initial-data" type="application/json">
-{!! json_encode($wrapped) !!}
+{!! json_encode($wrapped, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
 </script>
 
 <!-- Fullscreen Instagram Story Experience Wrapper -->
