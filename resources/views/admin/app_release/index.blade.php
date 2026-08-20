@@ -342,6 +342,7 @@
     </div>
 
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -496,4 +497,4 @@ function apkUploadForm() {
     };
 }
 </script>
-@endsection
+@endpush
