@@ -519,18 +519,12 @@ function navProfileState() {
                         class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 transition-all shadow-sm cursor-pointer group">
                     
                     <!-- Avatar Thumbnail -->
-                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center font-bold text-xs text-black shadow overflow-hidden shrink-0">
-                        @if($activeProfile)
-                            @if($activeProfile->avatar)
-                                <img src="{{ $activeProfile->avatar }}" class="w-full h-full object-cover">
-                            @else
-                                {{ strtoupper(substr($activeProfile->name, 0, 2)) }}
-                            @endif
-                        @elseif(Auth::user()->avatar)
-                            <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
-                        @else
-                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                        @endif
+                    <div class="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden shrink-0 border border-white/15">
+                        @php
+                            $navAvatarUrl = $activeProfile ? $activeProfile->avatar_url : Auth::user()->avatar_url;
+                            $navAvatarName = $activeProfile ? $activeProfile->name : Auth::user()->name;
+                        @endphp
+                        <img src="{{ $navAvatarUrl }}" alt="{{ $navAvatarName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($navAvatarName) }}';">
                     </div>
 
                     <!-- Active Profile Name & Badge -->
@@ -565,14 +559,8 @@ function navProfileState() {
                     <div class="px-4 py-3 border-b border-white/10 bg-white/5">
                         <p class="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-1">Profil Aktif</p>
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-amber-500 text-black flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
-                                @if($activeProfile && $activeProfile->avatar)
-                                    <img src="{{ $activeProfile->avatar }}" class="w-full h-full object-cover">
-                                @elseif(!$activeProfile && Auth::user()->avatar)
-                                    <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
-                                @else
-                                    {{ strtoupper(substr($activeProfile ? $activeProfile->name : Auth::user()->name, 0, 2)) }}
-                                @endif
+                            <div class="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center font-bold text-xs overflow-hidden shrink-0 border border-white/15">
+                                <img src="{{ $navAvatarUrl }}" alt="{{ $navAvatarName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($navAvatarName) }}';">
                             </div>
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-bold text-white truncate">{{ $activeProfile ? $activeProfile->name : Auth::user()->name }}</p>
@@ -590,12 +578,8 @@ function navProfileState() {
                                 @click="selectSubProfile(null, '{{ addslashes(Auth::user()->name) }}', false)"
                                 class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ !$activeProfile ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ Auth::user()->avatar }}" class="w-full h-full object-cover">
-                                    @else
-                                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                                    @endif
+                                <div class="w-6 h-6 rounded-full bg-zinc-800 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0 border border-white/10">
+                                    <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(Auth::user()->name) }}';">
                                 </div>
                                 <span class="text-xs font-semibold truncate">{{ Auth::user()->name }} (Utama)</span>
                             </div>
@@ -611,11 +595,7 @@ function navProfileState() {
                                     class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer {{ $activeProfile && $activeProfile->id == $p->id ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300' : 'hover:bg-white/5 text-zinc-300' }}">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/20 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
-                                        @if($p->avatar)
-                                            <img src="{{ $p->avatar }}" class="w-full h-full object-cover">
-                                        @else
-                                            {{ strtoupper(substr($p->name, 0, 2)) }}
-                                        @endif
+                                        <img src="{{ $p->avatar_url }}" alt="{{ $p->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($p->name) }}';">
                                     </div>
                                     <span class="text-xs font-medium truncate">{{ $p->name }}</span>
                                     @if($p->is_child)
@@ -639,29 +619,29 @@ function navProfileState() {
 
                     <!-- Actions List -->
                     <div class="p-2 space-y-0.5">
-                        <a href="{{ route('profile') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <i data-lucide="user-cog" class="w-4 h-4 text-zinc-400"></i>
-                            <span>Akun & Badges</span>
+                        <a href="{{ route('profile') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-white hover:bg-white/10 transition-colors font-semibold">
+                            <i data-lucide="user" class="w-4 h-4 text-zinc-400"></i>
+                            <span>Profile</span>
                         </a>
 
-                        <a href="{{ route('leaderboard') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
-                            <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                        <a href="{{ route('leaderboard') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-white hover:bg-white/10 transition-colors font-semibold">
+                            <i data-lucide="trophy" class="w-4 h-4 text-zinc-400"></i>
                             <span>Papan Peringkat</span>
                         </a>
 
-                        <a href="{{ route('wrapped') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 transition-colors font-semibold">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                        <a href="{{ route('wrapped') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-white hover:bg-white/10 transition-colors font-semibold">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-zinc-400"></i>
                             <span>Movie Wrapped</span>
                         </a>
 
-                        <a href="{{ route('notifications.index') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
+                        <a href="{{ route('notifications.index') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-white hover:bg-white/10 transition-colors font-semibold">
                             <i data-lucide="bell" class="w-4 h-4 text-zinc-400"></i>
                             <span>Halaman Notifikasi</span>
                         </a>
 
                         @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-amber-300 hover:bg-amber-500/10 transition-colors font-semibold">
-                                <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs text-white hover:bg-white/10 transition-colors font-semibold">
+                                <i data-lucide="shield" class="w-4 h-4 text-zinc-400"></i>
                                <span>Admin Panel</span>
                             </a>
                         @endif

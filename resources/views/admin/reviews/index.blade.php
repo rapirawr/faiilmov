@@ -60,7 +60,12 @@
                     @forelse($reviews as $rev)
                         <tr class="hover:bg-zinc-800/40 transition-colors group">
                             <td class="px-4 py-3.5 font-bold text-white text-xs">
-                                {{ $rev->user->name ?? 'User Terhapus' }}
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full overflow-hidden bg-zinc-800 shrink-0 border border-zinc-700">
+                                        <img src="{{ $rev->user?->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($rev->user?->name ?? 'User') }}" alt="{{ $rev->user?->name ?? 'User' }}" class="w-full h-full object-cover">
+                                    </div>
+                                    <span class="truncate max-w-[120px]">{{ $rev->user->name ?? 'User Terhapus' }}</span>
+                                </div>
                             </td>
                             <td class="px-4 py-3.5 font-bold text-amber-400 text-xs">
                                 {{ $rev->film->title ?? 'Film Terhapus' }}
@@ -94,8 +99,8 @@
                                     <div @click.away="viewModal = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
                                         <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
                                             <div class="flex items-center gap-3">
-                                                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                                                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                                                <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
+                                                    <img src="{{ $rev->user?->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($rev->user?->name ?? 'User') }}" alt="{{ $rev->user?->name ?? 'User' }}" class="w-full h-full object-cover">
                                                 </div>
                                                 <div>
                                                     <h4 class="font-bold text-white text-sm font-['Outfit']">{{ $rev->film->title ?? 'Film' }}</h4>

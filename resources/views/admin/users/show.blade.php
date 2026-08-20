@@ -247,10 +247,15 @@
     <!-- Tab 4: Reviews -->
     <div x-show="activeTab === 'reviews'" class="space-y-3">
         @forelse($user->reviews as $r)
-            <div class="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-2 text-xs">
+            <div class="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3 text-xs">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-white text-sm">{{ $r->film->title ?? 'Film Dihapus' }}</span>
-                    <span class="text-amber-400 font-bold flex items-center gap-1">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                        </div>
+                        <span class="font-bold text-white text-sm truncate">{{ $r->film->title ?? 'Film Dihapus' }}</span>
+                    </div>
+                    <span class="text-amber-400 font-bold flex items-center gap-1 shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
                         <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
                         {{ $r->rating }}/10
                     </span>

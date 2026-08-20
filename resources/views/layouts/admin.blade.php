@@ -95,12 +95,12 @@
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
                         <img src="{{ asset('images/logo.png') }}" alt="faiilmov" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 shrink-0">
                         <div>
-                            <h1 class="font-chillax font-bold text-base tracking-tight text-white group-hover:text-amber-400 transition-colors">faiilmov</h1>
+                            <h1 class="font-chillax font-bold text-base tracking-tight text-zinc-100 group-hover:text-zinc-300 transition-colors">faiilmov</h1>
                             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">ADMIN PANEL</p>
                         </div>
                     </a>
 
-                    <button @click="sidebarOpen = false" class="lg:hidden p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
+                    <button @click="sidebarOpen = false" class="lg:hidden p-1.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -108,21 +108,21 @@
                 <!-- Real-time Live Filter in Sidebar -->
                 <div class="px-4 pt-3 pb-1">
                     <div class="relative w-full flex items-center group">
-                        <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none group-focus-within:text-amber-400 transition-colors"></i>
+                        <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none group-focus-within:text-zinc-200 transition-colors"></i>
                         <input type="text" 
                                x-model="sidebarQuery"
                                x-ref="sidebarSearchInput"
                                @keydown.escape.prevent="sidebarQuery = ''; $refs.sidebarSearchInput.blur()"
                                placeholder="Cari menu sidebar..." 
                                autocomplete="off"
-                               class="w-full pl-9 pr-14 py-2 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-[#E4E2DD] placeholder-zinc-500 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all font-sans">
+                               class="w-full pl-9 pr-14 py-2 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all font-sans">
                         
                         <div class="absolute right-2.5 flex items-center gap-1">
                             <button type="button" 
                                     x-show="sidebarQuery" 
                                     x-cloak
                                     @click="sidebarQuery = ''; $refs.sidebarSearchInput.focus()"
-                                    class="p-0.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                                    class="p-0.5 text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
                                     title="Hapus pencarian">
                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
@@ -139,8 +139,8 @@
                     <!-- Dashboard Overview Pill -->
                     <div x-show="matches('Dashboard Overview Beranda Home')">
                         <a href="{{ route('admin.dashboard') }}" 
-                           class="flex items-center gap-3 px-4 py-3 rounded-full text-xs font-bold transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-white text-zinc-950 shadow-md font-bold' : 'bg-transparent text-zinc-300 hover:bg-zinc-900 hover:text-white' }}">
-                            <div class="w-7 h-7 rounded-full flex items-center justify-center {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-zinc-400 border border-zinc-800' }}">
+                           class="flex items-center gap-3 px-4 py-3 rounded-full text-xs font-bold transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-100 text-zinc-950 shadow-md font-bold' : 'bg-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100' }}">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-900 text-zinc-400 border border-zinc-800' }}">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                             </div>
                             <span class="font-bold text-xs tracking-wide">Dashboard Overview</span>
@@ -154,9 +154,9 @@
                          class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
-                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
+                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-zinc-200 text-xs font-bold transition-all cursor-pointer">
                             <div class="flex items-center gap-2.5">
-                                <i data-lucide="film" class="w-4 h-4 text-zinc-300"></i>
+                                <i data-lucide="film" class="w-4 h-4 text-zinc-400"></i>
                                 <span>Manajemen Konten</span>
                             </div>
                             <div class="flex items-center gap-2">
@@ -170,7 +170,7 @@
                             <div x-show="matches('Semua Film Katalog Movie Series Dracin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.index') || request()->routeIs('admin.films.create') || request()->routeIs('admin.films.edit') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.index') || request()->routeIs('admin.films.create') || request()->routeIs('admin.films.edit') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="clapperboard" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Semua Film</span>
                                 </a>
@@ -180,8 +180,8 @@
                             <div x-show="matches('Cari & Impor Film Moviebox Dracin Anichin Importer')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.importer') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.importer') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="download-cloud" class="w-4 h-4 text-amber-400"></i>
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.importer') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
+                                    <i data-lucide="download-cloud" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Cari & Impor Film</span>
                                 </a>
                             </div>
@@ -190,11 +190,11 @@
                             <div x-show="matches('Smart Collections Koleksi AI Franchise Curation')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.collections.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.collections.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.collections.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-zinc-400"></i>
                                     <span class="flex items-center gap-1.5">
                                         Smart Collections
-                                        <span class="px-1 py-0.2 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">AI</span>
+                                        <span class="px-1 py-0.2 rounded text-[9px] font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">AI</span>
                                     </span>
                                 </a>
                             </div>
@@ -203,8 +203,8 @@
                             <div x-show="matches('Elemen & Widget CMS Studio Floating Popup Broadcast Custom')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.page_elements.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.page_elements.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="layout-template" class="w-4 h-4 text-amber-400"></i>
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.page_elements.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
+                                    <i data-lucide="layout-template" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Elemen & Widget (CMS)</span>
                                 </a>
                             </div>
@@ -213,13 +213,13 @@
                             <div x-show="matches('Request Film Permintaan Permohonan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.film-requests.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.film-requests.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.film-requests.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
                                         <i data-lucide="inbox" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Request Film</span>
                                     </div>
                                     @if(($adminPendingRequestsCount ?? 0) > 0)
-                                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-black">
+                                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
                                             {{ $adminPendingRequestsCount }}
                                         </span>
                                     @endif
@@ -230,7 +230,7 @@
                             <div x-show="matches('Banner Fitur CMS Header Hero')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.feature-banners.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.feature-banners.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.feature-banners.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
                                         <i data-lucide="layout-template" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Banner Fitur (CMS)</span>
@@ -242,7 +242,7 @@
                             <div x-show="matches('Rating Massal Content Rating Batas Usia Sensor')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.content_rating') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="shield-alert" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Rating Massal</span>
                                 </a>
@@ -252,7 +252,7 @@
                             <div x-show="matches('Genre Film Kategori Tag')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.genres.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.genres.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.genres.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="tags" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Genre Film</span>
                                 </a>
@@ -262,7 +262,7 @@
                             <div x-show="matches('Aktor & Cast Pemeran Artis Pemain')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.actors.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.actors.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.actors.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="users" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Aktor & Cast</span>
                                 </a>
@@ -277,7 +277,7 @@
                          class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
-                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
+                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-zinc-200 text-xs font-bold transition-all cursor-pointer">
                             <div class="flex items-center gap-2.5">
                                 <i data-lucide="shield" class="w-4 h-4 text-zinc-400"></i>
                                 <span>Moderasi & User</span>
@@ -293,7 +293,7 @@
                             <div x-show="matches('Watch Parties Nobar Live Room Ruangan')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.watch_parties.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.watch_parties.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.watch_parties.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
                                         <i data-lucide="tv" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Watch Parties</span>
@@ -310,7 +310,7 @@
                             <div x-show="matches('Moderasi Ulasan Review Komentar Laporan Report')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.reviews.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.reviews.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.reviews.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
                                         <i data-lucide="message-square" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Moderasi Ulasan</span>
@@ -327,7 +327,7 @@
                             <div x-show="matches('Komentar Episode Series Diskusi Spoiler')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.comments.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.comments.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.comments.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
                                         <i data-lucide="messages-square" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Komentar Episode</span>
@@ -339,7 +339,7 @@
                             <div x-show="matches('Kelola Pengguna User Akun Ban Banned Role Admin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.users.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.users.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.users.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="user-check" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Kelola Pengguna</span>
                                 </a>
@@ -349,7 +349,7 @@
                             <div x-show="matches('Broadcast Notifikasi Push Notification Pesan Blast')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.notifications.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.notifications.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.notifications.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="bell-ring" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Broadcast Notifikasi</span>
                                 </a>
@@ -359,12 +359,12 @@
                             <div x-show="matches('Gamification Badges Lencana XP Leaderboard Peringkat Wrapped Cinephile')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.gamification.index') }}" 
-                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.gamification.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.gamification.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <div class="flex items-center gap-2.5">
-                                        <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                                        <i data-lucide="trophy" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Gamification & Badges</span>
                                     </div>
-                                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    <span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
                                         XP
                                     </span>
                                 </a>
@@ -379,7 +379,7 @@
                          class="space-y-1">
                         <button @click="open = !open" 
                                 type="button" 
-                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-white text-xs font-bold transition-all cursor-pointer">
+                                class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:bg-zinc-850 text-zinc-200 text-xs font-bold transition-all cursor-pointer">
                             <div class="flex items-center gap-2.5">
                                 <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
                                 <span>Sistem & Log</span>
@@ -396,7 +396,7 @@
                                 <div x-show="matches('API Tester Docs Endpoint Swagger Dokumentasi')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.api_tester.index') }}" 
-                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.api_tester.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <i data-lucide="terminal" class="w-4 h-4 text-zinc-400"></i>
                                         <span>API Tester & Docs</span>
                                     </a>
@@ -406,7 +406,7 @@
                                 <div x-show="matches('PHP Script Runner Eksekusi Script Terminal Artisan')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.scripts.index') }}" 
-                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.scripts.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.scripts.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <i data-lucide="code" class="w-4 h-4 text-zinc-400"></i>
                                         <span>PHP Script Runner</span>
                                     </a>
@@ -417,7 +417,7 @@
                             <div x-show="matches('Changelog & Updates Rilis Versi Pembaruan Update')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.changelogs.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.changelogs.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="file-clock" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Changelog & Updates</span>
                                 </a>
@@ -427,7 +427,7 @@
                             <div x-show="matches('Activity Audit Log Aktivitas Riwayat Log Admin')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.activity_logs.index') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.activity_logs.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.activity_logs.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                     <i data-lucide="history" class="w-4 h-4 text-zinc-400"></i>
                                     <span>Activity Audit Log</span>
                                 </a>
@@ -438,7 +438,7 @@
                                 <div x-show="matches('Rilis APK Mobile Download Android App Release')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.app_release.index') }}" 
-                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.app_release.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <i data-lucide="smartphone" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Rilis APK Mobile</span>
                                     </a>
@@ -448,7 +448,7 @@
                                 <div x-show="matches('Kelola Menu Sidebar Navigasi Navigation Urutan')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.navigation.index') }}" 
-                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.navigation.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.navigation.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Kelola Menu Sidebar</span>
                                     </a>
@@ -458,7 +458,7 @@
                                 <div x-show="matches('Pengaturan Umum Settings Konfigurasi Web Website')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.settings.index') }}" 
-                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <i data-lucide="sliders" class="w-4 h-4 text-zinc-400"></i>
                                         <span>Pengaturan Umum</span>
                                     </a>
@@ -468,12 +468,12 @@
                                 <div x-show="matches('Manajemen Iklan Ads Adsterra Banner Popunder Socialbar')" class="relative flex items-center">
                                     <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                     <a href="{{ route('admin.ads.index') }}" 
-                                       class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-white font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40' }}">
+                                       class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.ads.*') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
                                         <div class="flex items-center gap-2.5">
-                                            <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-400"></i>
+                                            <i data-lucide="dollar-sign" class="w-4 h-4 text-zinc-400"></i>
                                             <span>Manajemen Iklan</span>
                                         </div>
-                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
                                             ADS
                                         </span>
                                     </a>
@@ -488,7 +488,7 @@
                          x-cloak>
                         <i data-lucide="search-x" class="w-6 h-6 mx-auto text-zinc-600"></i>
                         <p>Tidak ada menu yang cocok</p>
-                        <button type="button" @click="sidebarQuery = ''" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 text-[11px] font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                        <button type="button" @click="sidebarQuery = ''" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px] font-semibold hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer">
                             Reset Pencarian
                         </button>
                     </div>
@@ -500,23 +500,23 @@
             <div class="p-3 border-t border-zinc-800/80 bg-zinc-950">
                 <div class="flex items-center justify-between p-2">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-full bg-zinc-800 text-white font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-700">
-                            {{ strtoupper(substr(Auth::user()?->name ?? 'RA', 0, 2)) }}
+                        <div class="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 shrink-0 border border-zinc-700 flex items-center justify-center">
+                            <img src="{{ Auth::user()?->avatar_url }}" alt="{{ Auth::user()?->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(Auth::user()?->name ?? 'Admin') }}';">
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <p class="font-bold text-white text-xs truncate">{{ Auth::user()?->name ?? 'Admin' }}</p>
+                                <p class="font-bold text-zinc-100 text-xs truncate">{{ Auth::user()?->name ?? 'Admin' }}</p>
                                 @if(Auth::user()?->isAdministrator())
-                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Superadmin</span>
+                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700">Superadmin</span>
                                 @else
-                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30">Admin</span>
+                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700">Admin</span>
                                 @endif
                             </div>
                             <p class="text-[11px] text-zinc-400 truncate">{{ Auth::user()?->email }}</p>
                         </div>
                     </div>
                     
-                    <a href="{{ route('home') }}" class="p-2 text-zinc-400 hover:text-white transition-colors" title="Kunjungi Situs Publik" target="_blank">
+                    <a href="{{ route('home') }}" class="p-2 text-zinc-400 hover:text-zinc-100 transition-colors" title="Kunjungi Situs Publik" target="_blank">
                         <i data-lucide="external-link" class="w-4 h-4"></i>
                     </a>
                 </div>
@@ -598,8 +598,8 @@
                         <button @click="open = !open" 
                                 @click.outside="open = false"
                                 class="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-2xl border border-white/10 transition-all cursor-pointer">
-                            <div class="w-7 h-7 rounded-xl bg-white text-zinc-950 font-black text-xs flex items-center justify-center shadow-sm">
-                                {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
+                            <div class="w-7 h-7 rounded-full overflow-hidden bg-zinc-800 border border-white/15 shrink-0 flex items-center justify-center">
+                                <img src="{{ Auth::user()?->avatar_url }}" alt="{{ Auth::user()?->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(Auth::user()?->name ?? 'Admin') }}';">
                             </div>
                             <span class="text-xs font-bold text-white hidden md:inline">{{ Auth::user()->name ?? 'Admin' }}</span>
                             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400"></i>
@@ -615,9 +615,14 @@
                              x-transition:leave-end="opacity-0 scale-95"
                              class="absolute right-0 mt-2 w-56 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl p-1.5 text-white z-50"
                              x-cloak>
-                            <div class="p-2.5 border-b border-white/10">
-                                <p class="font-bold text-xs text-white truncate">{{ Auth::user()?->name ?? 'Administrator' }}</p>
-                                <p class="text-[10px] text-zinc-400 truncate">{{ Auth::user()?->email ?? 'admin@faiilmov.my.id' }}</p>
+                            <div class="p-2.5 border-b border-white/10 flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0 flex items-center justify-center">
+                                    <img src="{{ Auth::user()?->avatar_url }}" alt="{{ Auth::user()?->name }}" class="w-full h-full object-cover">
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-xs text-white truncate">{{ Auth::user()?->name ?? 'Administrator' }}</p>
+                                    <p class="text-[10px] text-zinc-400 truncate">{{ Auth::user()?->email ?? 'admin@faiilmov.my.id' }}</p>
+                                </div>
                             </div>
 
                             <div class="py-1 space-y-0.5 text-xs">

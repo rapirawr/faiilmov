@@ -651,7 +651,15 @@
                     @else
                         <form action="{{ route('review.store', $film->id) }}" method="POST" class="glass-card p-5 rounded-2xl mb-8 border border-white/10">
                             @csrf
-                            <h4 class="text-xs font-bold text-white mb-3">Tulis Ulasan Anda</h4>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 border border-white/10 shrink-0">
+                                    <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">Tulis Ulasan Anda</h4>
+                                    <p class="text-[11px] text-zinc-400">Sebagai <strong class="text-zinc-200">{{ Auth::user()->name }}</strong></p>
+                                </div>
+                            </div>
                             
                             <div class="mb-4">
                                 <label class="block text-[11px] text-zinc-400 mb-2">Beri Rating (1 - 5 Bintang)</label>
@@ -670,7 +678,7 @@
                                           class="w-full bg-dark-950/60 text-xs text-white p-3 rounded-2xl border border-white/10 focus:outline-none focus:border-white/30">{{ $userReview->comment ?? '' }}</textarea>
                             </div>
 
-                            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors shadow-md">
+                            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors shadow-md cursor-pointer">
                                 {{ $userReview ? 'Perbarui Ulasan' : 'Kirim Ulasan' }}
                             </button>
                         </form>
@@ -685,21 +693,25 @@
                 <!-- Reviews List -->
                 <div class="space-y-4">
                     @forelse($film->reviews as $rev)
-                        <div class="glass-card p-4 rounded-2xl border border-white/10">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-xl bg-white flex items-center justify-center text-[10px] font-bold text-zinc-950">
-                                        {{ strtoupper(substr($rev->user->name, 0, 2)) }}
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl border border-white/10">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center shrink-0">
+                                        <img src="{{ $rev->user?->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($rev->user?->name ?? 'User') }}" 
+                                             alt="{{ $rev->user?->name ?? 'User' }}" 
+                                             class="w-full h-full object-cover">
                                     </div>
-                                    <span class="text-xs font-bold text-white">{{ $rev->user->name }}</span>
+                                    <div>
+                                        <span class="text-xs font-bold text-white block">{{ $rev->user?->name ?? 'Pengguna' }}</span>
+                                        <span class="text-[10px] text-zinc-500 block">{{ $rev->created_at->diffForHumans() }}</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-1 text-zinc-300 text-xs font-bold">
+                                <div class="flex items-center gap-1 text-amber-400 text-xs font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl">
                                     <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
                                     <span>{{ $rev->rating }} / 5</span>
                                 </div>
                             </div>
                             <p class="text-xs text-zinc-300 leading-relaxed">{{ $rev->comment }}</p>
-                            <span class="text-[10px] text-zinc-500 block mt-2">{{ $rev->created_at->diffForHumans() }}</span>
                         </div>
                     @empty
                         <p class="text-xs text-zinc-500 text-center py-4">Belum ada ulasan untuk film ini. Jadilah yang pertama memberi penilaian!</p>

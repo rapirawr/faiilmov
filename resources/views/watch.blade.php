@@ -1295,6 +1295,7 @@
                          data-episode="{{ $episode ?? 1 }}"
                          data-is-logged-in="{{ Auth::check() ? 'true' : 'false' }}"
                          data-user-name="{{ Auth::check() ? Auth::user()->name : '' }}"
+                         data-user-avatar="{{ Auth::check() ? Auth::user()->avatar_url : '' }}"
                          data-login-url="{{ route('login') }}"
                          data-csrf="{{ csrf_token() }}">
                     </div>

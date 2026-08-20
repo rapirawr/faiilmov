@@ -109,6 +109,7 @@ export default function EpisodeComments({
   initialEpisode = 1,
   isLoggedIn = false,
   userName = '',
+  userAvatar = '',
   loginUrl = '/login',
   csrfToken = '',
 }) {
@@ -460,8 +461,16 @@ export default function EpisodeComments({
       {isLoggedIn ? (
         <div className="glass-card p-5 rounded-2xl border border-white/10 space-y-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white text-zinc-950 flex items-center justify-center text-xs font-extrabold shrink-0 shadow">
-              {(userName || 'U').substring(0, 2).toUpperCase()}
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center text-white text-xs font-extrabold shrink-0 shadow">
+              <img
+                src={userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName || 'User')}`}
+                alt={userName || 'User'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName || 'User')}`;
+                }}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <textarea
@@ -559,11 +568,19 @@ export default function EpisodeComments({
               {/* Comment Header */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-white/10 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                    <span>{comment.user?.initial || 'U'}</span>
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <img
+                      src={comment.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user?.name || 'User')}`}
+                      alt={comment.user?.name || 'User'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user?.name || 'User')}`;
+                      }}
+                    />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-white block">{comment.user?.name}</span>
+                    <span className="text-xs font-bold text-white block">{comment.user?.name || 'Pengguna'}</span>
                     <span className="text-[10px] text-zinc-500 block">{comment.created_at}</span>
                   </div>
                 </div>
@@ -726,10 +743,18 @@ export default function EpisodeComments({
                     <div key={reply.id} className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-md bg-zinc-800 text-white flex items-center justify-center text-[9px] font-bold">
-                            <span>{reply.user?.initial || 'U'}</span>
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
+                            <img
+                              src={reply.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(reply.user?.name || 'User')}`}
+                              alt={reply.user?.name || 'User'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(reply.user?.name || 'User')}`;
+                              }}
+                            />
                           </div>
-                          <span className="text-xs font-bold text-white">{reply.user?.name}</span>
+                          <span className="text-xs font-bold text-white">{reply.user?.name || 'Pengguna'}</span>
                           <span className="text-[10px] text-zinc-500">{reply.created_at}</span>
                         </div>
 

@@ -402,6 +402,7 @@ function initReactComponents() {
       const initialEpisode = parseInt(episodeCommentsContainer.dataset.episode || '1', 10);
       const isLoggedIn = episodeCommentsContainer.dataset.isLoggedIn === 'true';
       const userName = episodeCommentsContainer.dataset.userName || '';
+      const userAvatar = episodeCommentsContainer.dataset.userAvatar || '';
       const loginUrl = episodeCommentsContainer.dataset.loginUrl || '/login';
       const csrfToken = episodeCommentsContainer.dataset.csrf || '';
 
@@ -413,6 +414,7 @@ function initReactComponents() {
           initialEpisode={initialEpisode}
           isLoggedIn={isLoggedIn}
           userName={userName}
+          userAvatar={userAvatar}
           loginUrl={loginUrl}
           csrfToken={csrfToken}
         />

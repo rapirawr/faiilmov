@@ -20,13 +20,17 @@ class MovieWrappedService
     /**
      * Generate complete Movie Wrapped statistics for a given user & period
      */
-    public function generateWrappedData(User $user, string $period = 'year', ?int $year = null, ?int $month = null): array
+    public function generateWrappedData(User $user, string $period = 'year', ?int $year = null, ?int $month = null, ?int $profileId = null): array
     {
         $year = $year ?: (int)date('Y');
         $month = $month ?: (int)date('n');
 
         $query = WatchHistory::where('user_id', $user->id)
             ->with(['film.genres', 'film.actors']);
+
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        }
 
         if ($period === 'year') {
             $query->whereYear('updated_at', $year);
@@ -241,5 +245,124 @@ class MovieWrappedService
             'badge_color' => 'indigo',
             'gradient'    => 'from-indigo-600 via-violet-700 to-zinc-950',
         ];
+    }
+
+    /**
+     * Get available monthly (and annual) wrapped highlights for user profile story bar
+     */
+    public function getUserAvailableMonthlyHighlights(User $user, ?int $profileId = null): array
+    {
+        $query = WatchHistory::where('user_id', $user->id)
+            ->where('progress_seconds', '>', 0)
+            ->with(['film.genres']);
+
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        }
+
+        $allHistories = $query->get();
+
+        if ($allHistories->isEmpty()) {
+            return [];
+        }
+
+        // Group by year and month of updated_at
+        $grouped = $allHistories->groupBy(function ($item) {
+            return $item->updated_at ? $item->updated_at->format('Y-m') : null;
+        })->filter();
+
+        $currentYear = (int)date('Y');
+        $currentMonth = (int)date('n');
+
+        $highlights = [];
+
+        // Sort year-months descending (newest month first)
+        $sortedKeys = $grouped->keys()->sortDesc();
+
+        foreach ($sortedKeys as $ym) {
+            $items = $grouped[$ym];
+            $parts = explode('-', $ym);
+            if (count($parts) !== 2) continue;
+            
+            $year = (int)$parts[0];
+            $month = (int)$parts[1];
+
+            $totalSeconds = $items->sum('progress_seconds');
+            $totalMinutes = (int)round($totalSeconds / 60);
+            $totalHours = round($totalMinutes / 60, 1);
+            $titlesCount = $items->pluck('film_id')->unique()->count();
+
+            // Find top film in this month
+            $topFilmItem = $items->groupBy('film_id')->map(function ($fItems) {
+                $film = $fItems->first()->film;
+                if (!$film) return null;
+                return [
+                    'film' => $film,
+                    'seconds' => $fItems->sum('progress_seconds')
+                ];
+            })->filter()->sortByDesc('seconds')->first();
+
+            $topFilm = $topFilmItem ? $topFilmItem['film'] : null;
+
+            $carbon = Carbon::create($year, $month, 1)->locale('id');
+            $monthName = $carbon->isoFormat('MMMM');
+            $shortMonthName = $carbon->isoFormat('MMM');
+            $label = "{$monthName} {$year}";
+            $shortLabel = "{$shortMonthName} {$year}";
+
+            $isCurrentMonth = ($year === $currentYear && $month === $currentMonth);
+
+            $highlights[] = [
+                'type'            => 'month',
+                'period'          => 'month',
+                'year'            => $year,
+                'month'           => $month,
+                'label'           => $label,
+                'short_label'     => $shortLabel,
+                'is_current'      => $isCurrentMonth,
+                'total_minutes'   => $totalMinutes,
+                'total_hours'     => $totalHours,
+                'titles_count'    => $titlesCount,
+                'top_film_id'     => $topFilm ? $topFilm->id : null,
+                'top_film_title'  => $topFilm ? $topFilm->title : 'Beragam Film',
+                'cover_image'     => $topFilm ? ($topFilm->poster_url ?: $topFilm->backdrop_url) : null,
+                'badge'           => $isCurrentMonth ? 'Bulan Ini' : null,
+            ];
+        }
+
+        // Also prepend an Annual Highlight for current year if user has activity in current year
+        $currentYearHistories = $allHistories->filter(function ($item) use ($currentYear) {
+            return $item->updated_at && (int)$item->updated_at->format('Y') === $currentYear;
+        });
+
+        if ($currentYearHistories->isNotEmpty()) {
+            $yearSecs = $currentYearHistories->sum('progress_seconds');
+            $topYearFilmItem = $currentYearHistories->groupBy('film_id')->map(function ($fItems) {
+                $film = $fItems->first()->film;
+                if (!$film) return null;
+                return ['film' => $film, 'seconds' => $fItems->sum('progress_seconds')];
+            })->filter()->sortByDesc('seconds')->first();
+
+            $topYearFilm = $topYearFilmItem ? $topYearFilmItem['film'] : null;
+
+            array_unshift($highlights, [
+                'type'            => 'year',
+                'period'          => 'year',
+                'year'            => $currentYear,
+                'month'           => null,
+                'label'           => "Kilas Balik Tahun {$currentYear}",
+                'short_label'     => "Tahun {$currentYear}",
+                'is_current'      => true,
+                'total_minutes'   => (int)round($yearSecs / 60),
+                'total_hours'     => round($yearSecs / 3600, 1),
+                'titles_count'    => $currentYearHistories->pluck('film_id')->unique()->count(),
+                'top_film_id'     => $topYearFilm ? $topYearFilm->id : null,
+                'top_film_title'  => $topYearFilm ? $topYearFilm->title : 'Film Pilihan',
+                'cover_image'     => $topYearFilm ? ($topYearFilm->poster_url ?: $topYearFilm->backdrop_url) : null,
+                'badge'           => 'Tahun ' . $currentYear,
+            ]);
+        }
+
+        return $highlights;
     }
 }

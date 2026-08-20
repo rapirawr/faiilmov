@@ -28,8 +28,9 @@ class MovieWrappedController extends Controller
         $period = $request->query('period', 'year');
         $year = (int)$request->query('year', date('Y'));
         $month = (int)$request->query('month', date('n'));
+        $activeProfileId = session('active_profile_id');
 
-        $wrappedData = $this->wrappedService->generateWrappedData($user, $period, $year, $month);
+        $wrappedData = $this->wrappedService->generateWrappedData($user, $period, $year, $month, $activeProfileId);
 
         return view('wrapped.index', [
             'wrapped' => $wrappedData,
@@ -52,8 +53,9 @@ class MovieWrappedController extends Controller
         $period = $request->query('period', 'year');
         $year = (int)$request->query('year', date('Y'));
         $month = (int)$request->query('month', date('n'));
+        $activeProfileId = session('active_profile_id');
 
-        $wrappedData = $this->wrappedService->generateWrappedData($user, $period, $year, $month);
+        $wrappedData = $this->wrappedService->generateWrappedData($user, $period, $year, $month, $activeProfileId);
 
         return response()->json([
             'success' => true,

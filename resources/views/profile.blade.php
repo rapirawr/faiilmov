@@ -25,14 +25,12 @@
         <div class="absolute rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left z-10">
-            <div class="w-20 h-20 shrink-0 rounded-3xl bg-gradient-to-tr from-amber-400 to-amber-200 text-zinc-950 flex items-center justify-center text-2xl font-serif font-black shadow-xl ring-4 ring-white/10 overflow-hidden">
-                @if($activeProfile && $activeProfile->avatar)
-                    <img src="{{ $activeProfile->avatar }}" alt="{{ $activeProfile->name }}" class="w-full h-full object-cover">
-                @elseif(!$activeProfile && $user->avatar)
-                    <img src="{{ $user->avatar }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
-                @else
-                    {{ strtoupper(substr($activeProfile ? $activeProfile->name : $user->name, 0, 2)) }}
-                @endif
+            <div class="w-20 h-20 shrink-0 rounded-3xl bg-zinc-800 text-white flex items-center justify-center text-2xl font-serif font-black shadow-xl ring-4 ring-white/10 overflow-hidden">
+                @php
+                    $profileHeroAvatar = $activeProfile ? $activeProfile->avatar_url : $user->avatar_url;
+                    $profileHeroName = $activeProfile ? $activeProfile->name : $user->name;
+                @endphp
+                <img src="{{ $profileHeroAvatar }}" alt="{{ $profileHeroName }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($profileHeroName) }}';">
             </div>
             <div>
                 <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
@@ -95,6 +93,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Cinephile Level Progress & Gamification Quick Banner -->
     <div class="glass-panel p-5 sm:p-6 rounded-3xl mb-8 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-dark-900/80 to-dark-950 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
@@ -1059,6 +1058,5 @@
             </div>
         @endif
     </div>
-
 </div>
 @endsection

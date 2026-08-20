@@ -58,7 +58,7 @@ class EpisodeCommentController extends Controller
             'auth_user' => Auth::check() ? [
                 'id' => Auth::id(),
                 'name' => Auth::user()->name,
-                'avatar' => Auth::user()->avatar,
+                'avatar' => Auth::user()->avatar_url,
                 'is_admin' => Auth::user()->isAdmin(),
             ] : null,
         ]);
@@ -244,7 +244,7 @@ class EpisodeCommentController extends Controller
                 'user' => [
                     'id' => $r->user->id ?? 0,
                     'name' => $r->user->name ?? 'Pengguna',
-                    'avatar' => $r->user->avatar ?? null,
+                    'avatar' => $r->user?->avatar_url ?? null,
                     'initial' => strtoupper(substr($r->user->name ?? 'P', 0, 2)),
                 ],
                 'can_delete' => $currentUserId && ($r->user_id === $currentUserId || (Auth::check() && Auth::user()->isAdmin())),
@@ -262,7 +262,7 @@ class EpisodeCommentController extends Controller
             'user' => [
                 'id' => $c->user->id ?? 0,
                 'name' => $c->user->name ?? 'Pengguna',
-                'avatar' => $c->user->avatar ?? null,
+                'avatar' => $c->user?->avatar_url ?? null,
                 'initial' => strtoupper(substr($c->user->name ?? 'P', 0, 2)),
             ],
             'replies' => $replies,

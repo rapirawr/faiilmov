@@ -141,14 +141,19 @@
                                 #{{ $user->id }}
                             </td>
                             <td class="px-4 py-3.5">
-                                <div class="min-w-0">
-                                    <p class="font-bold text-white text-xs truncate flex items-center gap-1.5">
-                                        <span>{{ $user->name }}</span>
-                                        @if($user->trashed())
-                                            <span class="text-[9px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 font-mono">Dihapus</span>
-                                        @endif
-                                    </p>
-                                    <p class="text-[11px] text-zinc-400 truncate">{{ $user->email }}</p>
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0 flex items-center justify-center">
+                                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->name) }}';">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                                            <span>{{ $user->name }}</span>
+                                            @if($user->trashed())
+                                                <span class="text-[9px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 font-mono">Dihapus</span>
+                                            @endif
+                                        </p>
+                                        <p class="text-[11px] text-zinc-400 truncate">{{ $user->email }}</p>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3.5">

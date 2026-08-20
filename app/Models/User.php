@@ -181,16 +181,26 @@ class User extends Authenticatable
     {
         $val = trim($this->avatar ?? '');
 
-        if (!empty($val) && (str_starts_with($val, 'http://') || str_starts_with($val, 'https://') || str_starts_with($val, 'data:image/'))) {
-            return $val;
-        }
+        if (!empty($val)) {
+            if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://') || str_starts_with($val, 'data:image/')) {
+                return $val;
+            }
 
-        if (!empty($val) && str_starts_with($val, 'storage/')) {
-            return asset($val);
-        }
+            if (str_starts_with($val, '/storage/')) {
+                return asset(ltrim($val, '/'));
+            }
 
-        if (!empty($val) && str_starts_with($val, 'avatars/')) {
-            return asset('storage/' . $val);
+            if (str_starts_with($val, 'storage/')) {
+                return asset($val);
+            }
+
+            if (str_starts_with($val, '/avatars/')) {
+                return asset('storage' . $val);
+            }
+
+            if (str_starts_with($val, 'avatars/')) {
+                return asset('storage/' . $val);
+            }
         }
 
         $seed = urlencode($this->name ?: 'User');
