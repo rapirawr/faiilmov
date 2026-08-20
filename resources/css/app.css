@@ -1,12 +1,64 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Outfit:wght@400;600;700;800&display=swap');
 @import 'tailwindcss';
 
+/* Chillax Custom Font */
+@font-face {
+    font-family: 'Chillax';
+    src: url('/fonts/chillax/Chillax-Variable.woff2') format('woff2'),
+         url('/fonts/chillax/Chillax-Variable.woff') format('woff'),
+         url('/fonts/chillax/Chillax-Variable.ttf') format('truetype');
+    font-weight: 200 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Chillax';
+    src: url('/fonts/chillax/Chillax-Regular.woff2') format('woff2'),
+         url('/fonts/chillax/Chillax-Regular.woff') format('woff'),
+         url('/fonts/chillax/Chillax-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Chillax';
+    src: url('/fonts/chillax/Chillax-Medium.woff2') format('woff2'),
+         url('/fonts/chillax/Chillax-Medium.woff') format('woff'),
+         url('/fonts/chillax/Chillax-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Chillax';
+    src: url('/fonts/chillax/Chillax-Semibold.woff2') format('woff2'),
+         url('/fonts/chillax/Chillax-Semibold.woff') format('woff'),
+         url('/fonts/chillax/Chillax-Semibold.ttf') format('truetype');
+    font-weight: 600;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Chillax';
+    src: url('/fonts/chillax/Chillax-Bold.woff2') format('woff2'),
+         url('/fonts/chillax/Chillax-Bold.woff') format('woff'),
+         url('/fonts/chillax/Chillax-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
     --font-serif: 'Outfit', sans-serif;
+    --font-chillax: 'Chillax', 'Outfit', sans-serif;
 
     --color-amber-50: #faf9f7;
     --color-amber-100: #f4f3ef;
@@ -44,5 +96,9 @@ body {
 .no-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+}
+
+.font-chillax {
+    font-family: 'Chillax', 'Outfit', sans-serif;
 }
 

@@ -81,7 +81,7 @@ class NavigationService
     {
         return [
             'is_active'      => true,
-            'title'          => 'Get faiilmov',
+            'title'          => 'Get Faiilmov',
             'button_text'    => 'Mobile',
             'button_url'     => '/download-app',
             'button_icon'    => 'smartphone',

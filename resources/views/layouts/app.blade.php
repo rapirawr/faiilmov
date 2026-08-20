@@ -81,6 +81,61 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Preload Chillax Brand Font -->
+    <link rel="preload" href="{{ asset('fonts/chillax/Chillax-Variable.woff2') }}" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Chillax Font Definition -->
+    <style>
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Variable.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Variable.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Variable.ttf') }}') format('truetype');
+            font-weight: 200 700;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Bold.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Bold.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Bold.ttf') }}') format('truetype');
+            font-weight: 700;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Semibold.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Semibold.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Semibold.ttf') }}') format('truetype');
+            font-weight: 600;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Medium.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Medium.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Medium.ttf') }}') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Regular.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Regular.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Regular.ttf') }}') format('truetype');
+            font-weight: 400;
+            font-display: swap;
+            font-style: normal;
+        }
+        .font-chillax {
+            font-family: 'Chillax', 'Outfit', sans-serif !important;
+        }
+    </style>
+    
     <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 

@@ -17,7 +17,7 @@
         <div class="w-10 h-10 rounded-xl bg-zinc-900 p-1.5 flex items-center justify-center shadow-lg border border-white/20">
             <img src="{{ $cmsSetting->logo_url }}" alt="{{ $cmsSetting->site_name }}" class="w-full h-full object-contain">
         </div>
-        <span class="font-serif font-extrabold text-2xl text-white tracking-tight">{{ $cmsSetting->site_name }}</span>
+        <span class="font-chillax font-bold text-2xl text-white tracking-tight">{{ $cmsSetting->site_name }}</span>
     </a>
 
     <div class="w-full max-w-xl glass-panel p-8 sm:p-14 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden text-center backdrop-blur-xl bg-zinc-900/90">

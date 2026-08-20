@@ -18,7 +18,7 @@
 
         <a href="{{ route('home') }}" class="hidden sm:flex items-center gap-2.5 group">
             <img src="{{ $navSetting->logo_url }}" alt="{{ $navSetting->site_name }}" class="h-8 w-auto object-contain">
-            <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-zinc-300 transition-colors">
+            <span class="font-chillax font-bold text-xl tracking-tight text-white group-hover:text-zinc-300 transition-colors">
                 {{ $navSetting->site_name }}
             </span>
         </a>

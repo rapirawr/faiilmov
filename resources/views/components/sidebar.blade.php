@@ -10,7 +10,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-white/10 lg:hidden">
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
                 <img src="{{ $sidebarSetting->logo_url }}" alt="{{ $sidebarSetting->site_name }}" class="h-8 w-auto object-contain">
-                <span class="font-serif font-extrabold text-xl tracking-tight text-white group-hover:text-zinc-300 transition-colors">
+                <span class="font-chillax font-bold text-xl tracking-tight text-white group-hover:text-zinc-300 transition-colors">
                     {{ $sidebarSetting->site_name }}
                 </span>
             </a>
@@ -144,7 +144,7 @@
     @endphp
     @if($sidebarWidget['is_active'] ?? true)
         <div class="glass-panel p-4 rounded-3xl border border-white/10 space-y-3">
-            <span class="text-xs font-bold text-white block">{{ $sidebarWidget['title'] ?? 'Get faiilmov' }}</span>
+            <span class="text-xs font-bold text-white block font-chillax">{{ $sidebarWidget['title'] ?? 'Get Faiilmov' }}</span>
             <div class="grid {{ (!empty($sidebarWidget['button2_active'])) ? 'grid-cols-2' : 'grid-cols-1' }} gap-2">
                 <a href="{{ url($sidebarWidget['button_url'] ?? '/download-app') }}" class="px-3 py-2 rounded-2xl bg-white text-zinc-950 text-[10px] font-bold flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-colors shadow-sm">
                     <i data-lucide="{{ $sidebarWidget['button_icon'] ?? 'smartphone' }}" class="w-3.5 h-3.5"></i>
