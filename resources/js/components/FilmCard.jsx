@@ -13,30 +13,57 @@ function formatDuration(minutes, type) {
   return `${mins}m`;
 }
 
-function formatAgeRating(rating) {
-  if (!rating) return '13+';
-  const upper = String(rating).toUpperCase();
-  if (upper === 'R' || upper === 'NC-17' || upper === '18+') return '18+';
-  if (upper === 'PG-13' || upper === '13+') return '13+';
-  if (upper === 'PG' || upper === 'G' || upper === 'SU') return 'SU';
-  return rating;
-}
+function getCustomAgeBadge(rawRating) {
+  const globalStyle = (typeof window !== 'undefined' && window.__AGE_RATING_STYLE__) ? window.__AGE_RATING_STYLE__ : null;
+  const r = String(rawRating || '').toUpperCase().trim();
 
-function getAgeBadgeStyle(rating) {
-  const upper = String(rating || '').toUpperCase();
-  if (upper === '18+' || upper === 'R' || upper === 'NC-17') {
-    return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+  let key = '13+';
+  if (!r || r === 'UNRATED') {
+    key = 'unrated';
+  } else if (['SU', 'G', 'PG', 'TV-Y'].includes(r)) {
+    key = 'SU';
+  } else if (['13+', 'PG-13', 'TV-14'].includes(r)) {
+    key = '13+';
+  } else if (['16+', '17+', 'TV-MA'].includes(r)) {
+    key = '16+';
+  } else if (['18+', '21+', 'R', 'NC-17'].includes(r)) {
+    key = '18+';
   }
-  if (upper === '16+') {
-    return 'bg-orange-500/20 text-orange-300 border-orange-500/40';
-  }
-  if (upper === '13+' || upper === 'PG-13') {
-    return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
-  }
-  if (upper === 'SU' || upper === 'G' || upper === 'PG') {
-    return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-  }
-  return 'bg-zinc-800 text-zinc-300 border-white/20';
+
+  const defaultBadges = {
+    'SU': { label: 'SU', bg_color: '#064e3b', border_color: '#10b981', text_color: '#ffffff' },
+    '13+': { label: '13+', bg_color: '#0c4a6e', border_color: '#0284c7', text_color: '#ffffff' },
+    '16+': { label: '16+', bg_color: '#78350f', border_color: '#f59e0b', text_color: '#ffffff' },
+    '18+': { label: '18+', bg_color: '#4c0519', border_color: '#f43f5e', text_color: '#ffffff' },
+    'unrated': { label: 'UNRATED', bg_color: '#27272a', border_color: '#52525b', text_color: '#d4d4d8' },
+  };
+
+  const badges = (globalStyle && globalStyle.badges) ? globalStyle.badges : defaultBadges;
+  const badgeCfg = badges[key] || defaultBadges[key] || defaultBadges['13+'];
+
+  const borderRadius = (globalStyle && globalStyle.border_radius) ? globalStyle.border_radius : 'rounded-lg';
+  const fontWeight = (globalStyle && globalStyle.font_weight) ? globalStyle.font_weight : 'font-black';
+  const borderWidth = (globalStyle && globalStyle.border_width) ? globalStyle.border_width : 'border-2';
+  const hasGlow = globalStyle ? Boolean(globalStyle.has_glow) : true;
+  const hasShadow = globalStyle ? Boolean(globalStyle.has_shadow) : true;
+
+  const bWidth = borderWidth === 'border-0' ? '0px' : (borderWidth === 'border-[1.5px]' ? '1.5px' : (borderWidth === 'border' ? '1px' : '2px'));
+  const shadowStr = hasGlow 
+    ? `0 0 8px ${badgeCfg.border_color}50` 
+    : (hasShadow ? '0 2px 4px rgba(0,0,0,0.5)' : 'none');
+
+  return {
+    label: badgeCfg.label || key,
+    className: `${borderRadius} ${fontWeight} inline-flex items-center justify-center transition-all duration-200`,
+    style: {
+      backgroundColor: badgeCfg.bg_color || '#27272a',
+      borderColor: badgeCfg.border_color || '#52525b',
+      color: badgeCfg.text_color || '#ffffff',
+      borderWidth: bWidth,
+      borderStyle: bWidth === '0px' ? 'none' : 'solid',
+      boxShadow: shadowStr,
+    }
+  };
 }
 
 export default function FilmCard({ film }) {
@@ -45,7 +72,7 @@ export default function FilmCard({ film }) {
   const showUrl = `/film/${film.slug}`;
   const watchUrl = `/film/${film.slug}/watch`;
 
-  const formattedAge = formatAgeRating(film.content_rating);
+  const ageBadge = getCustomAgeBadge(film.content_rating);
   const formattedDur = formatDuration(film.duration_minutes, film.subject_type);
 
   const isComingSoon = Boolean(
@@ -134,8 +161,11 @@ export default function FilmCard({ film }) {
           
           {/* Metadata Row with Colored Age Rating Badge */}
           <div className="flex items-center gap-1.5 text-[10.5px] text-zinc-400 font-medium flex-wrap">
-            <span className={`px-1.5 py-0.5 rounded-md border text-[9.5px] font-extrabold uppercase tracking-wider ${getAgeBadgeStyle(formattedAge)}`}>
-              {formattedAge}
+            <span 
+              className={`px-1.5 py-0.5 text-[9.5px] tracking-wider font-mono ${ageBadge.className}`}
+              style={ageBadge.style}
+            >
+              {ageBadge.label}
             </span>
             <span className="text-zinc-500">•</span>
             <span>{formattedDur}</span>

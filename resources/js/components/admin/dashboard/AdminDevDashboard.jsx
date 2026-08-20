@@ -22,6 +22,7 @@ import {
 import ApiStatusCard from './ApiStatusCard';
 import QueueMonitorCard from './QueueMonitorCard';
 import ContentPerformanceCard from './ContentPerformanceCard';
+import GenreViewsDonutCard from './GenreViewsDonutCard';
 import UserPulseCard from './UserPulseCard';
 import ActivityFeedCard from './ActivityFeedCard';
 
@@ -217,28 +218,28 @@ export default function AdminDevDashboard({ initialSnapshot, csrfToken, actionUr
           </div>
 
           {/* Tab Filter */}
-          <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs font-semibold">
+          <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs font-semibold overflow-x-auto no-scrollbar max-w-full">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${activeTab === 'all' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${activeTab === 'all' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               Semua
             </button>
             <button
               onClick={() => setActiveTab('health')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${activeTab === 'health' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${activeTab === 'health' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               API & Queue
             </button>
             <button
               onClick={() => setActiveTab('content')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${activeTab === 'content' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${activeTab === 'content' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               Konten
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${activeTab === 'users' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${activeTab === 'users' ? 'bg-zinc-800 text-[#E4E2DD]' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               User & Logs
             </button>
@@ -362,9 +363,10 @@ export default function AdminDevDashboard({ initialSnapshot, csrfToken, actionUr
       {/* 3. Balanced Main Deck Layout */}
       {activeTab === 'all' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column (7 cols): Content Performance + User Growth */}
+          {/* Left Column (7 cols): Content Performance + Genre Popularity + User Growth */}
           <div className="lg:col-span-7 space-y-6">
             <ContentPerformanceCard contentData={contentPerformance} />
+            <GenreViewsDonutCard genreData={contentPerformance?.top_genres} />
             <UserPulseCard userData={userAnalytics} />
             <ActivityFeedCard activityLogs={activityFeed} />
           </div>
@@ -469,8 +471,9 @@ export default function AdminDevDashboard({ initialSnapshot, csrfToken, actionUr
       {/* Tab: Content */}
       {activeTab === 'content' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 space-y-6">
             <ContentPerformanceCard contentData={contentPerformance} />
+            <GenreViewsDonutCard genreData={contentPerformance?.top_genres} />
           </div>
           <div className="lg:col-span-4 rounded-2xl bg-zinc-900 border border-zinc-800 p-5 space-y-4">
             <h3 className="text-sm font-bold text-[#E4E2DD]">Komposisi & Klasifikasi</h3>

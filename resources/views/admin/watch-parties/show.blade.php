@@ -73,7 +73,7 @@
                     <span class="px-2 py-0.5 rounded-full bg-white/10 text-white font-mono text-[10px]">{{ $watchParty->participants->count() }}</span>
                 </h3>
 
-                <div class="space-y-2 max-h-60 overflow-y-auto">
+                <div class="space-y-2 max-h-60 overflow-y-auto admin-scrollbar">
                     @forelse($watchParty->participants as $p)
                         <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between text-xs">
                             <div class="flex items-center gap-2.5">
@@ -111,14 +111,14 @@
                 </h3>
 
                 <!-- Message History Box -->
-                <div class="flex-1 overflow-y-auto space-y-2.5 p-3 rounded-xl bg-zinc-950 border border-white/10">
+                <div class="flex-1 overflow-y-auto space-y-2.5 p-3 rounded-xl bg-zinc-950 border border-white/10 admin-scrollbar">
                     @forelse($messages as $msg)
                         <div class="p-2.5 rounded-xl border text-xs space-y-1 {{ $msg->is_system ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-white/5 border-white/5 text-zinc-200' }}">
                             <div class="flex items-center justify-between text-[10px]">
                                 <span class="font-bold {{ $msg->is_system ? 'text-amber-400' : 'text-sky-400' }}">{{ $msg->sender_name }}</span>
                                 <span class="text-zinc-500">{{ $msg->created_at->format('H:i:s') }}</span>
                             </div>
-                            <p class="text-xs leading-relaxed">{{ $msg->message }}</p>
+                            <p class="text-xs leading-relaxed break-words">{{ $msg->message }}</p>
                         </div>
                     @empty
                         <div class="h-full flex items-center justify-center text-zinc-500 text-xs">

@@ -30,6 +30,42 @@
             font-display: swap;
             font-style: normal;
         }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Bold.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Bold.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Bold.ttf') }}') format('truetype');
+            font-weight: 700;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Semibold.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Semibold.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Semibold.ttf') }}') format('truetype');
+            font-weight: 600;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Medium.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Medium.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Medium.ttf') }}') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Chillax';
+            src: url('{{ asset('fonts/chillax/Chillax-Regular.woff2') }}') format('woff2'),
+                 url('{{ asset('fonts/chillax/Chillax-Regular.woff') }}') format('woff'),
+                 url('{{ asset('fonts/chillax/Chillax-Regular.ttf') }}') format('truetype');
+            font-weight: 400;
+            font-display: swap;
+            font-style: normal;
+        }
         .font-chillax {
             font-family: 'Chillax', 'Outfit', sans-serif !important;
         }
@@ -81,13 +117,13 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="sidebarOpen = false" 
-             class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
+             class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm lg:hidden"
              x-cloak>
         </div>
 
         <!-- ==================== SIDEBAR SHELL ==================== -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
-               class="fixed inset-y-0 left-0 z-50 w-72 bg-zinc-950 border-r border-zinc-800/80 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-2xl">
+               class="fixed inset-y-0 left-0 z-[70] w-72 bg-zinc-950 border-r border-zinc-800/80 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-2xl">
             
             <div class="flex flex-col flex-1 min-h-0">
                 <!-- Brand Header -->
@@ -238,13 +274,23 @@
                                 </a>
                             </div>
 
-                            <!-- Rating Massal -->
-                            <div x-show="matches('Rating Massal Content Rating Batas Usia Sensor')" class="relative flex items-center">
+                            <!-- Rating Usia (Age Rate) -->
+                            <div x-show="matches('Rating Usia Content Rating Batas Usia Sensor Age Rate')" class="relative flex items-center">
                                 <span class="absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-[1px] bg-zinc-800"></span>
                                 <a href="{{ route('admin.films.content_rating') }}" 
-                                   class="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
-                                    <i data-lucide="shield-alert" class="w-4 h-4 text-zinc-400"></i>
-                                    <span>Rating Massal</span>
+                                   class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('admin.films.content_rating') ? 'text-zinc-100 font-bold bg-zinc-900/80' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-zinc-400"></i>
+                                        <span>Rating Usia (Age Rate)</span>
+                                    </div>
+                                    @php
+                                        $sidebarUnratedCount = \App\Models\Film::whereNull('content_rating')->count();
+                                    @endphp
+                                    @if($sidebarUnratedCount > 0)
+                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-zinc-800 text-amber-400 border border-amber-500/30">
+                                            {{ $sidebarUnratedCount }}
+                                        </span>
+                                    @endif
                                 </a>
                             </div>
 
@@ -537,7 +583,7 @@
                     
                     <!-- Title Panel -->
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <h1 class="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight truncate">
+                        <h1 class="text-sm sm:text-base font-bold text-white font-chillax tracking-tight truncate">
                             @yield('page_title', 'Dashboard')
                         </h1>
                     </div>
@@ -566,7 +612,7 @@
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl overflow-hidden z-50 p-2 text-white"
+                             class="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl overflow-hidden z-[80] p-2 text-white"
                              x-cloak>
                             <div class="flex items-center justify-between p-2.5 border-b border-white/10">
                                 <span class="font-bold text-xs uppercase tracking-wider text-zinc-300">Aktivitas Terkini</span>
@@ -613,7 +659,7 @@
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-56 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl p-1.5 text-white z-50"
+                             class="absolute right-0 mt-2 w-56 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl p-1.5 text-white z-[80]"
                              x-cloak>
                             <div class="p-2.5 border-b border-white/10 flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0 flex items-center justify-center">
@@ -656,7 +702,7 @@
             </header>
 
             <!-- ==================== PAGE MAIN CONTAINER ==================== -->
-            <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+            <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 min-w-0 pb-16">
                 
                 <!-- Flash Toast Alerts -->
                 @if(session('success'))

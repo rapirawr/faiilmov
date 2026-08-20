@@ -145,6 +145,7 @@
             key: '{{ config('broadcasting.connections.pusher.key', '84a6e3fa24e4374c43b5') }}',
             cluster: '{{ config('broadcasting.connections.pusher.options.cluster', 'ap1') }}'
         };
+        window.__AGE_RATING_STYLE__ = {!! json_encode(\App\Models\SiteSetting::current()->getAgeRatingStyle(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
     </script>
 
     <style>

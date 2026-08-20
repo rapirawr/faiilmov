@@ -201,6 +201,104 @@ class ContentAnalyticsService
     }
 
     /**
+     * Get top genres aggregated by views / watch activity
+     */
+    public function getTopGenresByViews(int $limit = 6): array
+    {
+        // 1. Try from watch_histories activity first
+        $genres = DB::table('genres')
+            ->join('film_genre', 'genres.id', '=', 'film_genre.genre_id')
+            ->join('watch_histories', 'film_genre.film_id', '=', 'watch_histories.film_id')
+            ->select(
+                'genres.id',
+                'genres.name',
+                'genres.slug',
+                DB::raw('COUNT(watch_histories.id) as views'),
+                DB::raw('COUNT(DISTINCT watch_histories.user_id) as unique_viewers')
+            )
+            ->groupBy('genres.id', 'genres.name', 'genres.slug')
+            ->orderBy('views', 'desc')
+            ->limit($limit)
+            ->get();
+
+        // 2. If watch_histories is empty, fallback to aggregate films.view_count per genre
+        if ($genres->isEmpty() || $genres->sum('views') == 0) {
+            $genres = DB::table('genres')
+                ->join('film_genre', 'genres.id', '=', 'film_genre.genre_id')
+                ->join('films', 'film_genre.film_id', '=', 'films.id')
+                ->select(
+                    'genres.id',
+                    'genres.name',
+                    'genres.slug',
+                    DB::raw('COALESCE(SUM(films.view_count), 0) as views'),
+                    DB::raw('COUNT(films.id) as total_films')
+                )
+                ->groupBy('genres.id', 'genres.name', 'genres.slug')
+                ->having('views', '>', 0)
+                ->orderBy('views', 'desc')
+                ->limit($limit)
+                ->get();
+        }
+
+        // 3. If still empty (new database without view counts), count total films per genre
+        if ($genres->isEmpty()) {
+            $genres = DB::table('genres')
+                ->join('film_genre', 'genres.id', '=', 'film_genre.genre_id')
+                ->join('films', 'film_genre.film_id', '=', 'films.id')
+                ->select(
+                    'genres.id',
+                    'genres.name',
+                    'genres.slug',
+                    DB::raw('COUNT(films.id) as views'),
+                    DB::raw('COUNT(films.id) as total_films')
+                )
+                ->groupBy('genres.id', 'genres.name', 'genres.slug')
+                ->orderBy('views', 'desc')
+                ->limit($limit)
+                ->get();
+        }
+
+        $totalGenreViews = (int)$genres->sum('views');
+        if ($totalGenreViews == 0) {
+            $totalGenreViews = 1;
+        }
+
+        $colorPalette = [
+            '#F59E0B', // Amber
+            '#06B6D4', // Cyan
+            '#EC4899', // Pink
+            '#8B5CF6', // Purple
+            '#10B981', // Emerald
+            '#F97316', // Orange
+            '#3B82F6', // Blue
+            '#A855F7', // Violet
+        ];
+
+        $items = [];
+        foreach ($genres as $index => $g) {
+            $views = (int)$g->views;
+            $pct = round(($views / $totalGenreViews) * 100, 1);
+            $color = $colorPalette[$index % count($colorPalette)];
+
+            $items[] = [
+                'id'          => $g->id,
+                'name'        => $g->name,
+                'slug'        => $g->slug,
+                'views'       => $views,
+                'percentage'  => $pct,
+                'color'       => $color,
+                'total_films' => (int)($g->total_films ?? 0),
+            ];
+        }
+
+        return [
+            'total_views' => $totalGenreViews,
+            'items'       => $items,
+            'top_genre'   => $items[0]['name'] ?? 'Action',
+        ];
+    }
+
+    /**
      * Helper to format seconds into clean human string (e.g., '14j 25m' or '45m')
      */
     private function formatSeconds(int $seconds): string

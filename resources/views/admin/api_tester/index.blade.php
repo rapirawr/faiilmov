@@ -204,8 +204,8 @@
                         <p class="text-xs font-mono">Mengirim permintaan HTTP ke server...</p>
                     </div>
 
-                    <div x-show="responseBody && !isLoading" class="space-y-3">
-                        <pre class="w-full max-h-96 overflow-auto p-4 rounded-2xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-emerald-400 leading-relaxed scrollbar-thin"><code x-text="responseBody"></code></pre>
+                    <div x-show="responseBody && !isLoading" class="space-y-3 min-w-0">
+                        <pre class="w-full max-w-full max-h-96 overflow-x-auto overflow-y-auto p-4 rounded-2xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-emerald-400 leading-relaxed admin-scrollbar"><code x-text="responseBody"></code></pre>
                     </div>
                 </div>
             </div>

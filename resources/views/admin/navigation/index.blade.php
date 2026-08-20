@@ -407,48 +407,50 @@
     </div>
 
     <!-- Lucide Icon Picker Modal -->
-    <div x-show="iconPickerOpen" x-cloak 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div @click.away="iconPickerOpen = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div>
-                    <h4 class="font-bold text-white text-sm font-['Outfit']">Pilih Icon Lucide</h4>
-                    <p class="text-[11px] text-zinc-400">Pilih icon visual untuk elemen yang dipilih.</p>
-                </div>
-                <button type="button" @click="iconPickerOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Icon Search -->
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" 
-                       x-model="iconSearch" 
-                       placeholder="Cari nama icon..." 
-                       class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 font-mono">
-            </div>
-
-            <!-- Icon Grid -->
-            <div class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
-                @foreach($availableIcons as $iconName)
-                    <button type="button" 
-                            x-show="!iconSearch || '{{ $iconName }}'.includes(iconSearch.toLowerCase())"
-                            @click="selectIcon('{{ $iconName }}')" 
-                            class="p-3 rounded-2xl bg-zinc-950 hover:bg-white hover:text-zinc-950 border border-zinc-800 flex flex-col items-center justify-center gap-1.5 transition-all text-zinc-300 cursor-pointer group">
-                        <i data-lucide="{{ $iconName }}" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                        <span class="text-[9px] font-mono truncate w-full text-center">{{ $iconName }}</span>
+    <template x-teleport="body">
+        <div x-show="iconPickerOpen" x-cloak 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div @click.away="iconPickerOpen = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <div>
+                        <h4 class="font-bold text-white text-sm font-['Outfit']">Pilih Icon Lucide</h4>
+                        <p class="text-[11px] text-zinc-400">Pilih icon visual untuk elemen yang dipilih.</p>
+                    </div>
+                    <button type="button" @click="iconPickerOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
-                @endforeach
+                </div>
+
+                <!-- Icon Search -->
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" 
+                           x-model="iconSearch" 
+                           placeholder="Cari nama icon..." 
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 font-mono">
+                </div>
+
+                <!-- Icon Grid -->
+                <div class="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[300px] overflow-y-auto admin-scrollbar pr-1">
+                    @foreach($availableIcons as $iconName)
+                        <button type="button" 
+                                x-show="!iconSearch || '{{ $iconName }}'.includes(iconSearch.toLowerCase())"
+                                @click="selectIcon('{{ $iconName }}')" 
+                                class="p-3 rounded-2xl bg-zinc-950 hover:bg-white hover:text-zinc-950 border border-zinc-800 flex flex-col items-center justify-center gap-1.5 transition-all text-zinc-300 cursor-pointer group">
+                            <i data-lucide="{{ $iconName }}" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-[9px] font-mono truncate w-full text-center">{{ $iconName }}</span>
+                        </button>
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 
 </div>
 

@@ -4,10 +4,13 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+
+
 @theme {
     --font-sans: 'Instrument Sans', sans-serif;
-    --font-serif: 'Outfit', sans-serif;
+    --font-serif: 'Chillax', 'Outfit', sans-serif;
     --font-chillax: 'Chillax', 'Outfit', sans-serif;
+    --font-heading: 'Chillax', 'Outfit', sans-serif;
 
     --color-amber-50: #faf9f7;
     --color-amber-100: #f4f3ef;
@@ -32,6 +35,14 @@ body {
     font-family: 'Instrument Sans', sans-serif;
 }
 
+h1, h2, .font-chillax {
+    font-family: 'Chillax', 'Outfit', sans-serif;
+}
+
+h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Instrument Sans', sans-serif;
+}
+
 [x-cloak] {
     display: none !important;
 }
@@ -48,6 +59,10 @@ body {
 }
 
 .font-chillax {
-    font-family: 'Chillax', 'Outfit', sans-serif;
+    font-family: 'Chillax', 'Outfit', sans-serif !important;
+}
+
+.font-serif {
+    font-family: 'Outfit', sans-serif !important;
 }
 

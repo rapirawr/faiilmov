@@ -30,6 +30,7 @@ class DashboardSnapshotService
         $totalViewsToday = $this->contentService->getTotalViewsToday();
         $totalWatchTimeToday = $this->contentService->getTotalWatchTimeToday();
         $viewsTrend7d = $this->contentService->getDailyViewsTrend(7);
+        $topGenres = $this->contentService->getTopGenresByViews(6);
 
         // 3. User Analytics
         $dau = $this->userService->getDAU();
@@ -105,6 +106,7 @@ class DashboardSnapshotService
                 'total_watch_time_human' => $this->formatHoursMinutes($totalWatchTimeToday),
                 'top_films'              => $topFilms,
                 'views_trend_7d'         => $viewsTrend7d,
+                'top_genres'             => $topGenres,
                 'catalog'                => [
                     'total_films'     => $totalFilms,
                     'total_movies'    => $totalMovies,

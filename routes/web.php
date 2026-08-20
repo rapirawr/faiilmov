@@ -301,7 +301,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/films/{id}/force-delete', [AdminFilmController::class, 'forceDelete'])->name('films.force_delete');
     Route::post('/films/{id}/restore', [AdminFilmController::class, 'restore'])->name('films.restore');
     Route::get('/films-content-rating', [AdminFilmController::class, 'contentRatingEditor'])->name('films.content_rating');
+    Route::post('/films-content-rating/style', [AdminFilmController::class, 'saveAgeRatingStyle'])->name('films.save_age_rating_style');
     Route::post('/films-content-rating', [AdminFilmController::class, 'updateContentRatings'])->name('films.update_content_ratings');
+    Route::post('/films/{film}/content-rating', [AdminFilmController::class, 'updateSingleContentRating'])->name('films.update_single_content_rating');
+    Route::post('/films/bulk-set-content-rating', [AdminFilmController::class, 'bulkSetContentRating'])->name('films.bulk_set_content_rating');
     Route::post('/films/auto-rate-all', [AdminFilmController::class, 'autoRateAll'])->name('films.auto_rate_all');
     Route::post('/films/{film}/auto-rate', [AdminFilmController::class, 'autoRate'])->name('films.auto_rate');
     Route::post('/films/fetch-imdb', [AdminFilmController::class, 'fetchImdb'])->name('films.fetch_imdb');

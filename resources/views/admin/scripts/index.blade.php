@@ -7,15 +7,16 @@
 <div x-data="scriptRunner()" class="space-y-6 relative" @keydown.window.ctrl.s.prevent="saveScript()" @keydown.window.cmd.s.prevent="saveScript()">
 
     <!-- Floating In-App Toast System (Replaces Native alert) -->
-    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    <!-- Floating Toast Notifications (Top Right) -->
+    <div class="fixed top-6 right-6 z-[90] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         <template x-for="toast in toasts" :key="toast.id">
             <div x-show="toast.visible"
                  x-transition:enter="transition ease-out duration-300 transform"
-                 x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                 x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
                  x-transition:leave="transition ease-in duration-200 transform"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
                  class="pointer-events-auto p-4 rounded-2xl shadow-2xl border flex items-center justify-between gap-3 text-xs font-semibold backdrop-blur-xl"
                  :class="{
                      'bg-zinc-900/95 text-emerald-300 border-emerald-500/30': toast.type === 'success',
@@ -93,30 +94,44 @@
     </div>
 
     <!-- 2-Step Confirmation Security Modal -->
-    <div x-show="confirmModal" x-cloak 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div @click.away="confirmModal = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-amber-500/30 text-left space-y-4 shadow-2xl text-white">
-            <div class="flex items-center gap-3 text-amber-400 border-b border-zinc-800 pb-3">
-                <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+    <template x-teleport="body">
+        <div x-show="confirmModal" x-cloak 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div @click.away="confirmModal = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-amber-500/30 text-left space-y-4 shadow-2xl text-white">
+                <div class="flex items-center gap-3 text-amber-400 border-b border-zinc-800 pb-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm font-['Outfit']">Konfirmasi Eksekusi Kode PHP</h4>
+                        <p class="text-[11px] text-zinc-400">Peringatan Keamanan Runtime Server</p>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="font-bold text-white text-sm font-['Outfit']">Konfirmasi Eksekusi Kode PHP</h4>
-                    <p class="text-[11px] text-zinc-400">Peringatan Keamanan Runtime Server</p>
-                </div>
-            </div>
 
-            <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2 text-xs text-zinc-300">
-                <p>Anda akan mengeksekusi kode PHP kustom langsung pada runtime live:</p>
-                <div class="p-2 rounded-xl bg-zinc-900 font-mono text-[11px] text-amber-300 border border-zinc-800 truncate" x-text="form.title || 'Custom PHP Snippet'"></div>
-                <p class="text-[11px] text-zinc-500">Aksi eksekusi ini akan otomatis tercatat ke <strong>AdminActivityLog</strong>.</p>
+                <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2 text-xs text-zinc-300">
+                    <p>Anda akan mengeksekusi kode PHP kustom langsung pada runtime live:</p>
+                    <div class="p-2 rounded-xl bg-zinc-900 font-mono text-[11px] text-amber-300 border border-zinc-800 truncate" x-text="form.title || 'Custom PHP Snippet'"></div>
+                    <p class="text-[11px] text-zinc-500">Aksi eksekusi ini akan otomatis tercatat ke <strong>AdminActivityLog</strong>.</p>
+                </div>
+
+                <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
+                    <button type="button" @click="confirmModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button" @click="executeScript()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-zinc-950"></i>
+                        <span>Saya Mengerti, Jalankan</span>
+                    </button>
+                </div>
             </div>
+        </div>
+    </template>
 
             <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
                 <label class="flex items-center gap-2 text-[11px] text-zinc-400 cursor-pointer select-none">

@@ -348,24 +348,156 @@ class AdminFilmController extends Controller
 
     public function contentRatingEditor(Request $request)
     {
-        $query = Film::query();
+        $query = Film::with('genres');
 
-        if ($request->filled('filter')) {
-            if ($request->filter === 'unrated') {
-                $query->whereNull('content_rating');
+        // Filter content rating category
+        $filter = $request->get('filter', 'all');
+        if ($filter === 'unrated') {
+            $query->whereNull('content_rating');
+        } elseif ($filter === 'rated') {
+            $query->whereNotNull('content_rating');
+        } elseif (in_array($filter, ['SU', '13+', '16+', '18+', 'G', 'PG'])) {
+            if ($filter === 'SU') {
+                $query->whereIn('content_rating', ['SU', 'G', 'PG']);
             } else {
-                $query->where('content_rating', $request->filter);
+                $query->where('content_rating', $filter);
             }
         }
 
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+        // Filter subject type
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('subject_type', $request->type);
         }
 
-        $films = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
-        $unratedCount = Film::whereNull('content_rating')->count();
+        // Filter genre
+        if ($request->filled('genre_id') && $request->genre_id !== 'all') {
+            $query->whereHas('genres', fn($g) => $g->where('genres.id', $request->genre_id));
+        }
 
-        return view('admin.films.content-rating', compact('films', 'unratedCount'));
+        // Search query
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('synopsis', 'like', "%{$search}%")
+                  ->orWhere('release_year', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sort = $request->get('sort', 'newest');
+        if ($sort === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($sort === 'title_asc') {
+            $query->orderBy('title', 'asc');
+        } elseif ($sort === 'title_desc') {
+            $query->orderBy('title', 'desc');
+        } elseif ($sort === 'year_desc') {
+            $query->orderBy('release_year', 'desc');
+        } elseif ($sort === 'unrated_first') {
+            $query->orderByRaw('CASE WHEN content_rating IS NULL THEN 0 ELSE 1 END')->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $films = $query->paginate(20)->withQueryString();
+
+        // Comprehensive Metrics & Distribution Stats
+        $totalFilms = Film::count();
+        $unratedCount = Film::whereNull('content_rating')->count();
+        $ratedCount = $totalFilms - $unratedCount;
+        $suCount = Film::whereIn('content_rating', ['SU', 'G', 'PG'])->count();
+        $r13Count = Film::where('content_rating', '13+')->count();
+        $r16Count = Film::where('content_rating', '16+')->count();
+        $r18Count = Film::where('content_rating', '18+')->count();
+
+        $stats = [
+            'total' => $totalFilms,
+            'unrated' => $unratedCount,
+            'rated' => $ratedCount,
+            'rated_percentage' => $totalFilms > 0 ? round(($ratedCount / $totalFilms) * 100, 1) : 0,
+            'su' => $suCount,
+            'r13' => $r13Count,
+            'r16' => $r16Count,
+            'r18' => $r18Count,
+        ];
+
+        $genres = \App\Models\Genre::orderBy('name')->get();
+        $ageRatingStyle = \App\Models\SiteSetting::current()->getAgeRatingStyle();
+
+        return view('admin.films.content-rating', compact('films', 'stats', 'genres', 'ageRatingStyle'));
+    }
+
+    public function saveAgeRatingStyle(Request $request)
+    {
+        $validated = $request->validate([
+            'preset' => 'nullable|string|max:50',
+            'border_radius' => 'nullable|string|max:50',
+            'border_width' => 'nullable|string|max:50',
+            'font_weight' => 'nullable|string|max:50',
+            'font_size' => 'nullable|string|max:50',
+            'has_glow' => 'nullable|boolean',
+            'has_shadow' => 'nullable|boolean',
+            'badges' => 'required|array',
+        ]);
+
+        $setting = \App\Models\SiteSetting::current();
+        $setting->update(['age_rating_style' => $validated]);
+        \App\Models\SiteSetting::clearCache();
+
+        AdminActivityLog::log('updated_age_rating_style', 'Memperbarui kustomisasi desain style badge rating usia.');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Style rating usia berhasil disimpan dan diperbarui!',
+                'style' => $setting->getAgeRatingStyle()
+            ]);
+        }
+
+        return back()->with('success', 'Desain dan style badge rating usia berhasil disimpan!');
+    }
+
+    public function updateSingleContentRating(Request $request, Film $film)
+    {
+        $validated = $request->validate([
+            'content_rating' => 'nullable|string|in:SU,G,PG,13+,16+,18+,unrated',
+        ]);
+
+        $ratingVal = ($validated['content_rating'] === 'unrated' || empty($validated['content_rating'])) ? null : $validated['content_rating'];
+        $film->update(['content_rating' => $ratingVal]);
+
+        AdminActivityLog::log('updated_content_rating', "Mengubah rating usia film '{$film->title}' menjadi " . ($ratingVal ?? 'UNRATED') . ".", 'Film', $film->id);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'ok',
+                'rating' => $ratingVal,
+                'film_id' => $film->id,
+                'title' => $film->title
+            ]);
+        }
+
+        return back()->with('success', "Rating usia film '{$film->title}' berhasil diperbarui.");
+    }
+
+    public function bulkSetContentRating(Request $request)
+    {
+        $validated = $request->validate([
+            'film_ids' => 'required|array',
+            'film_ids.*' => 'exists:films,id',
+            'content_rating' => 'nullable|string|in:SU,G,PG,13+,16+,18+,unrated',
+        ]);
+
+        $ratingVal = ($validated['content_rating'] === 'unrated' || empty($validated['content_rating'])) ? null : $validated['content_rating'];
+        
+        Film::whereIn('id', $validated['film_ids'])->update(['content_rating' => $ratingVal]);
+
+        $count = count($validated['film_ids']);
+        $label = $ratingVal ?? 'UNRATED';
+        AdminActivityLog::log('bulk_set_content_rating', "Menetapkan rating usia {$label} untuk {$count} film.");
+
+        return back()->with('success', "Berhasil menetapkan rating usia '{$label}' untuk {$count} film.");
     }
 
     public function updateContentRatings(Request $request)

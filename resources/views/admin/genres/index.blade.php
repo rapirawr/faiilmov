@@ -51,9 +51,9 @@
                 </span>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-[75vh] admin-scrollbar">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider">
+                    <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider sticky top-0 z-10">
                         <tr>
                             <th class="px-4 py-3.5">Nama Genre</th>
                             <th class="px-4 py-3.5">Slug</th>
@@ -73,7 +73,7 @@
                                 </td>
                                 <td class="px-4 py-3.5 text-right">
                                     <div class="flex items-center justify-end gap-1.5" x-data="{ editing: false, name: '{{ addslashes($g->name) }}' }">
-                                        <button type="button" @click="editing = !editing" class="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors" title="Edit Genre">
+                                        <button type="button" @click="editing = !editing" class="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer" title="Edit Genre">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
 
@@ -86,36 +86,38 @@
                                         </form>
 
                                         <!-- Quick Edit Modal -->
-                                        <div x-show="editing" x-cloak 
-                                             x-transition:enter="transition ease-out duration-200"
-                                             x-transition:enter-start="opacity-0 scale-95"
-                                             x-transition:enter-end="opacity-100 scale-100"
-                                             x-transition:leave="transition ease-in duration-150"
-                                             x-transition:leave-start="opacity-100 scale-100"
-                                             x-transition:leave-end="opacity-0 scale-95"
-                                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                                            <div @click.away="editing = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl">
-                                                <div class="flex items-center gap-3 border-b border-zinc-800 pb-3">
-                                                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        <template x-teleport="body">
+                                            <div x-show="editing" x-cloak 
+                                                 x-transition:enter="transition ease-out duration-200"
+                                                 x-transition:enter-start="opacity-0 scale-95"
+                                                 x-transition:enter-end="opacity-100 scale-100"
+                                                 x-transition:leave="transition ease-in duration-150"
+                                                 x-transition:leave-start="opacity-100 scale-100"
+                                                 x-transition:leave-end="opacity-0 scale-95"
+                                                 class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                                <div @click.away="editing = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl">
+                                                    <div class="flex items-center gap-3 border-b border-zinc-800 pb-3">
+                                                        <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                                        </div>
+                                                        <h4 class="font-bold text-white text-sm font-['Outfit']">Edit Genre</h4>
                                                     </div>
-                                                    <h4 class="font-bold text-white text-sm font-['Outfit']">Edit Genre</h4>
-                                                </div>
 
-                                                <form action="{{ route('admin.genres.update', $g->id) }}" method="POST" class="space-y-4">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <div>
-                                                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nama Genre *</label>
-                                                        <input type="text" name="name" x-model="name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                                                    </div>
-                                                    <div class="flex justify-end gap-2.5 pt-2">
-                                                        <button type="button" @click="editing = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
-                                                        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 transition-all shadow-lg shadow-amber-500/20 cursor-pointer">Perbarui</button>
-                                                    </div>
-                                                </form>
+                                                    <form action="{{ route('admin.genres.update', $g->id) }}" method="POST" class="space-y-4">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div>
+                                                            <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Nama Genre *</label>
+                                                            <input type="text" name="name" x-model="name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                                                        </div>
+                                                        <div class="flex justify-end gap-2.5 pt-2">
+                                                            <button type="button" @click="editing = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
+                                                            <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-zinc-950 transition-all shadow-lg shadow-amber-500/20 cursor-pointer">Perbarui</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>

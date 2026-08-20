@@ -72,53 +72,55 @@
             </button>
 
             <!-- Clean Old Logs Modal -->
-            <div x-show="cleanModal" x-cloak 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                <div @click.away="cleanModal = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
-                    <div class="flex items-center gap-3 border-b border-zinc-800 pb-3 text-rose-400">
-                        <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
-                            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <template x-teleport="body">
+                <div x-show="cleanModal" x-cloak 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div @click.away="cleanModal = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                        <div class="flex items-center gap-3 border-b border-zinc-800 pb-3 text-rose-400">
+                            <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                            </div>
+                            <h4 class="font-bold text-white text-sm font-['Outfit']">Bersihkan Riwayat Audit Log</h4>
                         </div>
-                        <h4 class="font-bold text-white text-sm font-['Outfit']">Bersihkan Riwayat Audit Log</h4>
+
+                        <p class="text-xs text-zinc-300">Hapus catatan audit log yang sudah lampau untuk menghemat ruang penyimpanan database.</p>
+
+                        <form action="{{ route('admin.activity_logs.clear_old') }}" method="POST" class="space-y-4">
+                            @csrf
+                            @method('DELETE')
+
+                            <div>
+                                <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Pilih Retensi Waktu *</label>
+                                <select name="days" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500">
+                                    <option value="30">Hapus log yang lebih lama dari 30 Hari</option>
+                                    <option value="60">Hapus log yang lebih lama dari 60 Hari</option>
+                                    <option value="90">Hapus log yang lebih lama dari 90 Hari</option>
+                                </select>
+                            </div>
+
+                            <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
+                                <button type="button" @click="cleanModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-xs font-bold text-white shadow-lg shadow-rose-500/20 transition-all cursor-pointer">Konfirmasi Bersihkan</button>
+                            </div>
+                        </form>
                     </div>
-
-                    <p class="text-xs text-zinc-300">Hapus catatan audit log yang sudah lampau untuk menghemat ruang penyimpanan database.</p>
-
-                    <form action="{{ route('admin.activity_logs.clear_old') }}" method="POST" class="space-y-4">
-                        @csrf
-                        @method('DELETE')
-
-                        <div>
-                            <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Pilih Retensi Waktu *</label>
-                            <select name="days" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500">
-                                <option value="30">Hapus log yang lebih lama dari 30 Hari</option>
-                                <option value="60">Hapus log yang lebih lama dari 60 Hari</option>
-                                <option value="90">Hapus log yang lebih lama dari 90 Hari</option>
-                            </select>
-                        </div>
-
-                        <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
-                            <button type="button" @click="cleanModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
-                            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-xs font-bold text-white shadow-lg shadow-rose-500/20 transition-all cursor-pointer">Konfirmasi Bersihkan</button>
-                        </div>
-                    </form>
                 </div>
-            </div>
+            </template>
 
         </div>
     </div>
 
     <!-- Logs Table Container -->
     <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto max-h-[75vh] admin-scrollbar">
             <table class="w-full text-left text-xs">
-                <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider">
+                <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider sticky top-0 z-10">
                     <tr>
                         <th class="px-4 py-3.5">Admin</th>
                         <th class="px-4 py-3.5">Aksi</th>
@@ -148,7 +150,7 @@
                                     <span class="text-zinc-600">-</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3.5 text-zinc-300 max-w-md text-xs leading-relaxed">
+                            <td class="px-4 py-3.5 text-zinc-300 max-w-md text-xs leading-relaxed break-words min-w-[200px]">
                                 {{ $log->description }}
                             </td>
                             <td class="px-4 py-3.5 text-right font-mono text-zinc-400 text-[11px]">

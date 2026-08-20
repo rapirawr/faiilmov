@@ -20,6 +20,7 @@ class SiteSetting extends Model
         'secondary_color',
         'accent_color',
         'background_color',
+        'age_rating_style',
         'seo_meta_title',
         'seo_meta_description',
         'seo_meta_keywords',
@@ -39,9 +40,73 @@ class SiteSetting extends Model
     {
         return [
             'social_links' => 'array',
+            'age_rating_style' => 'array',
             'maintenance_mode' => 'boolean',
             'page_transition_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Default Age Rating Style Settings
+     */
+    public static function defaultAgeRatingStyle(): array
+    {
+        return [
+            'preset' => 'squircle_bordered',
+            'border_radius' => 'rounded-lg', // rounded-lg, rounded-md, rounded-full, rounded-sm
+            'border_width' => 'border-2', // border-2, border, border-[1.5px], border-0
+            'font_weight' => 'font-black', // font-black, font-extrabold, font-bold
+            'font_size' => 'text-[11px]',
+            'has_glow' => true,
+            'has_shadow' => true,
+            'badges' => [
+                'SU' => [
+                    'label' => 'SU',
+                    'full_label' => 'SU (Semua Umur)',
+                    'bg_color' => '#064e3b',
+                    'border_color' => '#10b981',
+                    'text_color' => '#ffffff',
+                ],
+                '13+' => [
+                    'label' => '13+',
+                    'full_label' => '13+ (Remaja)',
+                    'bg_color' => '#0c4a6e',
+                    'border_color' => '#0284c7',
+                    'text_color' => '#ffffff',
+                ],
+                '16+' => [
+                    'label' => '16+',
+                    'full_label' => '16+ (Dewasa Muda)',
+                    'bg_color' => '#78350f',
+                    'border_color' => '#f59e0b',
+                    'text_color' => '#ffffff',
+                ],
+                '18+' => [
+                    'label' => '18+',
+                    'full_label' => '18+ (Dewasa)',
+                    'bg_color' => '#4c0519',
+                    'border_color' => '#f43f5e',
+                    'text_color' => '#ffffff',
+                ],
+                'unrated' => [
+                    'label' => 'UNRATED',
+                    'full_label' => 'UNRATED',
+                    'bg_color' => '#27272a',
+                    'border_color' => '#52525b',
+                    'text_color' => '#d4d4d8',
+                ],
+            ]
+        ];
+    }
+
+    public function getAgeRatingStyle(): array
+    {
+        $defaults = static::defaultAgeRatingStyle();
+        if (empty($this->age_rating_style) || !is_array($this->age_rating_style)) {
+            return $defaults;
+        }
+
+        return array_replace_recursive($defaults, $this->age_rating_style);
     }
 
     /**

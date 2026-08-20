@@ -536,14 +536,12 @@
             </div>
         </div>
 
-        <!-- Sticky Save Action Bar -->
-        <div class="sticky bottom-6 z-30 p-4 rounded-2xl bg-zinc-900/90 border border-zinc-700/80 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2 text-xs text-zinc-400">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-                <span>Perubahan konfigurasi akan langsung berlaku secara global.</span>
-            </div>
+        <!-- Bottom Spacer for Floating Bar -->
+        <div class="h-20"></div>
 
-            <button type="submit" class="px-6 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors flex items-center gap-2 shadow-lg cursor-pointer">
+        <!-- Floating Bottom-Right Save Action Bar -->
+        <div class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/90 ring-1 ring-white/10 hover:border-amber-500/50 transition-all">
+            <button type="submit" class="px-5 sm:px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
                 <i data-lucide="save" class="w-4 h-4"></i>
                 <span>Simpan Pengaturan Iklan</span>
             </button>

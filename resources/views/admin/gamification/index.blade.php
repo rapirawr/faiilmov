@@ -659,185 +659,189 @@
     <!-- ========================================================================= -->
     <!-- MODAL: TAMBAH BADGE BARU                                                  -->
     <!-- ========================================================================= -->
-    <div x-show="showAddBadgeModal" 
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4"
-             @click.outside="showAddBadgeModal = false">
-            
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <h3 class="font-black text-sm text-white flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
-                    <span>Tambah Lencana Baru</span>
-                </h3>
-                <button type="button" @click="showAddBadgeModal = false" class="text-zinc-400 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+    <template x-teleport="body">
+        <div x-show="showAddBadgeModal" 
+             x-cloak 
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4"
+                 @click.outside="showAddBadgeModal = false">
+                
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <h3 class="font-black text-sm text-white flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
+                        <span>Tambah Lencana Baru</span>
+                    </h3>
+                    <button type="button" @click="showAddBadgeModal = false" class="text-zinc-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.gamification.badges.store') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-bold text-zinc-300">Nama Lencana</label>
+                            <input type="text" name="name" required placeholder="Misal: Penjelajah Galaksi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Kode Unik (Opsional)</label>
+                            <input type="text" name="code" placeholder="genre_scifi_master" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Kategori</label>
+                            <select name="category" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                                <option value="milestone">Pencapaian Utama (Milestone)</option>
+                                <option value="genre">Spesialis Genre</option>
+                                <option value="habit">Kebiasaan Nonton (Habit/Streak)</option>
+                                <option value="community">Sosial & Komunitas</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Ikon Lucide</label>
+                            <input type="text" name="icon" required value="award" placeholder="Misal: rocket, film, flame, sparkles" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                            <span class="text-[9px] text-zinc-500">Nama icon Lucide (tanpa raw emoji)</span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Warna Aksen</label>
+                            <select name="color" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                                <option value="amber">Amber (Emas)</option>
+                                <option value="purple">Purple (Ungu)</option>
+                                <option value="rose">Rose (Merah Muda)</option>
+                                <option value="cyan">Cyan (Biru Langit)</option>
+                                <option value="emerald">Emerald (Hijau)</option>
+                                <option value="yellow">Yellow (Kuning)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">XP Reward</label>
+                            <input type="number" name="xp_reward" value="50" min="0" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Target Hitungan</label>
+                            <input type="number" name="required_count" value="1" min="1" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-bold text-zinc-300">Deskripsi / Syarat Buka</label>
+                            <textarea name="description" required rows="2" placeholder="Tonton minimal 5 film sci-fi untuk membuka lencana ini." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+                        <button type="button" @click="showAddBadgeModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition shadow cursor-pointer">
+                            Simpan Lencana
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form action="{{ route('admin.gamification.badges.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1 col-span-2">
-                        <label class="text-xs font-bold text-zinc-300">Nama Lencana</label>
-                        <input type="text" name="name" required placeholder="Misal: Penjelajah Galaksi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Kode Unik (Opsional)</label>
-                        <input type="text" name="code" placeholder="genre_scifi_master" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Kategori</label>
-                        <select name="category" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                            <option value="milestone">Pencapaian Utama (Milestone)</option>
-                            <option value="genre">Spesialis Genre</option>
-                            <option value="habit">Kebiasaan Nonton (Habit/Streak)</option>
-                            <option value="community">Sosial & Komunitas</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Ikon Lucide</label>
-                        <input type="text" name="icon" required value="award" placeholder="Misal: rocket, film, flame, sparkles" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                        <span class="text-[9px] text-zinc-500">Nama icon Lucide (tanpa raw emoji)</span>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Warna Aksen</label>
-                        <select name="color" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                            <option value="amber">Amber (Emas)</option>
-                            <option value="purple">Purple (Ungu)</option>
-                            <option value="rose">Rose (Merah Muda)</option>
-                            <option value="cyan">Cyan (Biru Langit)</option>
-                            <option value="emerald">Emerald (Hijau)</option>
-                            <option value="yellow">Yellow (Kuning)</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">XP Reward</label>
-                        <input type="number" name="xp_reward" value="50" min="0" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Target Hitungan</label>
-                        <input type="number" name="required_count" value="1" min="1" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1 col-span-2">
-                        <label class="text-xs font-bold text-zinc-300">Deskripsi / Syarat Buka</label>
-                        <textarea name="description" required rows="2" placeholder="Tonton minimal 5 film sci-fi untuk membuka lencana ini." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
-                    <button type="button" @click="showAddBadgeModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition shadow">
-                        Simpan Lencana
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
+    </template>
 
     <!-- ========================================================================= -->
     <!-- MODAL: EDIT BADGE                                                         -->
     <!-- ========================================================================= -->
-    <div x-show="showEditBadgeModal" 
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4"
-             @click.outside="showEditBadgeModal = false">
-            
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <h3 class="font-black text-sm text-white flex items-center gap-2">
-                    <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
-                    <span>Edit Lencana</span>
-                </h3>
-                <button type="button" @click="showEditBadgeModal = false" class="text-zinc-400 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+    <template x-teleport="body">
+        <div x-show="showEditBadgeModal" 
+             x-cloak 
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4"
+                 @click.outside="showEditBadgeModal = false">
+                
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <h3 class="font-black text-sm text-white flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
+                        <span>Edit Lencana</span>
+                    </h3>
+                    <button type="button" @click="showEditBadgeModal = false" class="text-zinc-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form :action="'{{ url('admin/gamification/badges') }}/' + editBadgeData.id" method="POST" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-bold text-zinc-300">Nama Lencana</label>
+                            <input type="text" name="name" x-model="editBadgeData.name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Kode Unik</label>
+                            <input type="text" name="code" x-model="editBadgeData.code" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Kategori</label>
+                            <select name="category" x-model="editBadgeData.category" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                                <option value="milestone">Pencapaian Utama (Milestone)</option>
+                                <option value="genre">Spesialis Genre</option>
+                                <option value="habit">Kebiasaan Nonton (Habit/Streak)</option>
+                                <option value="community">Sosial & Komunitas</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Ikon Lucide</label>
+                            <input type="text" name="icon" x-model="editBadgeData.icon" required placeholder="rocket, flame, award" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Warna Aksen</label>
+                            <select name="color" x-model="editBadgeData.color" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                                <option value="amber">Amber (Emas)</option>
+                                <option value="purple">Purple (Ungu)</option>
+                                <option value="rose">Rose (Merah Muda)</option>
+                                <option value="cyan">Cyan (Biru Langit)</option>
+                                <option value="emerald">Emerald (Hijau)</option>
+                                <option value="yellow">Yellow (Kuning)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">XP Reward</label>
+                            <input type="number" name="xp_reward" x-model="editBadgeData.xp_reward" min="0" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-zinc-300">Target Hitungan</label>
+                            <input type="number" name="required_count" x-model="editBadgeData.required_count" min="1" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
+                        </div>
+
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-bold text-zinc-300">Deskripsi</label>
+                            <textarea name="description" x-model="editBadgeData.description" required rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer select-none">
+                                <input type="checkbox" name="is_active" value="1" :checked="editBadgeData.is_active" class="w-4 h-4 rounded text-amber-500">
+                                <span>Status Lencana Aktif</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+                        <button type="button" @click="showEditBadgeModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition shadow cursor-pointer">
+                            Perbarui Lencana
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form :action="'{{ url('admin/gamification/badges') }}/' + editBadgeData.id" method="POST" class="space-y-4">
-                @csrf
-                @method('PUT')
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1 col-span-2">
-                        <label class="text-xs font-bold text-zinc-300">Nama Lencana</label>
-                        <input type="text" name="name" x-model="editBadgeData.name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Kode Unik</label>
-                        <input type="text" name="code" x-model="editBadgeData.code" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Kategori</label>
-                        <select name="category" x-model="editBadgeData.category" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                            <option value="milestone">Pencapaian Utama (Milestone)</option>
-                            <option value="genre">Spesialis Genre</option>
-                            <option value="habit">Kebiasaan Nonton (Habit/Streak)</option>
-                            <option value="community">Sosial & Komunitas</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Ikon Lucide</label>
-                        <input type="text" name="icon" x-model="editBadgeData.icon" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Warna Aksen</label>
-                        <select name="color" x-model="editBadgeData.color" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
-                            <option value="amber">Amber (Emas)</option>
-                            <option value="purple">Purple (Ungu)</option>
-                            <option value="rose">Rose (Merah Muda)</option>
-                            <option value="cyan">Cyan (Biru Langit)</option>
-                            <option value="emerald">Emerald (Hijau)</option>
-                            <option value="yellow">Yellow (Kuning)</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">XP Reward</label>
-                        <input type="number" name="xp_reward" x-model="editBadgeData.xp_reward" min="0" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-zinc-300">Target Hitungan</label>
-                        <input type="number" name="required_count" x-model="editBadgeData.required_count" min="1" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none">
-                    </div>
-
-                    <div class="space-y-1 col-span-2">
-                        <label class="text-xs font-bold text-zinc-300">Deskripsi</label>
-                        <textarea name="description" x-model="editBadgeData.description" required rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
-                    </div>
-
-                    <div class="col-span-2">
-                        <label class="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
-                            <input type="checkbox" name="is_active" value="1" :checked="editBadgeData.is_active" class="w-4 h-4 rounded text-amber-500">
-                            <span>Status Lencana Aktif</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
-                    <button type="button" @click="showEditBadgeModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition shadow">
-                        Perbarui Lencana
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection

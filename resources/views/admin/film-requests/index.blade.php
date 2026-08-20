@@ -302,141 +302,147 @@
     </div>
 
     <!-- Reject Reason Modal -->
-    <div x-show="rejectModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div @click.away="rejectModalOpen = false" class="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
-                    <span x-text="singleRejectId ? 'Tolak Request Film' : 'Tolak Request Terpilih Massal'"></span>
-                </h3>
-                <button type="button" @click="rejectModalOpen = false" class="text-zinc-500 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <!-- Single Reject Form -->
-            <template x-if="singleRejectId">
-                <form :action="'{{ url('/admin/film-requests') }}/' + singleRejectId + '/reject'" method="POST" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan (Akan dikirim ke Notifikasi Pemohon)</label>
-                        <textarea name="rejection_reason" x-model="rejectReason" rows="3" required class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="rejectModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white">Konfirmasi Tolak</button>
-                    </div>
-                </form>
-            </template>
-
-            <!-- Bulk Reject Form -->
-            <template x-if="!singleRejectId">
-                <form action="{{ route('admin.film-requests.bulk_reject') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <template x-for="id in selectedIds" :key="id">
-                        <input type="hidden" name="ids[]" :value="id">
-                    </template>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan Massal</label>
-                        <textarea name="rejection_reason" x-model="rejectReason" rows="3" required class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="rejectModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white">Tolak Massal (<span x-text="selectedIds.length"></span>)</button>
-                    </div>
-                </form>
-            </template>
-        </div>
-    </div>
-
-    <!-- All Senders / Users List Modal -->
-    <div x-show="userModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div @click.away="userModalOpen = false" class="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <div>
+    <template x-teleport="body">
+        <div x-show="rejectModalOpen" x-cloak class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div @click.away="rejectModalOpen = false" class="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
-                        <span>Daftar Pemohon Film</span>
+                        <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
+                        <span x-text="singleRejectId ? 'Tolak Request Film' : 'Tolak Request Terpilih Massal'"></span>
                     </h3>
-                    <p class="text-xs text-zinc-400 mt-0.5" x-text="activeUserModalData ? activeUserModalData.title : ''"></p>
+                    <button type="button" @click="rejectModalOpen = false" class="text-zinc-500 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
                 </div>
-                <button type="button" @click="userModalOpen = false" class="text-zinc-500 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
 
-            <!-- List of Requesters -->
-            <div class="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
-                <template x-if="activeUserModalData && activeUserModalData.users">
-                    <template x-for="(u, idx) in activeUserModalData.users" :key="idx">
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-950/60 border border-white/5">
-                            <div class="flex items-center gap-3">
-                                <img :src="u.avatar" :alt="u.name" class="w-8 h-8 rounded-full object-cover border border-white/15 bg-zinc-900">
-                                <div>
-                                    <div class="text-xs font-bold text-white" x-text="u.name"></div>
-                                    <div class="text-[11px] text-zinc-400" x-text="u.email"></div>
-                                </div>
-                            </div>
-                            <span class="text-[10px] text-zinc-500 font-medium" x-text="u.requested_at"></span>
+                <!-- Single Reject Form -->
+                <template x-if="singleRejectId">
+                    <form :action="'{{ url('/admin/film-requests') }}/' + singleRejectId + '/reject'" method="POST" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan (Akan dikirim ke Notifikasi Pemohon)</label>
+                            <textarea name="rejection_reason" x-model="rejectReason" rows="3" required class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
                         </div>
-                    </template>
+
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <button type="button" @click="rejectModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700 cursor-pointer">Batal</button>
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white cursor-pointer">Konfirmasi Tolak</button>
+                        </div>
+                    </form>
+                </template>
+
+                <!-- Bulk Reject Form -->
+                <template x-if="!singleRejectId">
+                    <form action="{{ route('admin.film-requests.bulk_reject') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <template x-for="id in selectedIds" :key="id">
+                            <input type="hidden" name="ids[]" :value="id">
+                        </template>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan Massal</label>
+                            <textarea name="rejection_reason" x-model="rejectReason" rows="3" required class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <button type="button" @click="rejectModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700 cursor-pointer">Batal</button>
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white cursor-pointer">Tolak Massal (<span x-text="selectedIds.length"></span>)</button>
+                        </div>
+                    </form>
                 </template>
             </div>
+        </div>
+    </template>
 
-            <div class="flex justify-end pt-2">
-                <button type="button" @click="userModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700">Tutup</button>
+    <!-- All Senders / Users List Modal -->
+    <template x-teleport="body">
+        <div x-show="userModalOpen" x-cloak class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div @click.away="userModalOpen = false" class="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
+                            <span>Daftar Pemohon Film</span>
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-0.5" x-text="activeUserModalData ? activeUserModalData.title : ''"></p>
+                    </div>
+                    <button type="button" @click="userModalOpen = false" class="text-zinc-500 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- List of Requesters -->
+                <div class="max-h-72 overflow-y-auto space-y-2 pr-1 admin-scrollbar">
+                    <template x-if="activeUserModalData && activeUserModalData.users">
+                        <template x-for="(u, idx) in activeUserModalData.users" :key="idx">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-950/60 border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <img :src="u.avatar" :alt="u.name" class="w-8 h-8 rounded-full object-cover border border-white/15 bg-zinc-900">
+                                    <div>
+                                        <div class="text-xs font-bold text-white" x-text="u.name"></div>
+                                        <div class="text-[11px] text-zinc-400" x-text="u.email"></div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-zinc-500 font-medium" x-text="u.requested_at"></span>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="button" @click="userModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700 cursor-pointer">Tutup</button>
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 
     <!-- Change Status Modal -->
-    <div x-show="statusModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div @click.away="statusModalOpen = false" class="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
-                    <span>Ubah Status Permintaan Film</span>
-                </h3>
-                <button type="button" @click="statusModalOpen = false" class="text-zinc-500 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+    <template x-teleport="body">
+        <div x-show="statusModalOpen" x-cloak class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div @click.away="statusModalOpen = false" class="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
+                        <span>Ubah Status Permintaan Film</span>
+                    </h3>
+                    <button type="button" @click="statusModalOpen = false" class="text-zinc-500 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <template x-if="activeStatusModalData">
+                    <form :action="'{{ url('/admin/film-requests') }}/' + activeStatusModalData.id + '/status'" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PATCH')
+                        <div>
+                            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Judul Film</label>
+                            <div class="px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-xs font-bold text-white" x-text="activeStatusModalData.title"></div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Pilih Status Baru</label>
+                            <select name="status" x-model="activeStatusModalData.status" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                                <option value="pending">Pending</option>
+                                <option value="searching">Sedang Dicari</option>
+                                <option value="added">Ditemukan / Selesai</option>
+                                <option value="rejected">Ditolak</option>
+                            </select>
+                        </div>
+
+                        <div x-show="activeStatusModalData.status === 'rejected'">
+                            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan</label>
+                            <textarea name="rejection_reason" x-model="activeStatusModalData.rejection_reason" rows="3" placeholder="Tuliskan alasan penolakan..." class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <button type="button" @click="statusModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700 cursor-pointer">Batal</button>
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold cursor-pointer">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </template>
             </div>
-
-            <template x-if="activeStatusModalData">
-                <form :action="'{{ url('/admin/film-requests') }}/' + activeStatusModalData.id + '/status'" method="POST" class="space-y-4">
-                    @csrf
-                    @method('PATCH')
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Judul Film</label>
-                        <div class="px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-xs font-bold text-white" x-text="activeStatusModalData.title"></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Pilih Status Baru</label>
-                        <select name="status" x-model="activeStatusModalData.status" class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                            <option value="pending">Pending</option>
-                            <option value="searching">Sedang Dicari</option>
-                            <option value="added">Ditemukan / Selesai</option>
-                            <option value="rejected">Ditolak</option>
-                        </select>
-                    </div>
-
-                    <div x-show="activeStatusModalData.status === 'rejected'">
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Alasan Penolakan</label>
-                        <textarea name="rejection_reason" x-model="activeStatusModalData.rejection_reason" rows="3" placeholder="Tuliskan alasan penolakan..." class="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"></textarea>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="statusModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-bold text-zinc-300 hover:bg-zinc-700">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold">Simpan Perubahan</button>
-                    </div>
-                </form>
-            </template>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection

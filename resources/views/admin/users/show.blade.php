@@ -126,31 +126,31 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-white/10 text-xs">
+    <div class="flex items-center gap-2 border-b border-white/10 text-xs overflow-x-auto no-scrollbar pb-0.5">
         <button @click="activeTab = 'profiles'" 
                 :class="activeTab === 'profiles' ? 'border-amber-500 text-amber-400 font-bold bg-amber-500/10' : 'border-transparent text-zinc-400 hover:text-white'"
-                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer">
+                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
             <i data-lucide="users" class="w-4 h-4"></i>
             <span>Sub-Profil ({{ $user->profiles->count() }})</span>
         </button>
 
         <button @click="activeTab = 'history'" 
                 :class="activeTab === 'history' ? 'border-sky-500 text-sky-400 font-bold bg-sky-500/10' : 'border-transparent text-zinc-400 hover:text-white'"
-                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer">
+                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
             <i data-lucide="history" class="w-4 h-4"></i>
             <span>Riwayat Tontonan ({{ $user->watchHistories->count() }})</span>
         </button>
 
         <button @click="activeTab = 'watchlist'" 
                 :class="activeTab === 'watchlist' ? 'border-purple-500 text-purple-300 font-bold bg-purple-500/10' : 'border-transparent text-zinc-400 hover:text-white'"
-                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer">
+                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
             <i data-lucide="bookmark" class="w-4 h-4"></i>
             <span>Daftar Saya ({{ $user->watchlists->count() }})</span>
         </button>
 
         <button @click="activeTab = 'reviews'" 
                 :class="activeTab === 'reviews' ? 'border-emerald-500 text-emerald-400 font-bold bg-emerald-500/10' : 'border-transparent text-zinc-400 hover:text-white'"
-                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer">
+                class="px-4 py-2.5 rounded-t-xl border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
             <i data-lucide="message-square" class="w-4 h-4"></i>
             <span>Ulasan ({{ $user->reviews->count() }})</span>
         </button>
@@ -260,7 +260,7 @@
                         {{ $r->rating }}/10
                     </span>
                 </div>
-                <p class="text-zinc-300 leading-relaxed">{{ $r->comment }}</p>
+                <p class="text-zinc-300 leading-relaxed break-words">{{ $r->comment }}</p>
                 <p class="text-[10px] text-zinc-500">{{ $r->created_at->diffForHumans() }}</p>
             </div>
         @empty

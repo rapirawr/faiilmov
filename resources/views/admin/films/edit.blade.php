@@ -401,15 +401,15 @@ if (typeof window.castPicker !== 'function') {
             </div>
 
             <!-- Bottom Spacer for Floating Bar -->
-            <div class="h-12"></div>
+            <div class="h-20"></div>
 
             <!-- Floating Bottom-Right Save Action Bar -->
-            <div class="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 bg-zinc-900/90 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/80 ring-1 ring-white/10 hover:border-amber-500/40 transition-all">
-                <a href="{{ route('admin.films.index') }}" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5">
-                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                    <span>Kembali</span>
+            <div class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-white/15 p-2 sm:p-2.5 rounded-2xl shadow-2xl shadow-black/90 ring-1 ring-white/10 hover:border-amber-500/50 transition-all">
+                <a href="{{ route('admin.films.index') }}" class="px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Kembali</span>
                 </a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
+                <button type="submit" class="px-5 sm:px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
                     <i data-lucide="check" class="w-4 h-4"></i>
                     <span>Perbarui Film</span>
                 </button>
@@ -934,88 +934,90 @@ if (typeof window.castPicker !== 'function') {
         </div>
 
         <!-- Edit Soundtrack Modal -->
-        <div x-show="editModalOpen" 
-             x-cloak 
-             x-transition 
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div @click.outside="editModalOpen = false" class="w-full max-w-lg bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl p-6 space-y-4">
-                <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        <span>Edit Lagu: <span x-text="editForm.track_name" class="text-amber-400"></span></span>
-                    </h4>
-                    <button type="button" @click="editModalOpen = false" class="p-1 text-zinc-400 hover:text-white rounded-lg">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
+        <template x-teleport="body">
+            <div x-show="editModalOpen" 
+                 x-cloak 
+                 x-transition 
+                 class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div @click.outside="editModalOpen = false" class="w-full max-w-lg bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            <span>Edit Lagu: <span x-text="editForm.track_name" class="text-amber-400"></span></span>
+                        </h4>
+                        <button type="button" @click="editModalOpen = false" class="p-1 text-zinc-400 hover:text-white rounded-lg cursor-pointer">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+
+                    <form :action="'/admin/soundtracks/' + editForm.id" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Judul Lagu *</label>
+                                <input type="text" name="track_name" x-model="editForm.track_name" required
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Artis / Penyanyi *</label>
+                                <input type="text" name="artist_name" x-model="editForm.artist_name" required
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Nama Album</label>
+                                <input type="text" name="collection_name" x-model="editForm.collection_name"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Nomor Urutan (Track #)</label>
+                                <input type="number" name="order" x-model="editForm.order" min="1"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Audio Preview URL (atau upload audio baru)</label>
+                                <input type="text" name="preview_audio_url" x-model="editForm.preview_audio_url"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Upload Audio Baru (Opsional)</label>
+                                <input type="file" name="audio_file" accept="audio/*"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-2 py-1 text-[11px] text-zinc-400 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:bg-amber-500 file:text-black">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Artwork URL</label>
+                                <input type="text" name="artwork_url" x-model="editForm.artwork_url"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Upload Cover Baru (Opsional)</label>
+                                <input type="file" name="artwork_file" accept="image/*"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-2 py-1 text-[11px] text-zinc-400 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:bg-amber-500 file:text-black">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Link Spotify / External</label>
+                                <input type="url" name="track_view_url" x-model="editForm.track_view_url"
+                                       class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-3 border-t border-white/10">
+                            <button type="button" @click="editModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer">Batal</button>
+                            <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md cursor-pointer">Simpan Perubahan</button>
+                        </div>
+                    </form>
                 </div>
-
-                <form :action="'/admin/soundtracks/' + editForm.id" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Judul Lagu *</label>
-                            <input type="text" name="track_name" x-model="editForm.track_name" required
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Artis / Penyanyi *</label>
-                            <input type="text" name="artist_name" x-model="editForm.artist_name" required
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Nama Album</label>
-                            <input type="text" name="collection_name" x-model="editForm.collection_name"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Nomor Urutan (Track #)</label>
-                            <input type="number" name="order" x-model="editForm.order" min="1"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Audio Preview URL (atau upload audio baru)</label>
-                            <input type="text" name="preview_audio_url" x-model="editForm.preview_audio_url"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Upload Audio Baru (Opsional)</label>
-                            <input type="file" name="audio_file" accept="audio/*"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-2 py-1 text-[11px] text-zinc-400 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:bg-amber-500 file:text-black">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Artwork URL</label>
-                            <input type="text" name="artwork_url" x-model="editForm.artwork_url"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Upload Cover Baru (Opsional)</label>
-                            <input type="file" name="artwork_file" accept="image/*"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-2 py-1 text-[11px] text-zinc-400 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:bg-amber-500 file:text-black">
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Link Spotify / External</label>
-                            <input type="url" name="track_view_url" x-model="editForm.track_view_url"
-                                   class="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-2 pt-3 border-t border-white/10">
-                        <button type="button" @click="editModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold">Batal</button>
-                        <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md">Simpan Perubahan</button>
-                    </div>
-                </form>
             </div>
-        </div>
+        </template>
 
     </div>
 </div>

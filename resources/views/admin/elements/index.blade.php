@@ -293,13 +293,14 @@
     </div>
 
     <!-- ==================== VISUAL STUDIO FORM & LIVE PREVIEW MODAL ==================== -->
-    <div x-show="modalOpen" 
-         x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto"
-         style="display: none;">
-        
-        <div @click.outside="modalOpen = false" 
-             class="w-full max-w-5xl rounded-3xl bg-zinc-900 border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <template x-teleport="body">
+        <div x-show="modalOpen" 
+             x-cloak
+             x-transition.opacity
+             class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
+            
+            <div @click.outside="modalOpen = false" 
+                 class="w-full max-w-5xl rounded-3xl bg-zinc-900 border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             
             <!-- Modal Header -->
             <div class="p-5 border-b border-white/10 flex items-center justify-between bg-zinc-950/60">
@@ -782,78 +783,81 @@
             </form>
         </div>
     </div>
+    </template>
 
     <!-- ==================== VISUAL ICON PICKER MODAL ==================== -->
-    <div x-show="iconPickerOpen" 
-         x-cloak 
-         @click.stop
-         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
-         style="display: none;">
-        <div @click.stop @click.outside="iconPickerOpen = false" class="w-full max-w-2xl bg-zinc-950 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                        <i data-lucide="palette" class="w-4 h-4"></i>
+    <template x-teleport="body">
+        <div x-show="iconPickerOpen" 
+             x-cloak 
+             @click.stop
+             class="fixed inset-0 z-[85] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
+             style="display: none;">
+            <div @click.stop @click.outside="iconPickerOpen = false" class="w-full max-w-2xl bg-zinc-950 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <i data-lucide="palette" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-[#E4E2DD]">Pilih Ikon Elemen</h3>
+                            <p class="text-[11px] text-zinc-400">Pilih salah satu ikon di bawah ini untuk ditampilkan pada elemen widget/banner</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-[#E4E2DD]">Pilih Ikon Elemen</h3>
-                        <p class="text-[11px] text-zinc-400">Pilih salah satu ikon di bawah ini untuk ditampilkan pada elemen widget/banner</p>
-                    </div>
-                </div>
-                <button type="button" @click="iconPickerOpen = false" class="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <!-- Search Bar -->
-            <div class="relative shrink-0">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" x-model="iconSearchQuery" placeholder="Cari nama ikon (misal: send, film, play, star, flame, heart)..." 
-                       class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400">
-            </div>
-
-            <!-- Icon Categories Filter Tabs -->
-            <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto pb-1 no-scrollbar">
-                <button type="button" @click="selectedIconCat = 'all'" 
-                        :class="selectedIconCat === 'all' ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
-                        class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0">
-                    Semua (<span x-text="iconsList.length"></span>)
-                </button>
-                <template x-for="cat in ['Aksi', 'Media', 'Spesial', 'Interaksi']" :key="cat">
-                    <button type="button" @click="selectedIconCat = cat" 
-                            :class="selectedIconCat === cat ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
-                            class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0" 
-                            x-text="cat">
+                    <button type="button" @click="iconPickerOpen = false" class="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
-                </template>
-            </div>
+                </div>
 
-            <!-- Icons Grid -->
-            <div class="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 min-h-[260px]">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-                    <template x-for="item in filteredIcons" :key="item.key">
-                        <button type="button" @click="selectIcon(item.key)" 
-                                :class="formData.icon === item.key ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/5 text-zinc-300 hover:border-amber-500/40 hover:bg-zinc-800/80 hover:text-white'" 
-                                class="p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group text-center active:scale-95">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                                 :class="formData.icon === item.key ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-amber-400 group-hover:bg-amber-500/20'"
-                                 x-html="getIconSvg(item.key)">
-                            </div>
-                            <div class="w-full">
-                                <div class="text-[11px] font-bold truncate leading-tight" x-text="item.label"></div>
-                                <div class="text-[9px] text-zinc-500 font-mono mt-0.5 truncate" x-text="item.key"></div>
-                            </div>
+                <!-- Search Bar -->
+                <div class="relative shrink-0">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" x-model="iconSearchQuery" placeholder="Cari nama ikon (misal: send, film, play, star, flame, heart)..." 
+                           class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400">
+                </div>
+
+                <!-- Icon Categories Filter Tabs -->
+                <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto pb-1 no-scrollbar">
+                    <button type="button" @click="selectedIconCat = 'all'" 
+                            :class="selectedIconCat === 'all' ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
+                            class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0">
+                        Semua (<span x-text="iconsList.length"></span>)
+                    </button>
+                    <template x-for="cat in ['Aksi', 'Media', 'Spesial', 'Interaksi']" :key="cat">
+                        <button type="button" @click="selectedIconCat = cat" 
+                                :class="selectedIconCat === cat ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'" 
+                                class="px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0" 
+                                x-text="cat">
                         </button>
                     </template>
                 </div>
 
-                <div x-show="filteredIcons.length === 0" class="py-12 text-center text-zinc-500 text-xs">
-                    Ikon dengan kata kunci "<span x-text="iconSearchQuery"></span>" tidak ditemukan.
+                <!-- Icons Grid -->
+                <div class="flex-1 overflow-y-auto pr-1 admin-scrollbar min-h-[260px]">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                        <template x-for="item in filteredIcons" :key="item.key">
+                            <button type="button" @click="selectIcon(item.key)" 
+                                    :class="formData.icon === item.key ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500' : 'bg-zinc-900/80 border-white/5 text-zinc-300 hover:border-amber-500/40 hover:bg-zinc-800/80 hover:text-white'" 
+                                    class="p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group text-center active:scale-95">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                                     :class="formData.icon === item.key ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-amber-400 group-hover:bg-amber-500/20'"
+                                     x-html="getIconSvg(item.key)">
+                                </div>
+                                <div class="w-full">
+                                    <div class="text-[11px] font-bold truncate leading-tight" x-text="item.label"></div>
+                                    <div class="text-[9px] text-zinc-500 font-mono mt-0.5 truncate" x-text="item.key"></div>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+
+                    <div x-show="filteredIcons.length === 0" class="py-12 text-center text-zinc-500 text-xs">
+                        Ikon dengan kata kunci "<span x-text="iconSearchQuery"></span>" tidak ditemukan.
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection

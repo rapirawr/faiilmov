@@ -48,11 +48,11 @@
         </div>
     </div>
 
-    <!-- Watch Parties Table -->
+    <!-- Table Container -->
     <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto max-h-[75vh] admin-scrollbar">
             <table class="w-full text-left text-xs">
-                <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider">
+                <thead class="bg-zinc-950 text-zinc-400 uppercase text-[10px] font-bold border-b border-zinc-800 tracking-wider sticky top-0 z-10">
                     <tr>
                         <th class="px-4 py-3.5">Kode Room</th>
                         <th class="px-4 py-3.5">Film</th>
@@ -71,13 +71,15 @@
                                     #{{ $party->room_code }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3.5 flex items-center gap-3">
-                                <img src="{{ $party->film->poster_url ?? '' }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-950">
-                                <div class="min-w-0">
-                                    <p class="font-bold text-white text-xs line-clamp-1">{{ $party->film->title ?? 'Film Dihapus' }}</p>
-                                    @if($party->season_number)
-                                        <p class="text-[10px] text-purple-300 font-mono mt-0.5">S{{ $party->season_number }} E{{ $party->episode_number }}</p>
-                                    @endif
+                            <td class="px-4 py-3.5">
+                                <div class="flex items-center gap-3">
+                                    <img src="{{ $party->film->poster_url ?? '' }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0 bg-zinc-950">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-white text-xs line-clamp-1">{{ $party->film->title ?? 'Film Dihapus' }}</p>
+                                        @if($party->season_number)
+                                            <p class="text-[10px] text-purple-300 font-mono mt-0.5">S{{ $party->season_number }} E{{ $party->episode_number }}</p>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3.5">

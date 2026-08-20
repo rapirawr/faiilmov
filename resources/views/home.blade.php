@@ -148,13 +148,21 @@
                                     $age = $film->content_rating ? strtoupper($film->content_rating) : '13+';
                                     if (in_array($age, ['R', 'NC-17'])) $age = '18+';
                                     if (in_array($age, ['PG', 'G'])) $age = 'SU';
-                                    $ageBadgeClass = match($age) {
-                                        '18+' => 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-                                        '16+' => 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-                                        '13+' => 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-                                        'SU'  => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-                                        default => 'bg-zinc-800 text-zinc-300 border-white/20',
-                                    };
+
+                                    $ageStyleGlobal = \App\Models\SiteSetting::current()->getAgeRatingStyle();
+                                    $bKey = in_array($age, ['SU', 'G', 'TV-Y']) ? 'SU' : (in_array($age, ['13+', 'PG-13', 'TV-14', 'PG']) ? '13+' : (in_array($age, ['16+', 'TV-MA', '17+']) ? '16+' : (in_array($age, ['18+', '21+', 'R', 'NC-17']) ? '18+' : 'unrated')));
+                                    $badgeStyleData = $ageStyleGlobal['badges'][$bKey] ?? ($ageStyleGlobal['badges']['13+'] ?? [
+                                        'bg_color' => '#0c4a6e',
+                                        'border_color' => '#0284c7',
+                                        'text_color' => '#ffffff',
+                                        'label' => '13+'
+                                    ]);
+
+                                    $bWidth = ($ageStyleGlobal['border_width'] ?? '') === 'border-0' ? '0px' : (($ageStyleGlobal['border_width'] ?? '') === 'border-[1.5px]' ? '1.5px' : (($ageStyleGlobal['border_width'] ?? '') === 'border' ? '1px' : '2px'));
+                                    $bRadius = $ageStyleGlobal['border_radius'] ?? 'rounded-lg';
+                                    $bWeight = $ageStyleGlobal['font_weight'] ?? 'font-black';
+                                    $bShadow = !empty($ageStyleGlobal['has_glow']) ? "0 0 8px {$badgeStyleData['border_color']}60" : (!empty($ageStyleGlobal['has_shadow']) ? "0 2px 4px rgba(0,0,0,0.5)" : "none");
+                                    $badgeInlineStyle = "background-color: {$badgeStyleData['bg_color']}; border-color: {$badgeStyleData['border_color']}; color: {$badgeStyleData['text_color']}; border-width: {$bWidth}; border-style: " . ($bWidth === '0px' ? 'none' : 'solid') . "; box-shadow: {$bShadow};";
                                 @endphp
 
                                 <div class="w-64 sm:w-72 shrink-0 group/cw">
@@ -171,8 +179,8 @@
                                         </div>
 
                                         <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
-                                            <span class="px-1.5 py-0.5 rounded-md border text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow {{ $ageBadgeClass }}">
-                                                {{ $age }}
+                                            <span class="px-1.5 py-0.5 text-[9px] uppercase tracking-wider backdrop-blur-md shadow font-mono {{ $bRadius }} {{ $bWeight }}" style="{{ $badgeInlineStyle }}">
+                                                {{ $badgeStyleData['label'] ?? $age }}
                                             </span>
                                             @if($film->subject_type === 'series')
                                                 <span class="px-2 py-0.5 rounded-md bg-amber-500 text-zinc-950 text-[9.5px] font-extrabold uppercase shadow">

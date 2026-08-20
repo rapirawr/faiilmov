@@ -505,177 +505,165 @@
 
     </div>
 
-    <!-- Quick Film Picker Modal with Live Filter & Fallback Poster -->
-    <div x-show="filmPickerOpen" x-cloak 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div @click.away="filmPickerOpen = false" class="w-full max-w-xl p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div>
-                    <h4 class="font-bold text-white text-sm font-['Outfit']">Pilih Film untuk Notifikasi</h4>
-                    <p class="text-[11px] text-zinc-400">Pilih film dari katalog untuk mengisi judul & URL otomatis.</p>
-                </div>
-                <button type="button" @click="filmPickerOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Instant Search Filter Bar -->
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" 
-                       x-model="filmSearch" 
-                       placeholder="Cari judul film atau dracin..." 
-                       autocomplete="off"
-                       autocorrect="off"
-                       autocapitalize="off"
-                       spellcheck="false"
-                       class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30">
-            </div>
-
-            <!-- Filtered Film List -->
-            <div class="max-h-[380px] overflow-y-auto space-y-2 pr-1 admin-scrollbar">
-                @foreach($recentFilms as $f)
-                    <div x-show="!filmSearch || '{{ strtolower(addslashes($f->title)) }}'.includes(filmSearch.toLowerCase())"
-                         @click="selectFilm('{{ addslashes($f->title) }}', '/film/{{ $f->slug }}')" 
-                         class="w-full p-2.5 rounded-2xl bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 flex items-center gap-3 transition-colors text-left cursor-pointer group">
-                        
-                        <!-- Poster with Fallback Image -->
-                        <div class="w-9 h-12 rounded-lg overflow-hidden bg-zinc-900 shrink-0 border border-zinc-800 flex items-center justify-center">
-                            @if($f->poster_url)
-                                <img src="{{ $f->poster_url }}" 
-                                     alt="{{ $f->title }}" 
-                                     referrerpolicy="no-referrer"
-                                     class="w-full h-full object-cover"
-                                     onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
-                                <div class="hidden w-full h-full flex items-center justify-center text-zinc-600">
-                                    <i data-lucide="film" class="w-4 h-4"></i>
-                                </div>
-                            @else
-                                <i data-lucide="film" class="w-4 h-4 text-zinc-600"></i>
-                            @endif
-                        </div>
-
-                        <div class="min-w-0 flex-1">
-                            <p class="font-bold text-xs text-white group-hover:text-zinc-200 truncate">{{ $f->title }}</p>
-                            <p class="text-[10px] text-zinc-500 font-mono">{{ strtoupper($f->subject_type) }} &bull; {{ $f->release_year }}</p>
-                        </div>
-
-                        <span class="px-3 py-1 rounded-xl bg-zinc-800 group-hover:bg-white group-hover:text-zinc-950 text-zinc-300 text-[10px] font-bold shrink-0 transition-colors">
-                            Pilih
-                        </span>
+    <!-- Quick Film Picker Modal -->
+    <template x-teleport="body">
+        <div x-show="filmPickerOpen" x-cloak 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div @click.away="filmPickerOpen = false" class="w-full max-w-xl p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <div>
+                        <h4 class="font-bold text-white text-sm font-['Outfit']">Pilih Film untuk Notifikasi</h4>
+                        <p class="text-[11px] text-zinc-400">Pilih film dari katalog untuk mengisi judul & URL otomatis.</p>
                     </div>
-                @endforeach
+                    <button type="button" @click="filmPickerOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Instant Search Filter Bar -->
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" 
+                           x-model="filmSearch" 
+                           placeholder="Cari judul film atau dracin..." 
+                           autocomplete="off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30">
+                </div>
+
+                <!-- Filtered Film List -->
+                <div class="max-h-[380px] overflow-y-auto space-y-2 pr-1 admin-scrollbar">
+                    @foreach($recentFilms as $f)
+                        <div x-show="!filmSearch || '{{ strtolower(addslashes($f->title)) }}'.includes(filmSearch.toLowerCase())"
+                             @click="selectFilm('{{ addslashes($f->title) }}', '/film/{{ $f->slug }}')" 
+                             class="w-full p-2.5 rounded-2xl bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 flex items-center gap-3 transition-colors text-left cursor-pointer group">
+                            
+                            <!-- Poster with Fallback Image -->
+                            <div class="w-9 h-12 rounded-lg overflow-hidden bg-zinc-900 shrink-0 border border-zinc-800 flex items-center justify-center">
+                                @if($f->poster_url)
+                                    <img src="{{ $f->poster_url }}" 
+                                         alt="{{ $f->title }}" 
+                                         referrerpolicy="no-referrer"
+                                         class="w-full h-full object-cover"
+                                         onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
+                                    <div class="hidden w-full h-full flex items-center justify-center text-zinc-600">
+                                        <i data-lucide="film" class="w-4 h-4"></i>
+                                    </div>
+                                @else
+                                    <i data-lucide="film" class="w-4 h-4 text-zinc-600"></i>
+                                @endif
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-xs text-white group-hover:text-zinc-200 truncate">{{ $f->title }}</p>
+                                <p class="text-[10px] text-zinc-500 font-mono">{{ strtoupper($f->subject_type) }} &bull; {{ $f->release_year }}</p>
+                            </div>
+
+                            <span class="px-3 py-1 rounded-xl bg-zinc-800 group-hover:bg-white group-hover:text-zinc-950 text-zinc-300 text-[10px] font-bold shrink-0 transition-colors">
+                                Pilih
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 
     <!-- Dedicated Custom User Picker Modal -->
-    <div x-show="userPickerModalOpen" x-cloak 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div @click.away="userPickerModalOpen = false" class="w-full max-w-xl p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
-            
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div>
-                    <h4 class="font-bold text-white text-sm font-['Outfit'] flex items-center gap-2">
-                        <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
-                        <span>Pilih Pengguna Penerima Notifikasi</span>
-                    </h4>
-                    <p class="text-[11px] text-zinc-400">Cari dan pilih satu atau beberapa user penerima notifikasi spesifik.</p>
-                </div>
-                <button type="button" @click="userPickerModalOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Instant Search Filter Bar -->
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" 
-                       x-model="userSearchQuery" 
-                       @input.debounce.250ms="searchUsers()"
-                       placeholder="Cari nama pengguna atau alamat email..." 
-                       autocomplete="off"
-                       autocorrect="off"
-                       autocapitalize="off"
-                       spellcheck="false"
-                       class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/40">
-            </div>
-
-            <!-- Quick Action Toolbar -->
-            <div class="flex items-center justify-between text-xs text-zinc-400 px-1">
-                <span class="font-mono text-[11px]">
-                    <strong class="text-white" x-text="selectedUsers.length"></strong> pengguna terpilih
-                </span>
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="selectAllSearched()" class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer">
-                        Pilih Semua yang Tampil
-                    </button>
-                    <span class="text-zinc-600">|</span>
-                    <button type="button" @click="selectedUsers = []" class="text-[11px] text-zinc-400 hover:text-white cursor-pointer">
-                        Kosongkan
+    <template x-teleport="body">
+        <div x-show="userPickerModalOpen" x-cloak 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div @click.away="userPickerModalOpen = false" class="w-full max-w-xl p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                    <div>
+                        <h4 class="font-bold text-white text-sm font-['Outfit'] flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
+                            <span>Pilih Pengguna Penerima Notifikasi</span>
+                        </h4>
+                        <p class="text-[11px] text-zinc-400">Cari dan pilih satu atau beberapa user penerima notifikasi spesifik.</p>
+                    </div>
+                    <button type="button" @click="userPickerModalOpen = false" class="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-            </div>
 
-            <!-- User List -->
-            <div class="max-h-[340px] overflow-y-auto space-y-1.5 pr-1 admin-scrollbar">
-                <template x-for="user in searchUserResults" :key="user.id">
-                    <div @click="toggleSelectUser(user)" 
-                         :class="isUserSelected(user.id) ? 'bg-amber-500/10 border-amber-500/40' : 'bg-zinc-950 border-zinc-800 hover:bg-zinc-800/80'"
-                         class="w-full p-3 rounded-2xl border flex items-center justify-between gap-3 transition-colors text-left cursor-pointer group">
-                        
-                        <div class="flex items-center gap-3 min-w-0">
-                            <!-- Avatar / Initial -->
-                            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 border"
-                                 :class="isUserSelected(user.id) ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700'"
-                                 x-text="user.name.charAt(0).toUpperCase()"></div>
+                <!-- Instant Search Filter Bar -->
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" 
+                           x-model="userSearchQuery" 
+                           @input.debounce.250ms="searchUsers()"
+                           placeholder="Cari nama pengguna atau alamat email..." 
+                           autocomplete="off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30">
+                </div>
 
-                            <div class="min-w-0">
-                                <p class="font-bold text-xs text-white truncate flex items-center gap-1.5">
-                                    <span x-text="user.name"></span>
-                                    <span x-show="user.is_admin" class="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">ADMIN</span>
-                                </p>
-                                <p class="text-[10px] text-zinc-400 font-mono truncate mt-0.5" x-text="user.email"></p>
+                <!-- User List -->
+                <div class="max-h-[340px] overflow-y-auto space-y-1.5 pr-1 admin-scrollbar">
+                    <template x-for="user in searchUserResults" :key="user.id">
+                        <div @click="toggleSelectUser(user)" 
+                             :class="isUserSelected(user.id) ? 'bg-amber-500/10 border-amber-500/40' : 'bg-zinc-950 border-zinc-800 hover:bg-zinc-800/80'"
+                             class="w-full p-3 rounded-2xl border flex items-center justify-between gap-3 transition-colors text-left cursor-pointer group">
+                            
+                            <div class="flex items-center gap-3 min-w-0">
+                                <!-- Avatar / Initial -->
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 border"
+                                     :class="isUserSelected(user.id) ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700'"
+                                     x-text="user.name.charAt(0).toUpperCase()"></div>
+
+                                <div class="min-w-0">
+                                    <p class="font-bold text-xs text-white truncate flex items-center gap-1.5">
+                                        <span x-text="user.name"></span>
+                                        <span x-show="user.is_admin" class="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">ADMIN</span>
+                                    </p>
+                                    <p class="text-[10px] text-zinc-400 font-mono truncate mt-0.5" x-text="user.email"></p>
+                                </div>
+                            </div>
+
+                            <!-- Checkbox / Toggle Badge -->
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition-all"
+                                 :class="isUserSelected(user.id) ? 'bg-amber-500 border-amber-500 text-zinc-950 font-bold' : 'border-zinc-700 bg-zinc-900 group-hover:border-zinc-500'">
+                                <i data-lucide="check" x-show="isUserSelected(user.id)" class="w-4 h-4 stroke-[3]"></i>
                             </div>
                         </div>
+                    </template>
 
-                        <!-- Checkbox / Toggle Badge -->
-                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition-all"
-                             :class="isUserSelected(user.id) ? 'bg-amber-500 border-amber-500 text-zinc-950 font-bold' : 'border-zinc-700 bg-zinc-900 group-hover:border-zinc-500'">
-                            <i data-lucide="check" x-show="isUserSelected(user.id)" class="w-4 h-4 stroke-[3]"></i>
-                        </div>
+                    <div x-show="searchUserResults.length === 0" class="py-12 text-center text-zinc-500 space-y-1">
+                        <i data-lucide="user-x" class="w-8 h-8 mx-auto text-zinc-600 mb-2"></i>
+                        <p class="text-xs font-semibold text-zinc-400">Tidak ada pengguna yang cocok</p>
+                        <p class="text-[10px]">Coba cari dengan kata kunci nama atau email lainnya</p>
                     </div>
-                </template>
-
-                <div x-show="searchUserResults.length === 0" class="py-12 text-center text-zinc-500 space-y-1">
-                    <i data-lucide="user-x" class="w-8 h-8 mx-auto text-zinc-600 mb-2"></i>
-                    <p class="text-xs font-semibold text-zinc-400">Tidak ada pengguna yang cocok</p>
-                    <p class="text-[10px]">Coba cari dengan kata kunci nama atau email lainnya</p>
                 </div>
-            </div>
 
-            <!-- Modal Footer -->
-            <div class="pt-3 border-t border-zinc-800 flex items-center justify-end gap-2">
-                <button type="button" @click="userPickerModalOpen = false" 
-                        class="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors cursor-pointer shadow">
-                    Selesai (<span x-text="selectedUsers.length"></span> Terpilih)
-                </button>
-            </div>
+                <!-- Modal Footer -->
+                <div class="pt-3 border-t border-zinc-800 flex items-center justify-end gap-2">
+                    <button type="button" @click="userPickerModalOpen = false" 
+                            class="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition-colors cursor-pointer shadow">
+                        Selesai (<span x-text="selectedUsers.length"></span> Terpilih)
+                    </button>
+                </div>
 
+            </div>
         </div>
-    </div>
+    </template>
 
 </div>
 

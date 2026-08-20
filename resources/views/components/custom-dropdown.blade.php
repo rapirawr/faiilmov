@@ -81,7 +81,8 @@
         }
     }
 }" 
-class="relative inline-block text-left {{ $size === 'sm' ? 'min-w-[120px]' : 'w-full min-w-[160px]' }} {{ $class }}"
+class="relative block text-left w-full {{ $class }}"
+:class="{ 'z-50': open, 'z-10': !open }"
 @click.outside="open = false"
 @keydown.escape.window="open = false">
 
@@ -94,7 +95,7 @@ class="relative inline-block text-left {{ $size === 'sm' ? 'min-w-[120px]' : 'w-
     <button type="button" 
             @click="open = !open" 
             :aria-expanded="open"
-            class="group w-full flex items-center justify-between gap-2.5 transition-all duration-200 cursor-pointer focus:outline-none 
+            class="group w-full min-w-0 flex items-center justify-between gap-2 transition-all duration-200 cursor-pointer focus:outline-none 
             @if($variant === 'glass')
                 bg-dark-950/70 hover:bg-dark-900/80 text-white border border-white/10 hover:border-white/20 backdrop-blur-xl shadow-inner
             @elseif($variant === 'table')
@@ -107,12 +108,12 @@ class="relative inline-block text-left {{ $size === 'sm' ? 'min-w-[120px]' : 'w-
             @elseif($size === 'lg')
                 px-4 py-3 rounded-2xl text-sm font-semibold
             @else
-                px-3.5 py-2.5 rounded-2xl text-xs font-semibold
+                px-3 py-2 rounded-2xl text-xs font-semibold
             @endif
             {{ $buttonClass }}"
             :class="{ 'ring-2 ring-amber-500/30 border-amber-500/50': open }">
         
-        <span class="truncate flex items-center gap-2" x-text="selectedLabel || '{{ addslashes($placeholder) }}'">
+        <span class="truncate min-w-0 flex items-center gap-1.5" x-text="selectedLabel || '{{ addslashes($placeholder) }}'">
             {{ $selectedOption['label'] ?? $placeholder }}
         </span>
 
@@ -133,7 +134,7 @@ class="relative inline-block text-left {{ $size === 'sm' ? 'min-w-[120px]' : 'w-
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
-         class="absolute left-0 mt-2 z-50 w-full min-w-[180px] origin-top-left rounded-2xl border border-white/15 bg-zinc-950/95 p-1.5 shadow-2xl backdrop-blur-2xl ring-1 ring-black/50 {{ $menuClass }}">
+         class="absolute left-0 mt-2 z-[60] w-full min-w-[180px] origin-top-left rounded-2xl border border-white/15 bg-zinc-950 p-1.5 shadow-2xl backdrop-blur-2xl ring-1 ring-black/50 {{ $menuClass }}">
         
         <!-- Search Filter Input (Optional) -->
         @if($searchable)

@@ -246,11 +246,11 @@
 })();
 </script>
     
-    <!-- Interactive Stats Shortcuts Bar -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+    <!-- Interactive Stats Shortcuts Bar (7-Column Balanced Grid) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 text-xs">
         <!-- Total Films -->
         <a href="{{ route('admin.films.index') }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ !request()->hasAny(['type', 'content_rating', 'search', 'genre']) ? 'border-amber-500/40 bg-amber-500/5' : 'border-white/10 hover:border-white/20' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ !request()->hasAny(['type', 'content_rating', 'search', 'genre', 'coming_soon']) ? 'border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20' : 'border-white/10 hover:border-white/20' }}">
             <div class="flex items-center justify-between">
                 <span class="text-zinc-400 font-semibold group-hover:text-white transition-colors">Total Film</span>
                 <i data-lucide="layers" class="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors"></i>
@@ -260,7 +260,7 @@
 
         <!-- Movie Filter Shortcut -->
         <a href="{{ route('admin.films.index', ['type' => 'movie']) }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'movie' ? 'border-sky-500/40 bg-sky-500/10' : 'border-white/10 hover:border-sky-500/30' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'movie' ? 'border-sky-500/40 bg-sky-500/10 ring-1 ring-sky-500/20' : 'border-white/10 hover:border-sky-500/30' }}">
             <div class="flex items-center justify-between">
                 <span class="text-zinc-400 font-semibold group-hover:text-sky-300 transition-colors">Movie</span>
                 <i data-lucide="clapperboard" class="w-4 h-4 text-sky-400"></i>
@@ -270,7 +270,7 @@
 
         <!-- Series Filter Shortcut -->
         <a href="{{ route('admin.films.index', ['type' => 'series']) }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'series' ? 'border-purple-500/40 bg-purple-500/10' : 'border-white/10 hover:border-purple-500/30' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'series' ? 'border-purple-500/40 bg-purple-500/10 ring-1 ring-purple-500/20' : 'border-white/10 hover:border-purple-500/30' }}">
             <div class="flex items-center justify-between">
                 <span class="text-zinc-400 font-semibold group-hover:text-purple-300 transition-colors">Series</span>
                 <i data-lucide="tv" class="w-4 h-4 text-purple-400"></i>
@@ -280,7 +280,7 @@
 
         <!-- Dracin Filter Shortcut -->
         <a href="{{ route('admin.films.index', ['type' => 'dracin']) }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'dracin' ? 'border-rose-500/40 bg-rose-500/10' : 'border-white/10 hover:border-rose-500/30' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('type') === 'dracin' ? 'border-rose-500/40 bg-rose-500/10 ring-1 ring-rose-500/20' : 'border-white/10 hover:border-rose-500/30' }}">
             <div class="flex items-center justify-between">
                 <span class="text-zinc-400 font-semibold group-hover:text-rose-300 transition-colors">Dracin</span>
                 <i data-lucide="sparkles" class="w-4 h-4 text-rose-400"></i>
@@ -290,7 +290,7 @@
 
         <!-- Unrated Filter Shortcut -->
         <a href="{{ route('admin.films.index', ['content_rating' => 'UNRATED']) }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('content_rating') === 'UNRATED' ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/10 hover:border-amber-500/30' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('content_rating') === 'UNRATED' ? 'border-amber-500/40 bg-amber-500/10 ring-1 ring-amber-500/20' : 'border-white/10 hover:border-amber-500/30' }}">
             <div class="flex items-center justify-between">
                 <span class="text-zinc-400 font-semibold group-hover:text-amber-300 transition-colors">Unrated</span>
                 <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
@@ -300,12 +300,12 @@
 
         <!-- Coming Soon Filter Shortcut -->
         <a href="{{ route('admin.films.index', ['coming_soon' => 'yes']) }}" 
-           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('coming_soon') === 'yes' ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/10 hover:border-amber-500/30' }}">
+           class="p-3.5 rounded-2xl bg-zinc-900/80 border transition-all flex flex-col justify-between hover:scale-[1.02] shadow-md group {{ request('coming_soon') === 'yes' ? 'border-emerald-500/40 bg-emerald-500/10 ring-1 ring-emerald-500/20' : 'border-white/10 hover:border-emerald-500/30' }}">
             <div class="flex items-center justify-between">
-                <span class="text-zinc-400 font-semibold group-hover:text-amber-300 transition-colors">Coming Soon</span>
-                <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
+                <span class="text-zinc-400 font-semibold group-hover:text-emerald-300 transition-colors">Coming Soon</span>
+                <i data-lucide="calendar-clock" class="w-4 h-4 text-emerald-400"></i>
             </div>
-            <span class="font-extrabold text-amber-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['coming_soon'] ?? 0) }}</span>
+            <span class="font-extrabold text-emerald-400 text-xl mt-2 font-['Outfit']">{{ number_format($stats['coming_soon'] ?? 0) }}</span>
         </a>
 
         <!-- Trash Bin Shortcut Trigger -->
@@ -319,176 +319,205 @@
         </button>
     </div>
 
-    <!-- Toolbar: Filter Bar & Primary Actions -->
-    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+    <!-- Toolbar: Search, Filters & Action Buttons (Structured 2-Tier Layout) -->
+    <form method="GET" action="{{ route('admin.films.index') }}" class="space-y-3 relative z-30">
         
-        <!-- Search & Filter Controls -->
-        <form method="GET" action="{{ route('admin.films.index') }}" class="flex flex-wrap items-center gap-2.5 flex-1">
-            <div class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-white/10 bg-zinc-900 focus-within:border-amber-500 transition-all flex-1 min-w-[220px]">
-                <i data-lucide="search" class="w-4 h-4 shrink-0 text-zinc-500"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul film, cast, atau slug..." 
-                       class="w-full min-w-0 bg-transparent text-xs text-white placeholder-zinc-500 border-none outline-none focus:outline-none focus:ring-0">
-            </div>
-
-            <!-- Search Button -->
-            <button type="submit" 
-                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-[0.98] cursor-pointer shrink-0"
-                    title="Cari Film">
-                <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                <span>Cari</span>
-            </button>
-
-            <!-- Type Filter Dropdown -->
-            <div class="w-36">
-                <x-custom-dropdown 
-                    name="type" 
-                    :value="request('type', '')" 
-                    :options="[
-                        '' => 'Semua Tipe',
-                        'movie' => 'Movie',
-                        'series' => 'Series',
-                        'dracin' => 'Dracin',
-                    ]" 
-                    placeholder="Semua Tipe" 
-                    :autoSubmit="true"
-                />
-            </div>
-
-            <!-- Coming Soon Status Filter Dropdown -->
-            <div class="w-44">
-                <x-custom-dropdown 
-                    name="coming_soon" 
-                    :value="request('coming_soon', '')" 
-                    :options="[
-                        '' => 'Semua Status Rilis',
-                        'yes' => 'Coming Soon',
-                        'no' => 'Sudah Rilis',
-                    ]" 
-                    placeholder="Semua Status" 
-                    :autoSubmit="true"
-                />
-            </div>
-
-            <!-- Content Rating Filter Dropdown -->
-            <div class="w-44">
-                <x-custom-dropdown 
-                    name="content_rating" 
-                    :value="request('content_rating', '')" 
-                    :options="[
-                        '' => 'Semua Usia',
-                        'SU' => 'SU (Semua Umur)',
-                        '13+' => '13+',
-                        '16+' => '16+',
-                        '18+' => '18+',
-                        'UNRATED' => 'Unrated',
-                    ]" 
-                    placeholder="Semua Usia" 
-                    :autoSubmit="true"
-                />
-            </div>
-
-            <!-- Genre Filter Dropdown -->
-            @php
-                $adminGenreOpts = ['' => 'Semua Genre'];
-                foreach($genres as $g) {
-                    $adminGenreOpts[(string)$g->id] = $g->name;
-                }
-            @endphp
-            <div class="w-40">
-                <x-custom-dropdown 
-                    name="genre" 
-                    :value="request('genre', '')" 
-                    :options="$adminGenreOpts" 
-                    placeholder="Semua Genre" 
-                    :searchable="count($genres) > 8"
-                    :autoSubmit="true"
-                />
-            </div>
-
-            <!-- Sort Dropdown -->
-            <div class="w-40">
-                <x-custom-dropdown 
-                    name="sort" 
-                    :value="request('sort', 'latest')" 
-                    :options="[
-                        'latest' => 'Terbaru',
-                        'rating' => 'Rating Tertinggi',
-                        'views' => 'View Terbanyak',
-                    ]" 
-                    placeholder="Urutkan" 
-                    :autoSubmit="true"
-                />
-            </div>
-
-            <!-- Reset Filter Button -->
-            @if(request()->hasAny(['search', 'type', 'content_rating', 'genre', 'sort', 'coming_soon']))
-                <a href="{{ route('admin.films.index') }}" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors" title="Reset Semua Filter">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </a>
-            @endif
-        </form>
-
-        <!-- Grouped Action Buttons Bar -->
-        <div class="flex items-center gap-2.5 flex-wrap">
+        <!-- Tier 1: Search Bar & Primary Actions Header -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 relative z-30">
             
-            <!-- Rating Tools Dropdown -->
-            <div class="relative" @click.outside="ratingDropdownOpen = false">
-                <button type="button" @click="ratingDropdownOpen = !ratingDropdownOpen" 
-                        class="px-3.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-bold text-xs flex items-center gap-2 border border-purple-500/30 transition-all cursor-pointer">
-                    <i data-lucide="wand-2" class="w-3.5 h-3.5 text-purple-400"></i>
-                    <span>Opsi Rating</span>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-purple-400 transition-transform duration-200" :class="ratingDropdownOpen ? 'rotate-180' : ''"></i>
-                </button>
-
-                <div x-show="ratingDropdownOpen" 
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-56 bg-zinc-900 border border-white/15 rounded-2xl shadow-2xl p-1.5 z-40 space-y-1"
-                     style="display: none;">
-                    
-                    <form action="{{ route('admin.films.auto_rate_all') }}" method="POST" @submit="isSubmitting = true">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-amber-300 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                            <span>Auto-Rate Massal (AI)</span>
+            <!-- Quick Search Input -->
+            <div class="flex-1 max-w-xl">
+                <div class="relative flex items-center">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           placeholder="Cari judul film, cast, sutradara, atau slug..." 
+                           class="w-full bg-zinc-900/90 border border-white/10 rounded-2xl pl-10 pr-24 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all shadow-sm">
+                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        @if(request('search'))
+                            <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="p-1 text-zinc-500 hover:text-white transition-colors" title="Hapus pencarian">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </a>
+                        @endif
+                        <button type="submit" class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all cursor-pointer">
+                            Cari
                         </button>
-                    </form>
-
-                    <a href="{{ route('admin.films.content_rating') }}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-purple-300 font-semibold flex items-center gap-2.5 transition-colors block">
-                        <i data-lucide="shield-alert" class="w-4 h-4 text-purple-400"></i>
-                        <span>Editor Rating Masif</span>
-                    </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Cari & Impor Film Button -->
-            <a href="{{ route('admin.films.importer') }}" 
-               class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]">
-                <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span>Cari & Impor Film</span>
-            </a>
+            <!-- Grouped Primary Action Buttons -->
+            <div class="flex items-center gap-2 flex-wrap relative z-30">
+                
+                <!-- Rating Tools Dropdown -->
+                <div class="relative" @click.outside="ratingDropdownOpen = false" :class="{ 'z-50': ratingDropdownOpen, 'z-10': !ratingDropdownOpen }">
+                    <button type="button" @click="ratingDropdownOpen = !ratingDropdownOpen" 
+                            class="px-3.5 py-2.5 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-bold text-xs flex items-center gap-2 border border-purple-500/30 transition-all cursor-pointer">
+                        <i data-lucide="wand-2" class="w-3.5 h-3.5 text-purple-400"></i>
+                        <span>Opsi Rating</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-purple-400 transition-transform duration-200" :class="ratingDropdownOpen ? 'rotate-180' : ''"></i>
+                    </button>
 
-            <!-- Import from IMDb Button -->
-            <button type="button" @click="imdbModalOpen = true; imdbError = ''; imdbData = null; imdbUrl = ''; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }"
-                    class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]">
-                <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span>Import IMDb</span>
-            </button>
+                    <div x-show="ratingDropdownOpen" 
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-56 bg-zinc-950 border border-white/15 rounded-2xl shadow-2xl p-1.5 z-[70] space-y-1"
+                         style="display: none;">
+                        
+                        <button type="button" @click="$refs.autoRateForm.submit()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-amber-300 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                            <span>Auto-Rate Massal (AI)</span>
+                        </button>
 
-            <!-- Add New Film (Primary CTA) -->
-            <a href="{{ route('admin.films.create') }}" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-all">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Tambah Film</span>
-            </a>
+                        <a href="{{ route('admin.films.content_rating') }}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-xs text-purple-300 font-semibold flex items-center gap-2.5 transition-colors block">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-purple-400"></i>
+                            <span>Editor Rating Masif</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Cari & Impor Film Button -->
+                <a href="{{ route('admin.films.importer') }}" 
+                   class="px-3.5 py-2.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold text-xs flex items-center gap-2 border border-white/10 transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]">
+                    <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Cari & Impor</span>
+                </a>
+
+                <!-- Import from IMDb Button -->
+                <button type="button" @click="imdbModalOpen = true; imdbError = ''; imdbData = null; imdbUrl = ''; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }"
+                        class="px-3.5 py-2.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold text-xs flex items-center gap-2 border border-white/10 transition-all shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Import IMDb</span>
+                </button>
+
+                <!-- Add New Film (Primary CTA) -->
+                <a href="{{ route('admin.films.create') }}" class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Film</span>
+                </a>
+            </div>
         </div>
-    </div>
+
+        <!-- Tier 2: Filter Strip Container -->
+        @php
+            $adminGenreOpts = ['' => 'Semua Genre'];
+            foreach($genres as $g) {
+                $adminGenreOpts[(string)$g->id] = $g->name;
+            }
+        @endphp
+        <div class="p-3 rounded-2xl bg-zinc-900/70 border border-white/10 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shadow-md relative z-20">
+            
+            <div class="flex items-center gap-3 flex-wrap flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 text-zinc-400 font-semibold text-xs shrink-0 pr-1">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Filter:</span>
+                </div>
+
+                <!-- Type Filter Dropdown -->
+                <div class="w-36 shrink-0">
+                    <x-custom-dropdown 
+                        name="type" 
+                        :value="request('type', '')" 
+                        :options="[
+                            '' => 'Semua Tipe',
+                            'movie' => 'Movie',
+                            'series' => 'Series',
+                            'dracin' => 'Dracin',
+                        ]" 
+                        placeholder="Semua Tipe" 
+                        :autoSubmit="true"
+                    />
+                </div>
+
+                <!-- Coming Soon Status Filter Dropdown -->
+                <div class="w-40 shrink-0">
+                    <x-custom-dropdown 
+                        name="coming_soon" 
+                        :value="request('coming_soon', '')" 
+                        :options="[
+                            '' => 'Semua Status',
+                            'yes' => 'Coming Soon',
+                            'no' => 'Sudah Rilis',
+                        ]" 
+                        placeholder="Semua Status" 
+                        :autoSubmit="true"
+                    />
+                </div>
+
+                <!-- Content Rating Filter Dropdown -->
+                <div class="w-40 shrink-0">
+                    <x-custom-dropdown 
+                        name="content_rating" 
+                        :value="request('content_rating', '')" 
+                        :options="[
+                            '' => 'Semua Usia',
+                            'SU' => 'SU (Semua Umur)',
+                            '13+' => '13+',
+                            '16+' => '16+',
+                            '18+' => '18+',
+                            'UNRATED' => 'Unrated',
+                        ]" 
+                        placeholder="Semua Usia" 
+                        :autoSubmit="true"
+                    />
+                </div>
+
+                <!-- Genre Filter Dropdown -->
+                <div class="w-44 shrink-0">
+                    <x-custom-dropdown 
+                        name="genre" 
+                        :value="request('genre', '')" 
+                        :options="$adminGenreOpts" 
+                        placeholder="Semua Genre" 
+                        :searchable="count($genres) > 8"
+                        :autoSubmit="true"
+                    />
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="w-36 shrink-0">
+                    <x-custom-dropdown 
+                        name="sort" 
+                        :value="request('sort', 'latest')" 
+                        :options="[
+                            'latest' => 'Terbaru',
+                            'rating' => 'Rating Tertinggi',
+                            'views' => 'View Terbanyak',
+                        ]" 
+                        placeholder="Urutkan" 
+                        :autoSubmit="true"
+                    />
+                </div>
+
+                <!-- Reset Filter Button -->
+                @if(request()->hasAny(['search', 'type', 'content_rating', 'genre', 'sort', 'coming_soon']))
+                    <a href="{{ route('admin.films.index') }}" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0" title="Reset Semua Filter">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Reset</span>
+                    </a>
+                @endif
+            </div>
+
+            <!-- Result Count Badge -->
+            <div class="text-xs text-zinc-400 font-mono shrink-0 pl-2 flex items-center gap-1.5">
+                <span>Menampilkan</span>
+                <span class="px-2 py-0.5 rounded-lg bg-zinc-950 border border-white/10 text-white font-bold font-['Outfit']">{{ number_format($films->total()) }}</span>
+                <span>Film</span>
+            </div>
+        </div>
+
+    </form>
+
+    <!-- Hidden Form for Auto Rate mass submission -->
+    <form x-ref="autoRateForm" action="{{ route('admin.films.auto_rate_all') }}" method="POST" class="hidden">
+        @csrf
+    </form>
 
     <!-- Active Films Table Container -->
-    <div class="bg-zinc-900/80 border border-white/10 rounded-2xl overflow-hidden shadow-xl backdrop-blur-md">
+    <div class="bg-zinc-900/80 border border-white/10 rounded-2xl overflow-hidden shadow-xl backdrop-blur-md relative z-10">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead class="bg-white/5 text-zinc-400 uppercase text-[10px] font-bold border-b border-white/10 tracking-wider">
@@ -662,359 +691,320 @@
         </button>
     </div>
 
-    <!-- Trash Bin Modal -->
-    <div x-show="trashModalOpen" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" 
-         style="display: none;">
-        
-        <div @click.away="trashModalOpen = false" 
-             class="bg-zinc-900 border border-white/15 rounded-3xl max-w-3xl w-full p-6 space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+    <!-- Tempat Sampah Modal -->
+    <template x-teleport="body">
+        <div x-show="trashModalOpen" 
+             x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
             
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-white text-base font-['Outfit']">Tempat Sampah Film (Trash Bin)</h3>
-                        <p class="text-xs text-zinc-400">Film yang dihapus sementara. Anda dapat memulihkan atau menghapusnya secara permanen.</p>
-                    </div>
-                </div>
-
-                <button @click="trashModalOpen = false" class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Trashed Films Table / List -->
-            <div class="flex-1 overflow-y-auto pr-1">
-                @if(count($trashedFilms) > 0)
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-white/5 text-zinc-400 uppercase text-[10px] font-bold border-b border-white/10">
-                            <tr>
-                                <th class="px-3 py-2.5">Film</th>
-                                <th class="px-3 py-2.5">Tipe</th>
-                                <th class="px-3 py-2.5">Tanggal Dihapus</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-                            @foreach($trashedFilms as $tf)
-                                <tr class="hover:bg-white/5 transition-colors">
-                                    <td class="px-3 py-3 flex items-center gap-3">
-                                        <img src="{{ $tf->poster_url }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0">
-                                        <div>
-                                            <p class="font-bold text-white text-xs line-clamp-1">{{ $tf->title }}</p>
-                                            <p class="text-[10px] text-zinc-400">{{ $tf->release_year }}</p>
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase {{ $tf->subject_type === 'dracin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : ($tf->subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30') }}">
-                                            {{ $tf->subject_type }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3 text-zinc-400 text-[11px]">
-                                        {{ $tf->deleted_at->diffForHumans() }}
-                                    </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <!-- Restore Button -->
-                                            <form action="{{ route('admin.films.restore', $tf->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold border border-emerald-500/30 transition-colors flex items-center gap-1 cursor-pointer">
-                                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                                                    <span>Pulihkan</span>
-                                                </button>
-                                            </form>
-
-                                            <!-- Force Delete Button -->
-                                            <form action="{{ route('admin.films.force_delete', $tf->id) }}" method="POST" onsubmit="return confirm('HAPUS PERMANEN film ini? Data yang dihapus permanen tidak dapat dikembalikan!')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[11px] font-bold border border-red-500/30 transition-colors flex items-center gap-1 cursor-pointer">
-                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                                    <span>Hapus Permanen</span>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="py-12 text-center text-zinc-500 space-y-2">
-                        <i data-lucide="check-circle-2" class="w-10 h-10 mx-auto text-zinc-600"></i>
-                        <p class="text-sm font-semibold text-zinc-400">Tempat sampah kosong</p>
-                        <p class="text-xs">Tidak ada film yang dihapus sementara.</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="flex items-center justify-between border-t border-white/10 pt-4">
-                @if(count($trashedFilms) > 0)
-                    <form action="{{ route('admin.films.empty_trash') }}" method="POST" onsubmit="return confirm('Kosongkan SELURUH tempat sampah? Semua film di sampah akan dihapus permanen!')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-red-600/30 hover:bg-red-600/50 text-red-200 text-xs font-bold border border-red-500/40 transition-colors flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i>
-                            <span>Kosongkan Tempat Sampah</span>
-                        </button>
-                    </form>
-                @else
-                    <div></div>
-                @endif
-
-                <button @click="trashModalOpen = false" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
-                    Tutup
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- IMDb Live Import Modal -->
-    <div x-show="imdbModalOpen" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" 
-         style="display: none;">
-        
-        <div @click.away="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" 
-             class="bg-zinc-900 border border-amber-500/30 rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl relative max-h-[92vh] flex flex-col">
-            
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-4 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                        <i data-lucide="film" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-white text-base font-['Outfit'] flex items-center gap-2">
-                            <span>Import Film & Soundtrack dari IMDb</span>
-                            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase">Otomatis</span>
-                        </h3>
-                        <p class="text-xs text-zinc-400">Masukkan link atau ID IMDb untuk mengambil metadata, sinopsis, poster, pemeran, hingga daftar OST.</p>
-                    </div>
-                </div>
-
-                <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Input Bar -->
-            <div class="space-y-3 shrink-0">
-                <div class="flex flex-col sm:flex-row items-center gap-2.5">
-                    <div class="flex-1 w-full relative">
-                        <i data-lucide="link" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                        <input type="text" x-model="imdbUrl" @keydown.enter.prevent="fetchImdbPreview()"
-                               placeholder="https://www.imdb.com/title/tt1375666/ atau tt1375666..." 
-                               class="w-full bg-zinc-950 border border-white/15 focus:border-amber-500 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-zinc-500 outline-none transition-all">
-                    </div>
-
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <button type="button" @click="fetchImdbPreview()" :disabled="imdbLoading || !imdbUrl.trim()"
-                                class="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
-                            <i data-lucide="search" class="w-4 h-4" x-show="!imdbLoading"></i>
-                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbLoading" style="display:none;"></i>
-                            <span x-text="imdbLoading ? 'Mengambil Data...' : 'Tarik Data & OST'"></span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Error Alert -->
-                <div x-show="imdbError" x-transition class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2" style="display: none;">
-                    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
-                    <span x-text="imdbError"></span>
-                </div>
-            </div>
-
-            <!-- Preview Content (Scrollable) -->
-            <div class="flex-1 overflow-y-auto space-y-6 pr-1">
+            <div @click.away="trashModalOpen = false" class="w-full max-w-4xl bg-zinc-900 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
                 
-                <!-- Initial Placeholder State -->
-                <div x-show="!imdbData && !imdbLoading" class="py-12 text-center text-zinc-500 space-y-3">
-                    <div class="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-zinc-600">
-                        <i data-lucide="sparkles" class="w-8 h-8 text-amber-500/40"></i>
-                    </div>
-                    <div class="space-y-1">
-                        <p class="text-sm font-semibold text-zinc-300">Tempelkan Link Film IMDb di Atas</p>
-                        <p class="text-xs text-zinc-500 max-w-md mx-auto">Sistem akan membaca judul, rating, usia, durasi, poster kualitas tinggi, daftar cast/pemeran, dan melacak seluruh lagu Soundtrack (OST) dengan preview audio.</p>
-                    </div>
-                    <div class="flex items-center justify-center gap-2 text-[11px] text-zinc-500 pt-2">
-                        <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt1375666/'; fetchImdbPreview();">Contoh: Inception (tt1375666)</span>
-                        <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt15398776/'; fetchImdbPreview();">Oppenheimer (tt15398776)</span>
-                    </div>
-                </div>
-
-                <!-- Loading Skeleton -->
-                <div x-show="imdbLoading" class="py-12 text-center space-y-4" style="display: none;">
-                    <div class="w-12 h-12 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto"></div>
-                    <div class="space-y-1">
-                        <p class="text-sm font-bold text-amber-300">Sedang Menganalisis IMDb & Mengumpulkan OST...</p>
-                        <p class="text-xs text-zinc-400">Menghubungkan metadata film, sinopsis, pemeran, dan lagu soundtrack.</p>
-                    </div>
-                </div>
-
-                <!-- Loaded Preview Data -->
-                <template x-if="imdbData">
-                    <div class="space-y-6">
-                        <!-- Main Film Header Card -->
-                        <div class="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 flex flex-col sm:flex-row gap-5">
-                            <div class="w-28 sm:w-36 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0 shadow-lg relative">
-                                <img :src="imdbData.poster_url" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=600'">
-                                <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-mono font-extrabold text-amber-300 border border-white/15" x-text="imdbData.max_resolution"></span>
-                            </div>
-
-                            <div class="flex-1 space-y-3 min-w-0">
-                                <div>
-                                    <div class="flex items-center gap-2 flex-wrap mb-1">
-                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase"
-                                              :class="imdbData.subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : (imdbData.subject_type === 'dracin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30')"
-                                              x-text="imdbData.subject_type"></span>
-                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-extrabold" x-text="imdbData.content_rating || '13+'"></span>
-                                        <span class="text-xs text-zinc-400 font-medium" x-text="imdbData.release_year"></span>
-                                        <span class="text-zinc-600">•</span>
-                                        <span class="text-xs text-zinc-400 font-medium" x-text="imdbData.duration_minutes + ' Menit'"></span>
-                                    </div>
-                                    <h4 class="text-lg sm:text-xl font-bold text-white font-serif leading-snug" x-text="imdbData.title"></h4>
-                                </div>
-
-                                <div class="flex items-center gap-4 text-xs">
-                                    <div class="flex items-center gap-1.5 font-bold text-amber-400">
-                                        <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
-                                        <span x-text="imdbData.rating + ' / 5.0'"></span>
-                                    </div>
-                                    <div class="text-zinc-400 text-[11px]" x-show="imdbData.moviebox_subject_id">
-                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex items-center gap-1 inline-flex">
-                                            <i data-lucide="check" class="w-3 h-3"></i>
-                                            <span>Stream Terhubung</span>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Genres -->
-                                <div class="flex flex-wrap gap-1.5">
-                                    <template x-for="g in imdbData.genres" :key="g">
-                                        <span class="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-zinc-300 font-medium" x-text="g"></span>
-                                    </template>
-                                </div>
-
-                                <!-- Synopsis -->
-                                <p class="text-xs text-zinc-400 line-clamp-3 leading-relaxed" x-text="imdbData.synopsis"></p>
-                            </div>
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </div>
-
-                        <!-- Cast / Actors Section -->
-                        <div class="space-y-2.5">
-                            <h5 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
-                                <span>Pemeran & Aktor (<span x-text="imdbData.actors ? imdbData.actors.length : 0"></span>)</span>
-                            </h5>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                <template x-for="(act, idx) in (imdbData.actors || []).slice(0, 8)" :key="idx">
-                                    <div class="p-2 rounded-xl bg-zinc-950 border border-white/10 flex items-center gap-2.5">
-                                        <img :src="act.photo_url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'" 
-                                             referrerpolicy="no-referrer"
-                                             loading="lazy"
-                                             class="w-8 h-8 rounded-lg object-cover bg-zinc-900 border border-white/10 shrink-0"
-                                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\' viewBox=\'0 0 24 24\' fill=\'%239ca3af\'><rect width=\'100%\' height=\'100%\' fill=\'%2327272a\'/><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">
-                                        <div class="min-w-0">
-                                            <p class="font-bold text-white text-[11px] truncate" x-text="act.name"></p>
-                                            <p class="text-[10px] text-zinc-400 truncate" x-text="act.character_name || 'Cast'"></p>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Soundtrack (OST) Section -->
-                        <div class="space-y-2.5">
-                            <div class="flex items-center justify-between">
-                                <h5 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
-                                    <i data-lucide="music" class="w-4 h-4 text-amber-400"></i>
-                                    <span>Soundtrack & Lagu Film (OST) | <span x-text="imdbData.soundtracks ? imdbData.soundtracks.length : 0"></span> Lagu Ditemukan</span>
-                                </h5>
-                                <span class="text-[10px] text-zinc-500">Otomatis disimpan ke tab OST</span>
-                            </div>
-
-                            <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                                <template x-for="(track, tIdx) in (imdbData.soundtracks || [])" :key="tIdx">
-                                    <div class="p-2.5 rounded-xl bg-zinc-950 border border-white/10 flex items-center justify-between gap-3 hover:border-amber-500/30 transition-colors group">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <div class="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-white/10">
-                                                <img :src="track.artwork_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150'" class="w-full h-full object-cover">
-                                                <button type="button" x-show="track.preview_audio_url" @click="toggleAudioPreview(track.preview_audio_url)"
-                                                        class="absolute inset-0 bg-black/60 flex items-center justify-center text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                                    <i data-lucide="play" class="w-3.5 h-3.5" x-show="activeAudioUrl !== track.preview_audio_url"></i>
-                                                    <i data-lucide="pause" class="w-3.5 h-3.5" x-show="activeAudioUrl === track.preview_audio_url"></i>
-                                                </button>
-                                            </div>
-
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-white text-xs truncate flex items-center gap-1.5">
-                                                    <span x-text="track.track_name"></span>
-                                                    <span x-show="activeAudioUrl === track.preview_audio_url" class="px-1.5 py-0.2 rounded text-[9px] bg-amber-500 text-zinc-950 font-extrabold animate-pulse">Playing</span>
-                                                </p>
-                                                <p class="text-[11px] text-zinc-400 truncate" x-text="track.artist_name + (track.collection_name ? ' • ' + track.collection_name : '')"></p>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            <span class="text-[10px] text-zinc-500 font-mono">#<span x-text="tIdx + 1"></span></span>
-                                            <button type="button" x-show="track.preview_audio_url" @click="toggleAudioPreview(track.preview_audio_url)"
-                                                    class="p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                                                    :class="activeAudioUrl === track.preview_audio_url ? 'bg-amber-500 text-zinc-950 border-amber-400' : 'bg-white/5 text-zinc-300 border-white/10 hover:text-white hover:bg-white/10'">
-                                                <i data-lucide="play" class="w-3 h-3" x-show="activeAudioUrl !== track.preview_audio_url"></i>
-                                                <i data-lucide="pause" class="w-3 h-3" x-show="activeAudioUrl === track.preview_audio_url"></i>
-                                                <span class="text-[10px]" x-text="activeAudioUrl === track.preview_audio_url ? 'Stop' : 'Preview'"></span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <div x-show="!imdbData.soundtracks || imdbData.soundtracks.length === 0" class="p-4 rounded-xl bg-zinc-950/60 border border-white/5 text-center text-zinc-500 text-xs">
-                                    Tidak ada OST resmi yang terdeteksi untuk judul ini.
-                                </div>
-                            </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white">Tempat Sampah Film (Trash)</h3>
+                            <p class="text-xs text-zinc-400">Daftar film yang dihapus sementara. Anda dapat memulihkan atau menghapusnya secara permanen.</p>
                         </div>
                     </div>
-                </template>
-
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="flex items-center justify-between border-t border-white/10 pt-4 shrink-0">
-                <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
-                    Batal
-                </button>
-
-                <div class="flex items-center gap-2">
-                    <button type="button" x-show="imdbData" @click="directImportImdb()" :disabled="imdbImporting"
-                            class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
-                        <i data-lucide="check-circle" class="w-4 h-4" x-show="!imdbImporting"></i>
-                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbImporting" style="display:none;"></i>
-                        <span x-text="imdbImporting ? 'Sedang Menyimpan...' : 'Simpan Film Lengkap ke Database'"></span>
+                    <button @click="trashModalOpen = false" class="text-zinc-400 hover:text-white p-1 rounded-lg cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-            </div>
 
+                <!-- Modal Body -->
+                <div class="flex-1 overflow-y-auto admin-scrollbar pr-1">
+                    @if(count($trashedFilms) > 0)
+                        <table class="w-full text-left text-xs text-zinc-300">
+                            <thead class="bg-zinc-950/60 uppercase font-mono text-[10px] text-zinc-400 border-b border-white/10 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2.5">Film</th>
+                                    <th class="px-3 py-2.5">Tipe</th>
+                                    <th class="px-3 py-2.5">Tanggal Dihapus</th>
+                                    <th class="px-3 py-2.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                @foreach($trashedFilms as $tf)
+                                    <tr class="hover:bg-white/5 transition-colors">
+                                        <td class="px-3 py-3">
+                                            <div class="flex items-center gap-3">
+                                                <img src="{{ $tf->poster_url }}" referrerpolicy="no-referrer" class="w-8 h-11 object-cover rounded shrink-0">
+                                                <div>
+                                                    <p class="font-bold text-white text-xs line-clamp-1">{{ $tf->title }}</p>
+                                                    <p class="text-[10px] text-zinc-400">{{ $tf->release_year }}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase {{ $tf->subject_type === 'dracin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : ($tf->subject_type === 'series' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30') }}">
+                                                {{ $tf->subject_type }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-3 text-zinc-400 text-[11px]">
+                                            {{ $tf->deleted_at->diffForHumans() }}
+                                        </td>
+                                        <td class="px-3 py-3 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <!-- Restore Button -->
+                                                <form action="{{ route('admin.films.restore', $tf->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold border border-emerald-500/30 transition-colors flex items-center gap-1 cursor-pointer">
+                                                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                                        <span>Pulihkan</span>
+                                                    </button>
+                                                </form>
+
+                                                <!-- Force Delete Button -->
+                                                <form action="{{ route('admin.films.force_delete', $tf->id) }}" method="POST" onsubmit="return confirm('HAPUS PERMANEN film ini? Data yang dihapus permanen tidak dapat dikembalikan!')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[11px] font-bold border border-red-500/30 transition-colors flex items-center gap-1 cursor-pointer">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Hapus Permanen</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <div class="py-12 text-center text-zinc-500 space-y-2">
+                            <i data-lucide="check-circle-2" class="w-10 h-10 mx-auto text-zinc-600"></i>
+                            <p class="text-sm font-semibold text-zinc-400">Tempat sampah kosong</p>
+                            <p class="text-xs">Tidak ada film yang dihapus sementara.</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between border-t border-white/10 pt-4">
+                    @if(count($trashedFilms) > 0)
+                        <form action="{{ route('admin.films.empty_trash') }}" method="POST" onsubmit="return confirm('Kosongkan SELURUH tempat sampah? Semua film di sampah akan dihapus permanen!')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-red-600/30 hover:bg-red-600/50 text-red-200 text-xs font-bold border border-red-500/40 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i>
+                                <span>Kosongkan Tempat Sampah</span>
+                            </button>
+                        </form>
+                    @else
+                        <div></div>
+                    @endif
+
+                    <button @click="trashModalOpen = false" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+
+            </div>
         </div>
-    </div>
+    </template>
+
+    <!-- IMDb Live Import Modal -->
+    <template x-teleport="body">
+        <div x-show="imdbModalOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-4" 
+             style="display: none;">
+            
+            <div @click.away="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" 
+                 class="bg-zinc-900 border border-amber-500/30 rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-white/10 pb-4 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <i data-lucide="film" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-base font-['Outfit'] flex items-center gap-2">
+                                <span>Import Film & Soundtrack dari IMDb</span>
+                                <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase">Otomatis</span>
+                            </h3>
+                            <p class="text-xs text-zinc-400">Masukkan link atau ID IMDb untuk mengambil metadata, sinopsis, poster, pemeran, hingga daftar OST.</p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Input Bar -->
+                <div class="space-y-3 shrink-0">
+                    <div class="flex flex-col sm:flex-row items-center gap-2.5">
+                        <div class="flex-1 w-full relative">
+                            <i data-lucide="link" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            <input type="text" x-model="imdbUrl" @keydown.enter.prevent="fetchImdbPreview()"
+                                   placeholder="https://www.imdb.com/title/tt1375666/ atau tt1375666..." 
+                                   class="w-full bg-zinc-950 border border-white/15 focus:border-amber-500 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-zinc-500 outline-none transition-all">
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button type="button" @click="fetchImdbPreview()" :disabled="imdbLoading || !imdbUrl.trim()"
+                                    class="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                                <i data-lucide="search" class="w-4 h-4" x-show="!imdbLoading"></i>
+                                <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbLoading" style="display:none;"></i>
+                                <span x-text="imdbLoading ? 'Mengambil Data...' : 'Tarik Data & OST'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error Alert -->
+                    <div x-show="imdbError" x-transition class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2" style="display: none;">
+                        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
+                        <span x-text="imdbError"></span>
+                    </div>
+                </div>
+
+                <!-- Preview Content (Scrollable) -->
+                <div class="flex-1 overflow-y-auto space-y-6 pr-1 admin-scrollbar">
+                    
+                    <!-- Initial Placeholder State -->
+                    <div x-show="!imdbData && !imdbLoading" class="py-12 text-center text-zinc-500 space-y-3">
+                        <div class="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-zinc-600">
+                            <i data-lucide="sparkles" class="w-8 h-8 text-amber-500/40"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm font-semibold text-zinc-300">Tempelkan Link Film IMDb di Atas</p>
+                            <p class="text-xs text-zinc-500 max-w-md mx-auto">Sistem akan membaca judul, rating, usia, durasi, poster kualitas tinggi, daftar cast/pemeran, dan melacak seluruh lagu Soundtrack (OST) dengan preview audio.</p>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 text-[11px] text-zinc-500 pt-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt1375666/'; fetchImdbPreview();">Contoh: Inception (tt1375666)</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-white/10 font-mono text-amber-400/80 cursor-pointer hover:border-amber-500/40" @click="imdbUrl = 'https://www.imdb.com/title/tt15398776/'; fetchImdbPreview();">Oppenheimer (tt15398776)</span>
+                        </div>
+                    </div>
+
+                    <!-- Loading State Spinner -->
+                    <div x-show="imdbLoading" class="py-16 text-center text-zinc-400 space-y-3" style="display: none;">
+                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-amber-400"></i>
+                        <p class="text-xs font-mono">Menghubungi IMDb & Spotify Data Services...</p>
+                    </div>
+
+                    <!-- Fetched Preview Data -->
+                    <template x-if="imdbData && !imdbLoading">
+                        <div class="space-y-6 animate-in fade-in zoom-in-95 duration-200">
+                            <!-- Film Overview Banner -->
+                            <div class="p-4 rounded-2xl bg-zinc-950 border border-white/10 flex flex-col sm:flex-row gap-4 items-start">
+                                <img :src="imdbData.poster_url" alt="Poster" class="w-24 sm:w-28 rounded-xl object-cover border border-white/10 shrink-0 shadow-lg">
+                                
+                                <div class="space-y-2 min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30" x-text="imdbData.subject_type"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/10 text-white" x-text="imdbData.release_year"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" x-text="imdbData.content_rating || 'SU'"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20" x-text="imdbData.rating + ' / 10'"></span>
+                                    </div>
+
+                                    <h2 class="text-lg font-bold text-white font-['Outfit']" x-text="imdbData.title"></h2>
+                                    <p class="text-xs text-zinc-400 line-clamp-3 leading-relaxed" x-text="imdbData.synopsis"></p>
+
+                                    <!-- Genres Pill -->
+                                    <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                                        <template x-for="g in imdbData.genres" :key="g">
+                                            <span class="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-zinc-300 font-medium" x-text="g"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cast List Strip -->
+                            <div class="space-y-2">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Pemeran & Cast Utama</h4>
+                                <div class="flex items-center gap-2 overflow-x-auto pb-2 admin-scrollbar">
+                                    <template x-for="c in imdbData.cast" :key="c.name">
+                                        <div class="p-2 rounded-xl bg-zinc-950 border border-white/10 flex items-center gap-2.5 shrink-0 min-w-[150px]">
+                                            <img :src="c.photo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(c.name)" class="w-8 h-8 rounded-full object-cover border border-white/10 bg-zinc-900">
+                                            <div class="min-w-0">
+                                                <p class="font-bold text-white text-xs truncate" x-text="c.name"></p>
+                                                <p class="text-[10px] text-zinc-500 truncate" x-text="c.role_name || 'Cast'"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Soundtracks / OST Detected -->
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                                        <i data-lucide="music" class="w-4 h-4 text-amber-400"></i>
+                                        <span>Daftar Soundtrack (OST)</span>
+                                    </h4>
+                                    <span class="text-[11px] font-mono text-zinc-400" x-text="(imdbData.soundtracks ? imdbData.soundtracks.length : 0) + ' Lagu Ditemukan'"></span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <template x-for="(track, idx) in imdbData.soundtracks" :key="idx">
+                                        <div class="p-3 rounded-xl bg-zinc-950 border border-white/10 flex items-center justify-between gap-3">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+                                                    <span x-text="idx + 1"></span>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="font-bold text-white text-xs truncate" x-text="track.title"></p>
+                                                    <p class="text-[10px] text-zinc-400 truncate" x-text="track.artist"></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <button type="button" x-show="track.preview_audio_url" @click="toggleAudioPreview(track.preview_audio_url)" 
+                                                        class="p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                                                        :class="activeAudioUrl === track.preview_audio_url ? 'bg-amber-500 text-zinc-950 border-amber-400' : 'bg-white/5 text-zinc-300 border-white/10 hover:text-white hover:bg-white/10'">
+                                                    <i data-lucide="play" class="w-3 h-3" x-show="activeAudioUrl !== track.preview_audio_url"></i>
+                                                    <i data-lucide="pause" class="w-3 h-3" x-show="activeAudioUrl === track.preview_audio_url"></i>
+                                                    <span class="text-[10px]" x-text="activeAudioUrl === track.preview_audio_url ? 'Stop' : 'Preview'"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <div x-show="!imdbData.soundtracks || imdbData.soundtracks.length === 0" class="p-4 rounded-xl bg-zinc-950/60 border border-white/5 text-center text-zinc-500 text-xs col-span-2">
+                                        Tidak ada OST resmi yang terdeteksi untuk judul ini.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between border-t border-white/10 pt-4 shrink-0">
+                    <button type="button" @click="imdbModalOpen = false; if (audioObj) { audioObj.pause(); audioObj = null; activeAudioUrl = null; }" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer">
+                        Batal
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" x-show="imdbData" @click="directImportImdb()" :disabled="imdbImporting"
+                                class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                            <i data-lucide="check-circle" class="w-4 h-4" x-show="!imdbImporting"></i>
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="imdbImporting" style="display:none;"></i>
+                            <span x-text="imdbImporting ? 'Sedang Menyimpan...' : 'Simpan Film Lengkap ke Database'"></span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </template>
 
 </div>
 @endsection

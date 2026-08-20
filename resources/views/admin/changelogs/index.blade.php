@@ -124,91 +124,93 @@
     </div>
 
     <!-- AI Import Modal -->
-    <div x-show="showImportModal" 
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5" @click.away="showImportModal = false">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-white font-['Outfit']">Import Catatan Rilis dari AI</h3>
-                        <p class="text-xs text-zinc-400">Salin prompt untuk AI atau tempel langsung data rilis JSON / Markdown.</p>
-                    </div>
-                </div>
-                <button type="button" @click="showImportModal = false" class="text-zinc-400 hover:text-white p-1 cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Format Chooser & Prompt Copy -->
-            <div class="space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold text-zinc-300">Pilih Format Data:</span>
-                        <div class="inline-flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 text-xs">
-                            <button type="button" 
-                                    @click="importFormat = 'json'" 
-                                    :class="importFormat === 'json' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
-                                    class="px-3 py-1 rounded-lg transition-colors cursor-pointer">
-                                JSON
-                            </button>
-                            <button type="button" 
-                                    @click="importFormat = 'markdown'" 
-                                    :class="importFormat === 'markdown' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
-                                    class="px-3 py-1 rounded-lg transition-colors cursor-pointer">
-                                Markdown
-                            </button>
+    <template x-teleport="body">
+        <div x-show="showImportModal" 
+             x-cloak 
+             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5" @click.away="showImportModal = false">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white font-['Outfit']">Import Catatan Rilis dari AI</h3>
+                            <p class="text-xs text-zinc-400">Salin prompt untuk AI atau tempel langsung data rilis JSON / Markdown.</p>
                         </div>
                     </div>
-
-                    <button type="button" @click="copyPrompt()" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
-                        <i :data-lucide="copiedPrompt ? 'check' : 'copy'" class="w-3.5 h-3.5"></i>
-                        <span x-text="copiedPrompt ? 'Prompt Berhasil Disalin!' : 'Salin Prompt AI (' + importFormat.toUpperCase() + ')'"></span>
+                    <button type="button" @click="showImportModal = false" class="text-zinc-400 hover:text-white p-1 cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <!-- Textarea Paste -->
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tempel Output dari AI di bawah ini:</label>
-                    <textarea x-model="rawImportText" 
-                              rows="9" 
-                              placeholder="Tempel teks JSON atau Markdown dari ChatGPT/Gemini/Claude di sini..."
-                              class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-mono text-white focus:outline-none focus:border-purple-500"></textarea>
+                <!-- Format Chooser & Prompt Copy -->
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold text-zinc-300">Pilih Format Data:</span>
+                            <div class="inline-flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 text-xs">
+                                <button type="button" 
+                                        @click="importFormat = 'json'" 
+                                        :class="importFormat === 'json' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
+                                        class="px-3 py-1 rounded-lg transition-colors cursor-pointer">
+                                    JSON
+                                </button>
+                                <button type="button" 
+                                        @click="importFormat = 'markdown'" 
+                                        :class="importFormat === 'markdown' ? 'bg-purple-500 text-white font-bold' : 'text-zinc-400 hover:text-white'"
+                                        class="px-3 py-1 rounded-lg transition-colors cursor-pointer">
+                                    Markdown
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="button" @click="copyPrompt()" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <i :data-lucide="copiedPrompt ? 'check' : 'copy'" class="w-3.5 h-3.5"></i>
+                            <span x-text="copiedPrompt ? 'Prompt Berhasil Disalin!' : 'Salin Prompt AI (' + importFormat.toUpperCase() + ')'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Textarea Paste -->
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Tempel Output dari AI di bawah ini:</label>
+                        <textarea x-model="rawImportText" 
+                                  rows="9" 
+                                  placeholder="Tempel teks JSON atau Markdown dari ChatGPT/Gemini/Claude di sini..."
+                                  class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-mono text-white focus:outline-none focus:border-purple-500 admin-scrollbar"></textarea>
+                    </div>
                 </div>
+
+                <!-- Modal Action Footer -->
+                <form action="{{ route('admin.changelogs.import') }}" method="POST" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800">
+                    @csrf
+                    <input type="hidden" name="format" :value="importFormat">
+                    <input type="hidden" name="content" :value="rawImportText">
+                    
+                    <label class="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer select-none">
+                        <input type="checkbox" name="auto_publish" value="1" checked class="w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-purple-500">
+                        <span>Langsung Publikasikan</span>
+                    </label>
+
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        <button type="button" @click="showImportModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-bold cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="!rawImportText.trim()" class="px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold shadow-lg shadow-purple-500/20 transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                            <span>Import & Simpan ke DB</span>
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <!-- Modal Action Footer -->
-            <form action="{{ route('admin.changelogs.import') }}" method="POST" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800">
-                @csrf
-                <input type="hidden" name="format" :value="importFormat">
-                <input type="hidden" name="content" :value="rawImportText">
-                
-                <label class="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
-                    <input type="checkbox" name="auto_publish" value="1" checked class="w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-purple-500">
-                    <span>Langsung Publikasikan</span>
-                </label>
-
-                <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-                    <button type="button" @click="showImportModal = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-bold cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="submit" :disabled="!rawImportText.trim()" class="px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold shadow-lg shadow-purple-500/20 transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5">
-                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                        <span>Import & Simpan ke DB</span>
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
+    </template>
 
 </div>
 

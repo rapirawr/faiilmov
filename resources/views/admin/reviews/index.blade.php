@@ -78,7 +78,7 @@
                             </td>
                             <td class="px-4 py-3.5 text-zinc-300 max-w-xs" x-data="{ viewModal: false }">
                                 <div class="cursor-pointer group/cmt" @click="viewModal = true">
-                                    <p class="line-clamp-2 text-xs leading-relaxed group-hover/cmt:text-white transition-colors">{{ $rev->comment }}</p>
+                                    <p class="line-clamp-2 text-xs leading-relaxed group-hover/cmt:text-white transition-colors break-words">{{ $rev->comment }}</p>
                                     @if(mb_strlen($rev->comment) > 60)
                                         <span class="text-[10px] text-rose-400 font-semibold inline-flex items-center gap-0.5 mt-0.5">
                                             <span>Baca selengkapnya</span>
@@ -88,40 +88,42 @@
                                 </div>
 
                                 <!-- Quick View Review Modal -->
-                                <div x-show="viewModal" x-cloak 
-                                     x-transition:enter="transition ease-out duration-200"
-                                     x-transition:enter-start="opacity-0 scale-95"
-                                     x-transition:enter-end="opacity-100 scale-100"
-                                     x-transition:leave="transition ease-in duration-150"
-                                     x-transition:leave-start="opacity-100 scale-100"
-                                     x-transition:leave-end="opacity-0 scale-95"
-                                     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                                    <div @click.away="viewModal = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
-                                        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
-                                                    <img src="{{ $rev->user?->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($rev->user?->name ?? 'User') }}" alt="{{ $rev->user?->name ?? 'User' }}" class="w-full h-full object-cover">
+                                <template x-teleport="body">
+                                    <div x-show="viewModal" x-cloak 
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-150"
+                                         x-transition:leave-start="opacity-100 scale-100"
+                                         x-transition:leave-end="opacity-0 scale-95"
+                                         class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                                        <div @click.away="viewModal = false" class="w-full max-w-lg p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl text-white">
+                                            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
+                                                        <img src="{{ $rev->user?->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($rev->user?->name ?? 'User') }}" alt="{{ $rev->user?->name ?? 'User' }}" class="w-full h-full object-cover">
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="font-bold text-white text-sm font-['Outfit']">{{ $rev->film->title ?? 'Film' }}</h4>
+                                                        <p class="text-xs text-zinc-400">Oleh <strong class="text-zinc-200">{{ $rev->user->name ?? 'User' }}</strong> &bull; Rating: {{ $rev->rating }}/10</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h4 class="font-bold text-white text-sm font-['Outfit']">{{ $rev->film->title ?? 'Film' }}</h4>
-                                                    <p class="text-xs text-zinc-400">Oleh <strong class="text-zinc-200">{{ $rev->user->name ?? 'User' }}</strong> &bull; Rating: {{ $rev->rating }}/10</p>
-                                                </div>
+                                                <button @click="viewModal = false" class="p-1 rounded-lg text-zinc-400 hover:text-white cursor-pointer">
+                                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                                </button>
                                             </div>
-                                            <button @click="viewModal = false" class="p-1 rounded-lg text-zinc-400 hover:text-white">
-                                                <i data-lucide="x" class="w-5 h-5"></i>
-                                            </button>
-                                        </div>
 
-                                        <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-200 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
-                                            {{ $rev->comment }}
-                                        </div>
+                                            <div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-200 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap break-words admin-scrollbar">
+                                                {{ $rev->comment }}
+                                            </div>
 
-                                        <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-800">
-                                            <span>Ditulis pada {{ $rev->created_at->format('d M Y H:i:s') }}</span>
-                                            <button @click="viewModal = false" class="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs">Tutup</button>
+                                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-800">
+                                                <span>Ditulis pada {{ $rev->created_at->format('d M Y H:i:s') }}</span>
+                                                <button @click="viewModal = false" class="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs cursor-pointer">Tutup</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </template>
                             </td>
                             <td class="px-4 py-3.5">
                                 @if($rev->reports_count > 0)
@@ -141,7 +143,7 @@
                                     @if($rev->reports_count > 0)
                                         <form action="{{ route('admin.reviews.dismiss_reports', $rev->id) }}" method="POST">
                                             @csrf
-                                            <button type="submit" class="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors" title="Abaikan Laporan">
+                                            <button type="submit" class="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer" title="Abaikan Laporan">
                                                 <i data-lucide="check-check" class="w-4 h-4 text-emerald-400"></i>
                                             </button>
                                         </form>
@@ -152,41 +154,43 @@
                                     </button>
 
                                     <!-- Delete Confirmation Modal -->
-                                    <div x-show="modalOpen" x-cloak 
-                                         x-transition:enter="transition ease-out duration-200"
-                                         x-transition:enter-start="opacity-0 scale-95"
-                                         x-transition:enter-end="opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-150"
-                                         x-transition:leave-start="opacity-100 scale-100"
-                                         x-transition:leave-end="opacity-0 scale-95"
-                                         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                                        <div @click.away="modalOpen = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl">
-                                            <div class="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
-                                                <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
-                                                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                    <template x-teleport="body">
+                                        <div x-show="modalOpen" x-cloak 
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-150"
+                                             x-transition:leave-start="opacity-100 scale-100"
+                                             x-transition:leave-end="opacity-0 scale-95"
+                                             class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                            <div @click.away="modalOpen = false" class="w-full max-w-md p-6 rounded-3xl bg-zinc-900 border border-zinc-800 text-left space-y-4 shadow-2xl">
+                                                <div class="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
+                                                    <div class="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                                                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                                    </div>
+                                                    <h4 class="font-bold text-white text-sm font-['Outfit']">Hapus Ulasan Ini?</h4>
                                                 </div>
-                                                <h4 class="font-bold text-white text-sm font-['Outfit']">Hapus Ulasan Ini?</h4>
+
+                                                <p class="text-xs text-zinc-300">Ulasan oleh <strong class="text-white">{{ $rev->user->name ?? 'User' }}</strong> akan dihapus permanen dari film <strong class="text-white">{{ $rev->film->title ?? 'Film' }}</strong>.</p>
+
+                                                <form action="{{ route('admin.reviews.destroy', $rev->id) }}" method="POST" class="space-y-4">
+                                                    @csrf
+                                                    @method('DELETE')
+
+                                                    <div>
+                                                        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Alasan Penghapusan *</label>
+                                                        <input type="text" name="reason" required placeholder="Contoh: Berisi kata-kata kasar / spam" 
+                                                               class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                                                    </div>
+
+                                                    <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
+                                                        <button type="button" @click="modalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
+                                                        <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-xs font-bold text-white shadow-lg shadow-rose-500/20 transition-all cursor-pointer">Hapus Ulasan</button>
+                                                    </div>
+                                                </form>
                                             </div>
-
-                                            <p class="text-xs text-zinc-300">Ulasan oleh <strong class="text-white">{{ $rev->user->name ?? 'User' }}</strong> akan dihapus permanen dari film <strong class="text-white">{{ $rev->film->title ?? 'Film' }}</strong>.</p>
-
-                                            <form action="{{ route('admin.reviews.destroy', $rev->id) }}" method="POST" class="space-y-4">
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <div>
-                                                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Alasan Penghapusan *</label>
-                                                    <input type="text" name="reason" required placeholder="Contoh: Berisi kata-kata kasar / spam" 
-                                                           class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                                                </div>
-
-                                                <div class="flex justify-end gap-2.5 pt-2 border-t border-zinc-800">
-                                                    <button type="button" @click="modalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition-colors cursor-pointer">Batal</button>
-                                                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-xs font-bold text-white shadow-lg shadow-rose-500/20 transition-all cursor-pointer">Hapus Ulasan</button>
-                                                </div>
-                                            </form>
                                         </div>
-                                    </div>
+                                    </template>
 
                                 </div>
                             </td>
